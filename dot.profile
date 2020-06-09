@@ -6,11 +6,6 @@ test -d $HOME/.cargo/bin && PATH=$PATH:$_
 
 export PATH
 
-export VISUAL=vi
-export EDITOR=$VISUAL
-export PAGER=less
-export GZIP=-9
-
 ulimit -c 0
 
 # avoid certain file types in completion
