@@ -1,0 +1,6 @@
+xterm*foreground: gray10
+xterm*background: gray90
+xterm*cursorColor: #19cb00
+xterm*cursorBlink: true
+xterm*font: 7x14
+xterm*loginShell: false
