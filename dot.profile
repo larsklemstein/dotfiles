@@ -8,15 +8,16 @@ export PATH
 
 ulimit -c 0
 
-# avoid certain file types in completion
-FIGNORE='@(*.o|~*)'
-
-# save more commands in history
 HISTSIZE=500
 HISTEDIT=$EDITOR
 
-if [ -z "$KSH_VERSION" -a $SHELL = /bin/bash ] && \
-	[[ $- == *i* ]] && test -f $HOME/.bashrc
+if [[ $- == *i* ]]  # if interactive bash or ksh...
 then
-	. $HOME/.bashrc
+    if [[ -z "$KSH_VERSION" && $SHELL = */bin/bash && -f ~/.bashrc ]]
+    then
+        . ~/.bashrc
+    elif [ -n "$KSH_VERSION" -a -f ~/.kshrc ]
+    then
+        . ~/.kshrc
+    fi
 fi
