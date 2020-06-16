@@ -1,5 +1,5 @@
 # dotfiles
-Personal collection of bash, ksh and nvim configurations etc.
+Profile files for bash and/or ksh usage.
 
 
 ## Goals
