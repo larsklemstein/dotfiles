@@ -1,5 +1,5 @@
 # dotfiles
-Profile files for bash and/or ksh usage.
+Profiles for bash and/or ksh and some other stuff.
 
 
 ## Goals
