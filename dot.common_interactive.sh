@@ -35,6 +35,10 @@ error() {
 	echo -e "${RED}$*${NOCOLOR}" >&2
 }
 
+f() {
+	$* $(fzf)
+}
+
 # -- git stuff ---
 alias ga='git add'
 alias gc='git commit'
@@ -42,7 +46,7 @@ alias gc='git commit'
 export VISUAL=nvim
 export EDITOR=$VISUAL
 export PAGER=less
-export LESS='-CN'
+export LESS='-C'
 export GZIP=-9
 
 export LS_COLORS='rs=0:di=34;01:ln=0:mh=0:pi=0:so=0:do=0:bd=0:cd=0:or=37;41:mi=0:su=0:sg=0:ca=0:tw=0:ow=0:st=0:ex=31;01'

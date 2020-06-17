@@ -8,9 +8,6 @@ export PATH
 
 ulimit -c 0
 
-# avoid certain file types in completion
-FIGNORE='@(*.o|~*)'
-
 # save more commands in history
 HISTSIZE=500
 HISTEDIT=$EDITOR
@@ -20,3 +17,4 @@ if [ -z "$KSH_VERSION" -a $SHELL = /bin/bash ] && \
 then
 	. $HOME/.bashrc
 fi
+set +x
