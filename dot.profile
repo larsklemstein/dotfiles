@@ -7,13 +7,7 @@ test -d $HOME/.cargo/bin && PATH=$PATH:$_
 export PATH
 
 ulimit -c 0
-
-<<<<<<< HEAD
-# save more commands in history
-=======
->>>>>>> 65a06fd773ca8b6202053ff1523b4a47fd3b7636
-HISTSIZE=500
-HISTEDIT=$EDITOR
+umask 002
 
 if [[ $- == *i* ]]  # if interactive bash or ksh...
 then
@@ -25,4 +19,3 @@ then
         . ~/.kshrc
     fi
 fi
-set +x
