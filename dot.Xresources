@@ -1,10 +1,2 @@
-xterm*foreground: gray10
-xterm*background: gray95
-xterm*cursorColor: #19cb00
-xterm*font: 7x14
-xterm*loginShell: false
-xterm*cursorBlink: true
-xterm*cursorOnTime: 400
-xterm*cursorOffTime: 400
-
-XFontsel.menu.options.showUnselectable: False
+#include ".xres_xterm"
+#include ".xres_xterm_solarized_light"

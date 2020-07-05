@@ -9,6 +9,27 @@ alias fgrep='/bin/fgrep --color=auto'
 alias vim=nvim
 
 
+# --- git stuff ---
+
+alias ga='git add'
+alias gc='git commit'
+
+
+# --- doc stuff ---
+
+alias bdg='badwolf www.golang.com/doc >/dev/null 2>&1 &'
+
+
+# --- color stuff ---
+
+export LS_COLORS='rs=0:di=34;01:ln=0:mh=0:pi=0:so=0:do=0:bd=0:cd=0:or=37;41:mi=0:su=0:sg=0:ca=0:tw=0:ow=0:st=0:ex=31;01'
+
+export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
+
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
+te=01'
+
+
 # --- color definitions, can be used via (e.g.) echo -e "This is {BLUE}, this is now {NOCOLOR} again."
 NOCOLOR='\033[0m'
 RED='\033[0;31m'
@@ -35,28 +56,16 @@ error() {
 	echo -e "${RED}$*${NOCOLOR}" >&2
 }
 
-f() {
-	$* $(fzf)
-}
-
-# -- git stuff ---
-alias ga='git add'
-alias gc='git commit'
 
 # --- activate Python virtualenv in sub directory ---
+
 alias avenv='__apy__=$(find . -maxdepth 4 -path "*/bin/activate" -type f|head -1) && [ -n "$__apy__" -a -f "$__apy__" ] && PS1="\W > " && . $__apy__ && python -V || echo "no python venv detected!"; unset __apy__'
+
 
 export VISUAL=nvim
 export EDITOR=$VISUAL
 export PAGER=less
 export LESS='-C'
-
-export LS_COLORS='rs=0:di=34;01:ln=0:mh=0:pi=0:so=0:do=0:bd=0:cd=0:or=37;41:mi=0:su=0:sg=0:ca=0:tw=0:ow=0:st=0:ex=31;01'
-
-export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
-
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
-te=01'
 
 
 test -f ~/.fzf.bash && . $_

@@ -16,8 +16,10 @@ lkl_add2path $HOME/bin pre
 lkl_add2path $HOME/app/bin post
 lkl_add2path $HOME/go/bin post
 lkl_add2path $HOME/.cargo/bin post
-
 export PATH
+
+test -d $HOME/tmp || mkdir -vp $_
+export TMPDIR=$_
 
 ulimit -c 0
 umask 002
