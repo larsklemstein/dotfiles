@@ -1,6 +1,12 @@
-alias ls='/bin/ls --color=auto'
+# --- use either exa (new style ls) or standard ls ---
+
+alias ls='/bin/ls -F --color=auto'
 alias ll='ls -l'
-alias la='ls -a'
+alias la='ls -A'
+alias lla='ls -la'
+
+unset _exa_prog
+
 
 alias grep='/bin/grep --color=auto'
 alias egrep='/bin/egrep --color=auto'
@@ -13,11 +19,15 @@ alias vim=nvim
 
 alias ga='git add'
 alias gc='git commit'
+alias gp='git push'
 
 
 # --- doc stuff ---
 
-alias bdg='badwolf www.golang.com/doc >/dev/null 2>&1 &'
+export DOC_BROWSER=badwolf
+# export DOC_BROWSER=firefox
+
+alias dbg='$DOC_BROWSER www.golang.com/doc >/dev/null 2>&1 &'
 
 
 # --- color stuff ---

@@ -1,2 +1,14 @@
-#include ".xres_xterm"
-#include ".xres_xterm_solarized_light"
+! like Vim/Nvim gruvebox color scheme
+xterm*foreground: #ebdbb2
+xterm*background: #292929
+xterm*cursorColor: #FFB266
+xterm*loginShell: false
+xterm*scrollBar: false
+xterm*font: 7x14
+
+rxvt*foreground: #ebdbb2
+rxvt*background: #292929
+rxvt*cursorColor: #FFB266
+rxvt*loginShell: false
+rxvt*scrollBar: false
+rxvt*font: 7x14
