@@ -1,6 +1,6 @@
 # --- use either exa (new style ls) or standard ls ---
 
-alias ls='/bin/ls -F --color=auto'
+alias ls='/bin/ls --color=auto'
 alias ll='ls -l'
 alias la='ls -A'
 alias lla='ls -la'
@@ -32,40 +32,14 @@ alias dbg='$DOC_BROWSER www.golang.com/doc >/dev/null 2>&1 &'
 
 # --- color stuff ---
 
-export LS_COLORS='rs=0:di=34;01:ln=0:mh=0:pi=0:so=0:do=0:bd=0:cd=0:or=37;41:mi=0:su=0:sg=0:ca=0:tw=0:ow=0:st=0:ex=31;01'
+# vivid: tool to generate themed LS_COLORS, https://github.com/sharkdp/vivid
+#
+which vivid 2>/dev/null >&2 && export LS_COLORS=$(vivid generate snazzy)
 
 export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 te=01'
-
-
-# --- color definitions, can be used via (e.g.) echo -e "This is {BLUE}, this is now {NOCOLOR} again."
-NOCOLOR='\033[0m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-LIGHTGRAY='\033[0;37m'
-DARKGRAY='\033[1;30m'
-LIGHTRED='\033[1;31m'
-LIGHTGREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-LIGHTBLUE='\033[1;34m'
-LIGHTPURPLE='\033[1;35m'
-LIGHTCYAN='\033[1;36m'
-WHITE='\033[1;37m'
-
-msg() {
-	echo -e "${BLUE}$*${NOCOLOR}" >&2
-}
-
-error() {
-	echo -e "${RED}$*${NOCOLOR}" >&2
-}
-
 
 # --- activate Python virtualenv in sub directory ---
 
@@ -75,7 +49,7 @@ alias avenv='__apy__=$(find . -maxdepth 4 -path "*/bin/activate" -type f|head -1
 export VISUAL=nvim
 export EDITOR=$VISUAL
 export PAGER=less
-export LESS='-C'
+export LESS='-RC'
 
 
 test -f ~/.fzf.bash && . $_
