@@ -67,4 +67,4 @@ _cd .
 # put the current directory and history number in the prompt
 PS1='$_pwd [!]\$ '
 
-test -f $HOME/.common_interactive.sh && . $HOME/.common_interactive.sh
+test -f $HOME/.common_interactive_sh && . $HOME/.common_interactive.sh
