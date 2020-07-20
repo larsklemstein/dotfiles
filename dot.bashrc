@@ -57,4 +57,4 @@ if ! shopt -oq posix; then
 fi
 
 
-test -s $HOME/.common_interactive.sh && . $_
+test -s $HOME/.common_interactive_sh && . $_
