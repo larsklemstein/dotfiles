@@ -49,7 +49,7 @@ aws_gt() {
 
 	if [ -z "$export_commands" ]
 	then
-		echo "$ups: unable to convert json to export def:"
+		echo "ups: unable to convert json to export def:"
 		echo "$json_out"; return
 		return 1
 	fi
