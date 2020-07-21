@@ -54,7 +54,7 @@ aws_gt() {
 		return 1
 	fi
 
-	export_commands+="export AWS_PROFILE=$profile"
+	export_commands+=";export AWS_PROFILE=$profile"
 
 	eval $export_commands
 
