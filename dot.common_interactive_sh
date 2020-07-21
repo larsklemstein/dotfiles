@@ -22,9 +22,50 @@ alias gc='git commit'
 alias gp='git push'
 
 
+# --- aws stuff
+
+export AWS_CLI_PROGRAM=aws
+
+alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
+
+aws_gt() {
+	[ $# -eq 3 ] || { echo "usage: aws_gt profile mfa token_code"; return 1; }
+
+	typeset profile="$1"
+	typeset mfa="$2"
+	typeset token_code="$3"
+
+	typeset rc
+	typeset json_out
+	typeset export_commands
+
+	json_out="$($AWS_CLI_PROGRAM sts get-session-token --profile "$profile" \
+		--serial-number $mfa --token-code $token_code 2>&1)"
+
+	rc=$?
+	[ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
+
+	export_commands=$(aws_credentials_export <<< "$json_out")
+
+	if [ -z "$export_commands" ]
+	then
+		echo "$ups: unable to convert json to export def:"
+		echo "$json_out"; return
+		return 1
+	fi
+
+	export_commands+="export AWS_PROFILE=$profile"
+
+	eval $export_commands
+
+	echo "--> now connected to AWS account \"$profile\""
+}
+# EOF aws_gt()
+
+
 # --- doc stuff ---
 
-export DOC_BROWSER=badwolf
+export DOC_BROWSER=qutebrowser
 # export DOC_BROWSER=firefox
 
 alias dbg='$DOC_BROWSER www.golang.com/doc >/dev/null 2>&1 &'
@@ -40,6 +81,7 @@ export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;3
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 te=01'
+
 
 # --- activate Python virtualenv in sub directory ---
 
