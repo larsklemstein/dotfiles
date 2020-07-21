@@ -1,5 +1,7 @@
 export LD_LIBRARY_PATH=/usr/local/lib
 
+echo .profile
+
 lkl_add2path() {
 	typeset new_path="$1"
 	typeset pos="$2"
@@ -23,6 +25,8 @@ export TMPDIR=$_
 
 ulimit -c 0
 umask 002
+
+test -f "$HOME/.profile_local" && . $_
 
 if [[ $- == *i* ]]  # if interactive bash or ksh...
 then
