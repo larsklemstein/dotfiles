@@ -76,9 +76,7 @@ alias dbg='$DOC_BROWSER www.golang.com/doc >/dev/null 2>&1 &'
 
 # --- color stuff ---
 
-# vivid: tool to generate themed LS_COLORS, https://github.com/sharkdp/vivid
-#
-which vivid 2>/dev/null >&2 && export LS_COLORS=$(vivid generate snazzy)
+test -s $HOME/.ls_colors && . $_
 
 export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
 
