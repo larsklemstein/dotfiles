@@ -17,9 +17,12 @@ alias vim=nvim
 
 # --- git stuff ---
 
-alias ga='git add'
-alias gc='git commit -m '
-alias gp='git push'
+export GIT_COMMAND=git
+
+alias gad='$GIT_COMMAND add'
+alias gco='$GIT_COMMAND commit -m '
+alias gpu='$GIT_COMMAND push'
+alias gst='$GIT_COMMAND status'
 
 
 
