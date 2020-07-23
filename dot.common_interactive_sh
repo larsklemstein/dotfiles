@@ -18,8 +18,9 @@ alias vim=nvim
 # --- git stuff ---
 
 alias ga='git add'
-alias gc='git commit'
+alias gc='git commit -m '
 alias gp='git push'
+
 
 
 # --- aws stuff
