@@ -38,3 +38,5 @@ then
         . ~/.kshrc
     fi
 fi
+
+export PATH="$HOME/.cargo/bin:$PATH"
