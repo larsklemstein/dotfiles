@@ -98,9 +98,27 @@ export EDITOR=$VISUAL
 export PAGER=less
 export LESS='-RC'
 
-
 test -f ~/.fzf.bash && . $_
 
 set -o vi
+
+# usage: fch [DEST_DIR]
+# Starts FZF to interactivly select an object (directory or file)
+# and "switch" to it (cd to a dir and open editor for anyting else)
+#
+fch() {
+	[ $# -le 1 ] || { echo '???' 2>&1; return 1; }
+	typeset dest="${1:-$PWD}"
+	cd $dest || { echo '???' 2>&1; return 1; }
+
+	typeset fzf_dest=$(fzf)
+
+	if [ -d "$fzf_dest" ]
+	then
+		cd $dest
+	else
+		$VISUAL $fzf_dest
+	fi
+}
 
 test -f $HOME/.common_interactive_local.sh && . $HOME/.common_interactive_local.sh
