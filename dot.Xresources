@@ -6,7 +6,7 @@ xterm*loginShell: false
 xterm*scrollBar: false
 xterm*cursorBlink: false
 xterm*font: 7x14
-xterm*selectToClippboard: true
+xterm*selectToClipboard: true
 
 rxvt*foreground: #ebdbb2
 rxvt*background: #292929
