@@ -61,4 +61,16 @@ if ! shopt -oq posix; then
 fi
 
 
+my_session_type() {
+	local login_shell interactive
+
+	shopt -q login_shell && login_shell='yes' || login_shell='no'
+	[[ $- == *i* ]] && interactive='yes' || interactive='no'
+
+	echo "logn shell....: $login_shell"
+	echo "interactive...: $interactive"
+}
+
+alias mst=my_session_type
+
 test -s $HOME/.common_interactive_sh && . $_
