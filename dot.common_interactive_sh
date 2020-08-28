@@ -93,8 +93,9 @@ te=01'
 alias avenv='__apy__=$(find . -maxdepth 4 -path "*/bin/activate" -type f|head -1) && [ -n "$__apy__" -a -f "$__apy__" ] && PS1="\W > " && . $__apy__ && python -V || echo "no python venv detected!"; unset __apy__'
 
 
-export VISUAL=nvim
-export EDITOR=$VISUAL
+export EDITOR=nvim
+export VISUAL=$EDITOR
+
 export PAGER=less
 export LESS='-RC'
 
@@ -117,6 +118,7 @@ fch() {
 	then
 		cd $dest
 	else
+		echo a
 		$VISUAL $fzf_dest
 	fi
 }
