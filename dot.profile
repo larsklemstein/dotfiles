@@ -4,14 +4,26 @@ lkl_add2path() {
 	typeset new_path="$1"
 	typeset pos="$2"
 
+	set -x
 	[ -d "$new_path" ] || return
 
-	if [ $pos = "pre" ]
+	if [ "$pos" = "pre" ]
 	then
-		[[ "$PATH" != *$_:* ]] && PATH=$_:$PATH
+		path_contains "$new_path" || PATH=$new_path:$PATH
 	else
-		[[ "$PATH" != *:$_* ]] && PATH=$PATH:$_
+		path_contains "$new_path" || PATH=$PATH:$new_path
 	fi
+}
+
+path_contains() {
+	typeset check_path="$1"
+
+	[[ "$PATH" ==   $check_path   ]] && return 0
+	[[ "$PATH" == *:$check_path   ]] && return 0
+	[| "$PATH" ==   $check_path:* ]] && return 0
+	[[ "$PATH" == *:$check_path:* ]] && return 0
+
+	return 1
 }
 
 lkl_add2path $HOME/bin pre
