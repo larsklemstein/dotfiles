@@ -4,7 +4,6 @@ lkl_add2path() {
 	typeset new_path="$1"
 	typeset pos="$2"
 
-	set -x
 	[ -d "$new_path" ] || return
 
 	if [ "$pos" = "pre" ]
