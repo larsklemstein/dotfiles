@@ -2,11 +2,11 @@ export LD_LIBRARY_PATH=/usr/local/lib
 
 lkl_add2path() {
 	typeset new_path="$1"
-	typeset pos="$2"
+	typeset pos="${2:-post}"
 
 	[ -d "$new_path" ] || return
 
-	if [ "$pos" = "pre" ]
+	if [ "$pos" = pre ]
 	then
 		path_contains "$new_path" || PATH=$new_path:$PATH
 	else
@@ -19,7 +19,7 @@ path_contains() {
 
 	[[ "$PATH" ==   $check_path   ]] && return 0
 	[[ "$PATH" == *:$check_path   ]] && return 0
-	[| "$PATH" ==   $check_path:* ]] && return 0
+	[[ "$PATH" ==   $check_path:* ]] && return 0
 	[[ "$PATH" == *:$check_path:* ]] && return 0
 
 	return 1
