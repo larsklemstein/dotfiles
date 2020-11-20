@@ -14,6 +14,8 @@ alias fgrep='/bin/fgrep --color=auto'
 
 alias vim=nvim
 
+alias mx='xrdb -merge ~/.Xresources'
+
 
 # --- git stuff ---
 
@@ -101,7 +103,12 @@ export LESS='-RC'
 
 test -f ~/.fzf.bash && . $_
 
+# what else...
 set -o vi
+
+export FZF_DEFAULT_OPTS='--multi'
+
+alias pfzf='fzf --preview="/bin/cat {}"'
 
 # usage: fch [DEST_DIR]
 # Starts FZF to interactivly select an object (directory or file)
