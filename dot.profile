@@ -51,3 +51,6 @@ then
 fi
 
 export PATH="$HOME/.cargo/bin:$PATH"
+
+# map CapsLock to Escape
+setxkbmap  -option caps:escape
