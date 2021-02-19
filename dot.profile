@@ -2,8 +2,14 @@ export LD_LIBRARY_PATH=/usr/local/lib
 
 export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
 
-test -d $HOME/tmp || mkdir -vp $_
-export TMPDIR=$_
+export TMPDIR=$HOME/tmp
+
+test -d $TMPDIR || mkdir -vp $TMPDIR
+
+if [ -d $TMPDIR ]
+then
+	find $TMPDIR -mtime +3 -exec /bin/rm -rf {} +
+fi
 
 ulimit -c 0
 umask 002
