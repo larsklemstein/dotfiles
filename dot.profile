@@ -14,11 +14,7 @@ lkl_add2path() {
 	fi
 }
 
-lkl_add2path $HOME/bin pre
-lkl_add2path $HOME/local/bin pre
-lkl_add2path $HOME/go/bin post
-lkl_add2path $HOME/.cargo/bin post
-export PATH
+export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
 
 test -d $HOME/tmp || mkdir -vp $_
 export TMPDIR=$_

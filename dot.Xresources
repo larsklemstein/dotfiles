@@ -8,7 +8,7 @@ xterm*cursorBlink: false
 xterm*selectToClipboard: true
 
 xterm*faceName: Ubuntu Mono
-xterm*faceSize: 9
+xterm*faceSize: 11
 xterm*renderFont: true
 
 rxvt*foreground: #ebdbb2
