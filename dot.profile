@@ -1,22 +1,16 @@
-export LD_LIBRARY_PATH=/usr/local/lib
-
 export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
+
+
+PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/go/bin:$PATH
+
+test -d "$HOME/.cargo" && . "$HOME/.cargo/env"
+
+export PATH
 
 export TMPDIR=$HOME/tmp
-
 test -d $TMPDIR || mkdir -vp $TMPDIR
 
-<<<<<<< HEAD
-export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
-
-test -d $HOME/tmp || mkdir -vp $_
-export TMPDIR=$_
-=======
-if [ -d $TMPDIR ]
-then
-	find $TMPDIR -mtime +3 -exec /bin/rm -rf {} +
-fi
->>>>>>> 811b201ed6eebca0e4caa283ddc986e94c2ee0f2
+test -d $TMPDIR && find $TMPDIR -mtime +3 -exec /bin/rm -rf {} +
 
 ulimit -c 0
 umask 002
@@ -33,8 +27,3 @@ then
         . ~/.kshrc
     fi
 fi
-
-
-# map CapsLock to Escape
-setxkbmap  -option caps:escape
-source "$HOME/.cargo/env"
