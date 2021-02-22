@@ -1,23 +1,22 @@
 export LD_LIBRARY_PATH=/usr/local/lib
 
-lkl_add2path() {
-	typeset new_path="$1"
-	typeset pos="$2"
+export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
 
-	[ -d "$new_path" ] || return
+export TMPDIR=$HOME/tmp
 
-	if [ $pos = "pre" ]
-	then
-		[[ "$PATH" != *$_:* ]] && PATH=$_:$PATH
-	else
-		[[ "$PATH" != *:$_* ]] && PATH=$PATH:$_
-	fi
-}
+test -d $TMPDIR || mkdir -vp $TMPDIR
 
+<<<<<<< HEAD
 export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
 
 test -d $HOME/tmp || mkdir -vp $_
 export TMPDIR=$_
+=======
+if [ -d $TMPDIR ]
+then
+	find $TMPDIR -mtime +3 -exec /bin/rm -rf {} +
+fi
+>>>>>>> 811b201ed6eebca0e4caa283ddc986e94c2ee0f2
 
 ulimit -c 0
 umask 002
@@ -35,4 +34,7 @@ then
     fi
 fi
 
-export PATH="$HOME/.cargo/bin:$PATH"
+
+# map CapsLock to Escape
+setxkbmap  -option caps:escape
+source "$HOME/.cargo/env"
