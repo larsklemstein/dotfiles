@@ -1,10 +1,10 @@
 ! like Vim/Nvim gruvebox color scheme
 xterm*foreground: #ebdbb2
 xterm*background: #292929
-xterm*cursorColor: #FFB266
+xterm*cursorColor: #a0c055
 xterm*loginShell: false
 xterm*scrollBar: false
-xterm*cursorBlink: true
+xterm*cursorBlink: false
 xterm*selectToClipboard: true
 
 ! xterm*faceName: Ubuntu Mono
@@ -14,7 +14,7 @@ xterm*renderFont: true
 
 rxvt*foreground: #ebdbb2
 rxvt*background: #292929
-rxvt*cursorColor: #FFB266
+rxvt*cursorColor: #a0c055
 rxvt*loginShell: false
 rxvt*scrollBar: false
 rxvt*font: 7x14

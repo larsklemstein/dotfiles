@@ -16,6 +16,9 @@ alias vim=nvim
 
 alias mx='xrdb -merge ~/.Xresources'
 
+# --- go stuff ---
+alias gb='echo "go build..."; go build'
+
 
 # --- git stuff ---
 
@@ -26,6 +29,7 @@ alias gco='$GIT_COMMAND commit -m '
 alias gpu='$GIT_COMMAND push'
 alias gst='$GIT_COMMAND status'
 
+alias gitbranch="git branch -av| sed -n '/^\*/s/^\* *\([^ ][^ ]*\).*/\1/p'"
 
 
 # --- aws stuff
