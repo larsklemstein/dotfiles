@@ -1,9 +1,10 @@
-export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/.cargo/bin:$PATH
+export PATH=$HOME/bin:$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$PATH
 
 
 PATH=$HOME/local/bin:$HOME/go/bin:$HOME/app/go/bin:$HOME/go/bin:$PATH
 
-test -d "$HOME/.cargo" && . "$HOME/.cargo/env"
+test -f "$HOME/.cargo/env" && . $_
+
 test -d "$HOME/.local/bin" && PATH="$_:$PATH"
 test -d "$HOME/app/node/bin" && PATH="$_:$PATH"
 

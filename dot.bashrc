@@ -76,4 +76,3 @@ alias mst=my_session_type
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 test -s $HOME/.common_interactive_sh && . $_
-source "$HOME/.cargo/env"
