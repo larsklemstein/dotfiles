@@ -2,14 +2,14 @@
 xterm*foreground: #ebdbb2
 xterm*background: #292929
 xterm*cursorColor: #a0c055
-xterm*loginShell: false
 xterm*scrollBar: false
 xterm*cursorBlink: false
 xterm*selectToClipboard: true
+xterm*loginShell: true
 
 ! xterm*faceName: Ubuntu Mono
 xterm*faceName: Noto Mono Regular
-xterm*faceSize: 9
+xterm*faceSize: 10
 xterm*renderFont: true
 
 rxvt*foreground: #ebdbb2
