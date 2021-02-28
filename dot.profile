@@ -1,6 +1,6 @@
 PATH=$HOME/bin:$PATH
 
-test -d "$HOME/app/go" && PATH="$_:$PATH"        # go itself
+test -d "$HOME/app/go/bin" && PATH="$_:$PATH"    # go itself
 test -d "$HOME/go/bin" && PATH="$_:$PATH"        # go toolchain
 test -f "$HOME/.cargo/env" && . $_               # rust (env will extend PATH)
 test -d "$HOME/.local/bin" && PATH="$_:$PATH"    # mainly python programs
