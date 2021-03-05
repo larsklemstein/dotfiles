@@ -1,3 +1,6 @@
+export TERM=xterm
+
+
 # --- use either exa (new style ls) or standard ls ---
 
 alias ls='/bin/ls --color=auto'

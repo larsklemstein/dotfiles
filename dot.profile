@@ -11,11 +11,11 @@ export PATH
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
-
 ulimit -c 0
 umask 002
 
 test -f "$HOME/.profile_local" && . $_
+
 
 if [[ $- == *i* ]]  # if interactive bash or ksh...
 then
