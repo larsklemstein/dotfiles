@@ -8,31 +8,12 @@ alias ll='ls -l'
 alias la='ls -A'
 alias lla='ls -la'
 
-unset _exa_prog
-
-
 alias grep='/bin/grep --color=auto'
 alias egrep='/bin/egrep --color=auto'
 alias fgrep='/bin/fgrep --color=auto'
 
-alias vim=nvim
 
 alias mx='xrdb -merge ~/.Xresources'
-
-# --- go stuff ---
-alias gb='echo "go build..."; go build'
-
-
-# --- git stuff ---
-
-export GIT_COMMAND=git
-
-alias gad='$GIT_COMMAND add'
-alias gco='$GIT_COMMAND commit -m '
-alias gpu='$GIT_COMMAND push'
-alias gst='$GIT_COMMAND status'
-
-alias gitbranch="git branch -av| sed -n '/^\*/s/^\* *\([^ ][^ ]*\).*/\1/p'"
 
 
 # --- aws stuff
@@ -79,62 +60,28 @@ aws_gt() {
 # EOF aws_gt()
 
 
-# --- doc stuff ---
-
-export DOC_BROWSER=qutebrowser
-# export DOC_BROWSER=firefox
-
-alias dbg='$DOC_BROWSER www.golang.com/doc >/dev/null 2>&1 &'
-
-
 # --- color stuff ---
 
 test -s $HOME/.ls_colors && . $_
 
 export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
 
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
-te=01'
-
-
-# --- activate Python virtualenv in sub directory ---
-
-alias avenv='__apy__=$(find . -maxdepth 4 -path "*/bin/activate" -type f|head -1) && [ -n "$__apy__" -a -f "$__apy__" ] && PS1="\W > " && . $__apy__ && python -V || echo "no python venv detected!"; unset __apy__'
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 
 export EDITOR=nvim
 export VISUAL=$EDITOR
+set -o vi
+
 
 export PAGER=less
 export LESS='-RC'
 
+
 test -f ~/.fzf.bash && . $_
 
-# what else...
-set -o vi
+alias bat='bat --color=auto --theme=gruvbox-dark'
+export FZF_DEFAULT_OPTS='--multi --preview="bat --color=always --theme=gruvbox-dark --plain {}"'
 
-export FZF_DEFAULT_OPTS='--multi'
-
-alias pfzf='fzf --preview="/bin/cat {}"'
-
-# usage: fch [DEST_DIR]
-# Starts FZF to interactivly select an object (directory or file)
-# and "switch" to it (cd to a dir and open editor for anyting else)
-#
-fch() {
-	[ $# -le 1 ] || { echo '???' 2>&1; return 1; }
-	typeset dest="${1:-$PWD}"
-	cd $dest || { echo '???' 2>&1; return 1; }
-
-	typeset fzf_dest=$(fzf)
-
-	if [ -d "$fzf_dest" ]
-	then
-		cd $dest
-	else
-		echo a
-		$VISUAL $fzf_dest
-	fi
-}
 
 test -f $HOME/.common_interactive_local.sh && . $HOME/.common_interactive_local.sh
