@@ -75,4 +75,52 @@ alias mst=my_session_type
 
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
+
+# --- path nagigation stuff
+
+
+show_pwd_change() {
+	typeset pwd="$PWD"
+	typeset oldpwd="$OLDPWD"
+
+	[[ $pwd == $HOME/* ]] && pwd="~/${pwd#$HOME/}"
+	[[ $oldpwd == $HOME/* ]] && oldpwd="~/${oldpwd#$HOME/}"
+	
+	echo "[$pwd <- $oldpwd]" >&2
+}
+
+alias cd1='cd ..; show_pwd_change'
+alias cd2='cd ../..; show_pwd_change'
+alias cd3='cd ../../..; show_pwd_change'
+alias cd4='cd ../../../..; show_pwd_change'
+alias cd5='cd ../../../../..; show_pwd_change'
+alias cd6='cd ../../../../../..; show_pwd_change'
+alias cd7='cd ../../../../../../..; show_pwd_change'
+alias cd8='cd ../../../../../../../..; show_pwd_change'
+
+cdu() {
+	typeset until_what="$1"
+	typeset cd_back_max="${2:-99}"
+	typeset -i cd_operations=0
+	typeset dir_start="$PWD"
+
+	while [ $PWD != "/" -a $cd_operations -lt $cd_back_max ]
+	do
+		cd ..
+		cd_operations=cd_operations+1
+
+		if [ -e "$until_what" ]
+		then
+			{ /bin/ls -l |sed '/ '"$until_what"'/s/$/ ***/'; } >&2
+			echo -e "\n[$PWD <- $dir_start]\n" >&2
+			return 0
+		fi
+	done
+
+	echo "Failed..." >&2
+	return 1
+}
+
+
+# !! this should be the last line:
 test -s $HOME/.common_interactive_sh && . $_

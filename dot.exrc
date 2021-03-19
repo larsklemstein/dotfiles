@@ -7,4 +7,4 @@ set tabstop=4
 set shiftwidth=4
 
 " <CTRL-Shift-T> to convert tabs to blanks
-map  :%!expand -t4
+map  :%!expand -t4

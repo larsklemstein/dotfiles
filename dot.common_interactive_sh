@@ -83,5 +83,4 @@ test -f ~/.fzf.bash && . $_
 alias bat='bat --color=auto --theme=gruvbox-dark'
 export FZF_DEFAULT_OPTS='--multi --preview="bat --color=always --theme=gruvbox-dark --plain {}"'
 
-
-test -f $HOME/.common_interactive_local.sh && . $HOME/.common_interactive_local.sh
+test -f $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
