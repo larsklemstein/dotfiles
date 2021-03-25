@@ -88,8 +88,13 @@ mybat() {
 }
 
 export FZF_DEFAULT_OPTS='--multi -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
-export FZF_DEFAULT_COMMAND='find . \( -type d -name .[~-_0-9a-Z]* -o -name tmp -o -name __pycache__ \) -prune -o \( -type f \( -name \*.pyc -o -name \*.o \) \) -o -print'
 
+if grep -iq '^Ubuntu' /etc/issue
+then
+	export FZF_DEFAULT_COMMAND='fdfind . -t f'
+else
+	export FZF_DEFAULT_COMMAND='fd . -t f'
+fi
 
 # each good profile should traditionally have a section called "useful aliases"...
 
