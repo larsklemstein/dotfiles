@@ -17,4 +17,6 @@ rxvt*background: #292929
 rxvt*cursorColor: #a0c055
 rxvt*loginShell: false
 rxvt*scrollBar: false
-rxvt*font: 7x14
+rxvt*faceName: Noto Mono Regular
+rxvt*faceSize: 10
+rxvt*renderFont: true
