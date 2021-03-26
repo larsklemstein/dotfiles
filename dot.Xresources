@@ -9,4 +9,3 @@ xterm*loginShell: false
 xterm*font: 7x14
 xterm*utf8: 1
 xterm*renderFont: true
-
