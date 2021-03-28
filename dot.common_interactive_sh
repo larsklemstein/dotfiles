@@ -1,6 +1,5 @@
 export TERM=xterm
 
-
 # --- use either exa (new style ls) or standard ls ---
 
 alias ls='/bin/ls --color=auto'
@@ -14,6 +13,8 @@ alias fgrep='/bin/fgrep --color=auto'
 
 
 alias mx='xrdb -merge ~/.Xresources'
+
+alias lsswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
 
 
 # --- aws stuff
@@ -89,8 +90,9 @@ mybat() {
 
 export FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 
-if grep -iq '^Ubuntu' /etc/issue
+if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
 then
+	alias fd=fdfind
 	export FZF_DEFAULT_COMMAND='fdfind . -t f'
 else
 	export FZF_DEFAULT_COMMAND='fd . -t f'
@@ -167,4 +169,4 @@ cdu() {
 }
 
 
-test -f $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
+test -s ~/.common_interactive_local_sh && . $_

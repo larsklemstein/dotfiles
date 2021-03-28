@@ -75,4 +75,4 @@ alias mst=my_session_type
 
 
 # !! this should be the last line:
-test -s $HOME/.common_interactive_sh && . $_
+test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh

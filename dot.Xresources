@@ -5,7 +5,7 @@ xterm*cursorColor: #a0c055
 xterm*scrollBar: false
 xterm*cursorBlink: false
 xterm*selectToClipboard: true
-xterm*loginShell: false
+xterm*loginShell: true
 xterm*font: 7x14
 xterm*utf8: 1
 xterm*renderFont: true
