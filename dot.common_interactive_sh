@@ -1,6 +1,23 @@
-export TERM=xterm
+# Assumptions:
+# - Heavy vi style user
+# - Using Neovim instead of Vim
+# - Using fzf
+# - Using ripgrep
+# - using bash as main shell (and sometimes ksh93)
+# - Beeing a Python/Go/Rust/Shell programmer
+# - Want to have Gruvbox color theme everywhere
+# - Install extra tools directly (python pip, go get, cargo install)
 
-# --- use either exa (new style ls) or standard ls ---
+
+# ----------------------------------------------------------------------------
+# basic stuff
+# ----------------------------------------------------------------------------
+
+test -s $HOME/.dircolors && eval $(dircolors $_)
+
+export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
+
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 alias ls='/bin/ls --color=auto'
 alias ll='ls -l'
@@ -10,6 +27,57 @@ alias lla='ls -la'
 alias grep='/bin/grep --color=auto'
 alias egrep='/bin/egrep --color=auto'
 alias fgrep='/bin/fgrep --color=auto'
+
+export TERM=xterm
+
+export PAGER=less
+export LESS='-RC'
+
+
+export EDITOR=nvim
+export VISUAL=$EDITOR
+
+set -o vi
+
+alias vimdiff='nvim -d'
+alias nvimdiff=vimdiff
+
+
+alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
+
+# activate Xresources
+alias mx='xrdb -merge ~/.Xresources'
+
+# show neovim swap files
+alias nswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
+
+
+# ----------------------------------------------------------------------------
+# fzf/ripgrep/fd stuff
+# ----------------------------------------------------------------------------
+
+test -f ~/.fzf.bash && . $_
+
+alias bat='bat --color=auto --theme=gruvbox-dark'
+
+FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always '
+FZF_DEFAULT_OPTS+='--theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
+export FZF_DEFAULT_OPTS
+
+if egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
+then
+	alias fd=fdfind
+	export FZF_DEFAULT_COMMAND='fdfind . -t f'
+else
+	export FZF_DEFAULT_COMMAND='fd . -t f'
+fi
+
+alias fnvim='nvim $(fzf)'
+
+
+# ----------------------------------------------------------------------------
+# go stuff
+# ----------------------------------------------------------------------------
 
 get_go_rootdir() {
 	typeset org_pwd="$PWD"
@@ -51,12 +119,10 @@ exec_in_go_root() {
 alias gbuild='exec_in_go_root build'
 alias grun='exec_in_go_root run main.go'
 
-alias mx='xrdb -merge ~/.Xresources'
 
-alias lsswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
-
-
-# --- aws stuff
+# ---------------------------------------------------------------------------
+# aws stuff
+# ---------------------------------------------------------------------------
 
 export AWS_CLI_PROGRAM=aws
 
@@ -100,70 +166,9 @@ aws_gt() {
 # EOF aws_gt()
 
 
-# --- color stuff ---
-
-test -s $HOME/.ls_colors && . $_
-
-export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
-
-export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-
-export EDITOR=nvim
-export VISUAL=$EDITOR
-set -o vi
-
-
-export PAGER=less
-export LESS='-RC'
-
-
-test -f ~/.fzf.bash && . $_
-
-alias bat='bat --color=auto --theme=gruvbox-dark'
-
-# preview only if file size is <= 10MB
-mybat() {
-    [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
-}
-
-export FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
-
-if test -f /etc/os-release && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
-then
-	alias fd=fdfind
-	export FZF_DEFAULT_COMMAND='fdfind . -t f'
-else
-	export FZF_DEFAULT_COMMAND='fd . -t f'
-fi
-
-# each good profile should traditionally have a section called "useful aliases"...
-
-# useful aliases
-
-alias fnvim='nvim $(fzf)'
-
-# git wants a command named 'vimdiff'
-alias vimdiff='nvim -d'
-alias nvimdiff=vimdiff
-
-alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
-
-
-cfgpull() {
-	typeset cfg_dir
-
-	for cfg_dir in ~/.dotfiles ~/.config/nvim
-	do
-		echo "-> $cfg_dir"
- 		cd $cfg_dir
-		git pull
-		cd -
-	done
-}
-
-
-# --- path nagigation stuff
+# ---------------------------------------------------------------------------
+# path nagigation stuff
+# ---------------------------------------------------------------------------
 
 show_pwd_change() {
     typeset pwd="$PWD"
@@ -207,5 +212,9 @@ cdu() {
     return 1
 }
 
+
+# ----------------------------------------------------------------------------
+# optionally source local/private settings
+# ----------------------------------------------------------------------------
 
 test -s ~/.common_interactive_local_sh && . $_
