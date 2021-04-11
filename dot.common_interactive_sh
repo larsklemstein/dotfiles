@@ -11,6 +11,45 @@ alias grep='/bin/grep --color=auto'
 alias egrep='/bin/egrep --color=auto'
 alias fgrep='/bin/fgrep --color=auto'
 
+get_go_rootdir() {
+	typeset org_pwd="$PWD"
+
+	while [ "$PWD" != / -a ! -f "$PWD/main.go" ]
+	do
+		cd ..
+	done
+
+	if [ -f "$PWD/main.go" ]
+	then
+		echo "$PWD"
+	else
+		echo ""
+	fi
+
+	cd $org_pwd
+}
+
+alias groot=get_go_rootdir
+alias cdgroot='cd $(get_go_rootdir); ls -ltr'
+
+exec_in_go_root() {
+	typeset cmds="$@"
+	typeset go_root=$(get_go_rootdir)
+
+	if [ -n "$go_root" ]
+	then
+		cd $go_root
+		go $cmds
+		cd - >/dev/null
+		return 0
+	else
+		echo "Not possible!" >&2
+		return 1
+	fi
+}
+
+alias gbuild='exec_in_go_root build'
+alias grun='exec_in_go_root run main.go'
 
 alias mx='xrdb -merge ~/.Xresources'
 
@@ -90,7 +129,7 @@ mybat() {
 
 export FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 
-if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
+if test -f /etc/os-release && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
 then
 	alias fd=fdfind
 	export FZF_DEFAULT_COMMAND='fdfind . -t f'
