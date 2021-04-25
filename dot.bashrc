@@ -73,8 +73,7 @@ my_session_type() {
 
 alias mst=my_session_type
 
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 # !! this should be the last line:
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
-
-source /home/lars/.config/broot/launcher/bash/br

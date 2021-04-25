@@ -1,9 +1,8 @@
-export TERM=xterm-256color
+# ----------------------------------------------------------------------------
+# basic stuff
+# ----------------------------------------------------------------------------
 
-export EDITOR=nvim
-export VISUAL=$EDITOR
-
-set -o vi
+test -s $HOME/.dircolors && eval $(dircolors $_)
 
 
 alias ls='/bin/ls --color=auto'
@@ -16,15 +15,101 @@ alias grep='/bin/grep --color=auto'
 alias egrep='/bin/egrep --color=auto'
 alias fgrep='/bin/fgrep --color=auto'
 
+export TERM=xterm-256color
 
+export PAGER=less
+export LESS='-RC'
+
+
+export EDITOR=nvim
+export VISUAL=$EDITOR
+
+set -o vi
+
+alias vimdiff='nvim -d'
+alias nvimdiff=vimdiff
+
+
+alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
+
+# activate Xresources
 alias mx='xrdb -merge ~/.Xresources'
 
 # nvim
 alias lsswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
 alias evc="$EDITOR $HOME/.config/nvim/init.vim"
 
+# ----------------------------------------------------------------------------
+# fzf/ripgrep/fd stuff
+# ----------------------------------------------------------------------------
 
-# --- aws stuff
+test -f ~/.fzf.bash && . $_
+
+alias bat='bat --color=auto --theme=gruvbox-dark'
+
+FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always '
+FZF_DEFAULT_OPTS+='--theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
+export FZF_DEFAULT_OPTS
+
+if egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
+then
+	alias fd=fdfind
+	export FZF_DEFAULT_COMMAND='fdfind . -t f'
+else
+	export FZF_DEFAULT_COMMAND='fd . -t f'
+fi
+
+alias fnvim='nvim $(fzf)'
+
+
+# ----------------------------------------------------------------------------
+# go stuff
+# ----------------------------------------------------------------------------
+
+get_go_rootdir() {
+	typeset org_pwd="$PWD"
+
+	while [ "$PWD" != / -a ! -f "$PWD/main.go" ]
+	do
+		cd ..
+	done
+
+	if [ -f "$PWD/main.go" ]
+	then
+		echo "$PWD"
+	else
+		echo ""
+	fi
+
+	cd $org_pwd
+}
+
+alias groot=get_go_rootdir
+alias cdgroot='cd $(get_go_rootdir); ls -ltr'
+
+exec_in_go_root() {
+	typeset cmds="$@"
+	typeset go_root=$(get_go_rootdir)
+
+	if [ -n "$go_root" ]
+	then
+		cd $go_root
+		go $cmds
+		cd - >/dev/null
+		return 0
+	else
+		echo "Not possible!" >&2
+		return 1
+	fi
+}
+
+alias gbuild='exec_in_go_root build'
+alias grun='exec_in_go_root run main.go'
+
+
+# ---------------------------------------------------------------------------
+# aws stuff
+# ---------------------------------------------------------------------------
 
 export AWS_CLI_PROGRAM=aws
 
@@ -129,6 +214,9 @@ cfgpull() {
 
 
 # --- path nagigation stuff
+# ---------------------------------------------------------------------------
+# path nagigation stuff
+# ---------------------------------------------------------------------------
 
 show_pwd_change() {
     typeset pwd="$PWD"
@@ -172,5 +260,9 @@ cdu() {
     return 1
 }
 
+
+# ----------------------------------------------------------------------------
+# optionally source local/private settings
+# ----------------------------------------------------------------------------
 
 test -s ~/.common_interactive_local_sh && . $_
