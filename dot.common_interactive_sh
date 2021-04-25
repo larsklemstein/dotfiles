@@ -1,9 +1,14 @@
-export TERM=xterm
+export TERM=xterm-256color
 
-# --- use either exa (new style ls) or standard ls ---
+export EDITOR=nvim
+export VISUAL=$EDITOR
+
+set -o vi
+
 
 alias ls='/bin/ls --color=auto'
 alias ll='ls -l'
+alias llh='ls -lh'
 alias la='ls -A'
 alias lla='ls -la'
 
@@ -14,7 +19,9 @@ alias fgrep='/bin/fgrep --color=auto'
 
 alias mx='xrdb -merge ~/.Xresources'
 
+# nvim
 alias lsswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
+alias evc="$EDITOR $HOME/.config/nvim/init.vim"
 
 
 # --- aws stuff
@@ -69,10 +76,7 @@ export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;3
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-
-export EDITOR=nvim
-export VISUAL=$EDITOR
-set -o vi
+alias e=$EDITOR
 
 
 export PAGER=less
@@ -88,7 +92,7 @@ mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-export FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
+export FZF_DEFAULT_OPTS='--multi -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 
 if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
 then
