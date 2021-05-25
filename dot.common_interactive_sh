@@ -4,16 +4,28 @@
 
 test -s $HOME/.dircolors && eval $(dircolors $_)
 
+_os_info=$(uname -v)
 
-alias ls='/bin/ls --color=auto'
-alias ll='ls -l'
-alias llh='ls -lh'
-alias la='ls -A'
-alias lla='ls -la'
+if [[ "$_os_info" == Darwin* ]]
+then
+    alias exa='/usr/local/bin/exa --color=auto'
 
-alias grep='/bin/grep --color=auto'
-alias egrep='/bin/egrep --color=auto'
-alias fgrep='/bin/fgrep --color=auto'
+    alias grep='/usr/bin/grep --color=auto'
+else
+    alias exa='$HOME/.cargo/bin/exa --color=auto'
+
+    alias grep='/bin/grep --color=auto'
+fi
+
+
+alias ls=exa
+alias ll='exa -l'
+alias la='exa -a'
+alias lla='exa -la'
+alias llg='exa -l --git --git-ignore'
+
+alias egrep='grep -E'
+alias fgrep='grep -F'
 
 export TERM=xterm-256color
 
@@ -28,7 +40,6 @@ set -o vi
 
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
-
 
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
@@ -51,56 +62,57 @@ FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always '
 FZF_DEFAULT_OPTS+='--theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 export FZF_DEFAULT_OPTS
 
-if egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
+if [[ "$_os_info" != Darwin* ]] && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
 then
-	alias fd=fdfind
-	export FZF_DEFAULT_COMMAND='fdfind . -t f'
+    alias fd=fdfind
+    export FZF_DEFAULT_COMMAND='fdfind . -t f'
 else
-	export FZF_DEFAULT_COMMAND='fd . -t f'
+    export FZF_DEFAULT_COMMAND='fd . -t f'
 fi
 
 alias fnvim='nvim $(fzf)'
 
+unset _os_info
 
 # ----------------------------------------------------------------------------
 # go stuff
 # ----------------------------------------------------------------------------
 
 get_go_rootdir() {
-	typeset org_pwd="$PWD"
+    typeset org_pwd="$PWD"
 
-	while [ "$PWD" != / -a ! -f "$PWD/main.go" ]
-	do
-		cd ..
-	done
+    while [ "$PWD" != / -a ! -f "$PWD/main.go" ]
+    do
+        cd ..
+    done
 
-	if [ -f "$PWD/main.go" ]
-	then
-		echo "$PWD"
-	else
-		echo ""
-	fi
+    if [ -f "$PWD/main.go" ]
+    then
+        echo "$PWD"
+    else
+        echo ""
+    fi
 
-	cd $org_pwd
+    cd $org_pwd
 }
 
 alias groot=get_go_rootdir
 alias cdgroot='cd $(get_go_rootdir); ls -ltr'
 
 exec_in_go_root() {
-	typeset cmds="$@"
-	typeset go_root=$(get_go_rootdir)
+    typeset cmds="$@"
+    typeset go_root=$(get_go_rootdir)
 
-	if [ -n "$go_root" ]
-	then
-		cd $go_root
-		go $cmds
-		cd - >/dev/null
-		return 0
-	else
-		echo "Not possible!" >&2
-		return 1
-	fi
+    if [ -n "$go_root" ]
+    then
+        cd $go_root
+        go $cmds
+        cd - >/dev/null
+        return 0
+    else
+        echo "Not possible!" >&2
+        return 1
+    fi
 }
 
 alias gbuild='exec_in_go_root build'
@@ -119,36 +131,36 @@ export AWS_PAGER=""
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
-	[ $# -eq 3 ] || { echo "usage: aws_gt profile mfa token_code"; return 1; }
+    [ $# -eq 3 ] || { echo "usage: aws_gt profile mfa token_code"; return 1; }
 
-	typeset profile="$1"
-	typeset mfa="$2"
-	typeset token_code="$3"
+    typeset profile="$1"
+    typeset mfa="$2"
+    typeset token_code="$3"
 
-	typeset rc
-	typeset json_out
-	typeset export_commands
+    typeset rc
+    typeset json_out
+    typeset export_commands
 
-	json_out="$($AWS_CLI_PROGRAM sts get-session-token --profile "$profile" \
-		--serial-number $mfa --token-code $token_code 2>&1)"
+    json_out="$($AWS_CLI_PROGRAM sts get-session-token --profile "$profile" \
+        --serial-number $mfa --token-code $token_code 2>&1)"
 
-	rc=$?
-	[ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
+    rc=$?
+    [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
 
-	export_commands=$(aws_credentials_export <<< "$json_out")
+    export_commands=$(aws_credentials_export <<< "$json_out")
 
-	if [ -z "$export_commands" ]
-	then
-		echo "ups: unable to convert json to export def:"
-		echo "$json_out"; return
-		return 1
-	fi
+    if [ -z "$export_commands" ]
+    then
+        echo "ups: unable to convert json to export def:"
+        echo "$json_out"; return
+        return 1
+    fi
 
-	export_commands+=";export AWS_PROFILE=$profile"
+    export_commands+=";export AWS_PROFILE=$profile"
 
-	eval $export_commands
+    eval $export_commands
 
-	echo "--> now connected to AWS account \"$profile\""
+    echo "--> now connected to AWS account \"$profile\""
 }
 # EOF aws_gt()
 
@@ -179,12 +191,13 @@ mybat() {
 
 export FZF_DEFAULT_OPTS='--multi -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 
-if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
+if [[ "$_os_info" != Darwin* ]] && test -f /etc/os-release \
+    && grep -q '^NAME="Debian ' /etc/os-release
 then
-	alias fd=fdfind
-	export FZF_DEFAULT_COMMAND='fdfind . -t f'
+    alias fd=fdfind
+    export FZF_DEFAULT_COMMAND='fdfind . -t f'
 else
-	export FZF_DEFAULT_COMMAND='fd . -t f'
+    export FZF_DEFAULT_COMMAND='fd . -t f'
 fi
 
 # each good profile should traditionally have a section called "useful aliases"...
@@ -197,23 +210,24 @@ alias fnvim='nvim $(fzf)'
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
+alias gs='git status -s'
+
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 
 cfgpull() {
-	typeset cfg_dir
+    typeset cfg_dir
 
-	for cfg_dir in ~/.dotfiles ~/.config/nvim
-	do
-		echo "-> $cfg_dir"
- 		cd $cfg_dir
-		git pull
-		cd -
-	done
+    for cfg_dir in ~/.dotfiles ~/.config/nvim
+    do
+        echo "-> $cfg_dir"
+        cd $cfg_dir
+        git pull
+        cd -
+    done
 }
 
 
-# --- path nagigation stuff
 # ---------------------------------------------------------------------------
 # path nagigation stuff
 # ---------------------------------------------------------------------------
@@ -259,6 +273,23 @@ cdu() {
     echo "Failed..." >&2
     return 1
 }
+
+
+
+# ----------------------------------------------------------------------------
+# tmux
+# ----------------------------------------------------------------------------
+
+sst(){
+	# the "tmux ls" trick seems to be required on at least some systems
+	# to avoid the "is not a terminal" issue.
+	#
+	ssh -t $@ 'tmux ls && tmux attach || tmux'
+}
+
+alias ta='tmux attach'
+alias td='tmux detach'
+alias tl='tmux ls'
 
 
 # ----------------------------------------------------------------------------
