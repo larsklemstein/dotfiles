@@ -78,4 +78,4 @@ alias mst=my_session_type
 # !! this should be the last line:
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
 
-source /Users/lklemstein/.config/broot/launcher/bash/br
+. $HOME/.config/broot/launcher/bash/br

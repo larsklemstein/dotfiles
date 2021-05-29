@@ -19,9 +19,9 @@ fi
 
 
 alias ls=exa
-alias ll='exa -l'
+alias ll='exa -lH'
 alias la='exa -a'
-alias lla='exa -la'
+alias lla='exa -lHa'
 alias llg='exa -l --git --git-ignore'
 
 alias egrep='grep -E'
