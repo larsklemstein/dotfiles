@@ -2,26 +2,14 @@
 # basic stuff
 # ----------------------------------------------------------------------------
 
-test -s $HOME/.dircolors && eval $(dircolors $_)
+test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
 _os_info=$(uname -v)
 
-if [[ "$_os_info" == Darwin* ]]
-then
-    alias exa='/usr/local/bin/exa --color=auto'
-
-    alias grep='/usr/bin/grep --color=auto'
-else
-    alias exa='$HOME/.cargo/bin/exa --color=auto'
-
-    alias grep='/bin/grep --color=auto'
-fi
-
-
-alias ls=exa
-alias ll='exa -lH'
-alias la='exa -a'
-alias lla='exa -lHa'
+alias ls='/bin/ls --color=auto'
+alias ll='ls -lH'
+alias la='ls -a'
+alias lla='ls -lHa'
 alias llg='exa -l --git --git-ignore'
 
 alias egrep='grep -E'
