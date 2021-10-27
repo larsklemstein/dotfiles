@@ -58,7 +58,16 @@ else
     export FZF_DEFAULT_COMMAND='fd . -t f'
 fi
 
+if [[ "$_os_info" == Darwin* ]]
+then
+    :
+else
+	alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
+fi
+
 alias fnvim='nvim $(fzf)'
+
+alias yd='youtube-dl'
 
 unset _os_info
 
