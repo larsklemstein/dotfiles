@@ -12,6 +12,7 @@ alias la='ls -a'
 alias lla='ls -lHa'
 alias llg='exa -l --git --git-ignore'
 
+alias grep='/bin/grep --color=auto'
 alias egrep='grep -E'
 alias fgrep='grep -F'
 
