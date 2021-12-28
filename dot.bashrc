@@ -73,7 +73,16 @@ my_session_type() {
 
 alias mst=my_session_type
 
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-# !! this should be the last line:
+for cond_env_file in \
+    $HOME/.fzf.bash \
+    "$HOME/.iterm2_shell_integration.bash" \
+do
+    test -f $cond_env_file && . $_
+done
+
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#         this should be the last line
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
