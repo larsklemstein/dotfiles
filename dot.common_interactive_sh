@@ -47,9 +47,13 @@ test -f ~/.fzf.bash && . $_
 
 alias bat='bat --color=auto --theme=gruvbox-dark'
 
-FZF_DEFAULT_OPTS='--multi --border=horizontal -e --preview="bat --color=always '
+FZF_DEFAULT_OPTS='--multi --border=horizontal -e'
 FZF_DEFAULT_OPTS+='--theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
 export FZF_DEFAULT_OPTS
+
+lsz() {
+	FZF_DEFAULT_OPTS="--ansi --preview-window right:60% --preview 'bat --theme=gruvbox-dark --color=always --style=header,grid --line-range :300 {}'" fzf
+}
 
 if [[ "$_os_info" != Darwin* ]] && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
 then
@@ -187,7 +191,7 @@ mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-export FZF_DEFAULT_OPTS='--multi -e --preview="bat --color=always --theme=gruvbox-dark --line-range=:100 --style=header,numbers {}"'
+export FZF_DEFAULT_OPTS='--multi -e'
 
 if [[ "$_os_info" != Darwin* ]] && test -f /etc/os-release \
     && grep -q '^NAME="Debian ' /etc/os-release
