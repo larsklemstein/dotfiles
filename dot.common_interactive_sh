@@ -6,11 +6,16 @@ test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
 _os_info=$(uname -v)
 
-alias ls='/bin/ls --color=auto'
+case $_os_info in
+    Darwin*)
+        alias ls='/bin/ls -G' ;;
+    *)
+        alias ls='/bin/ls --color=auto'
+esac
+
 alias ll='ls -lH'
 alias la='ls -a'
 alias lla='ls -lHa'
-alias llg='exa -l --git --git-ignore'
 
 alias grep='/bin/grep --color=auto'
 alias egrep='grep -E'
@@ -132,6 +137,9 @@ export AWS_PAGER=""
 
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
+# hint: in .common_interactive_local_sh create an alias like:
+# alias st_mca='aws_gt default arn:aws:iam::4711:mfa/user'
+#
 aws_gt() {
     [ $# -eq 3 ] || { echo "usage: aws_gt profile mfa token_code"; return 1; }
 
@@ -145,8 +153,8 @@ aws_gt() {
 
     json_out="$($AWS_CLI_PROGRAM sts get-session-token --profile "$profile" \
         --serial-number $mfa --token-code $token_code 2>&1)"
+	rc=$?
 
-    rc=$?
     [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
 
     export_commands=$(aws_credentials_export <<< "$json_out")
@@ -231,6 +239,15 @@ cfgpull() {
 
 
 # ---------------------------------------------------------------------------
+# messaging stuff
+# ---------------------------------------------------------------------------
+
+error() {
+    echo "$*" >&2
+}
+
+
+# ---------------------------------------------------------------------------
 # path nagigation stuff
 # ---------------------------------------------------------------------------
 
@@ -292,6 +309,15 @@ sst(){
 alias ta='tmux attach'
 alias td='tmux detach'
 alias tl='tmux ls'
+
+
+# ----------------------------------------------------------------------------
+# docker
+# ----------------------------------------------------------------------------
+
+docon() {
+    docker exec -it "$1" /bin/bash
+}
 
 
 # ----------------------------------------------------------------------------

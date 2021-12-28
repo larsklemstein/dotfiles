@@ -30,4 +30,3 @@ then
         . ~/.kshrc
     fi
 fi
-. "$HOME/.cargo/env"
