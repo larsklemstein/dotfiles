@@ -52,7 +52,6 @@ alias bat='bat --color=auto --theme=gruvbox-dark'
 if test -f ~/.fzf.bash
 then
     . ~/.fzf.bash
-    echo "fzf flash..."
 
     FZF_DEFAULT_OPTS='--multi --border=horizontal -e --theme=gruvbox-dark'
     FZF_DEFAULT_OPTS+='--line-range=:100 --style=header,numbers {}"'
