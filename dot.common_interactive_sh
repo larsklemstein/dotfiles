@@ -237,6 +237,70 @@ error() {
 }
 
 
+<<<<<<< HEAD
+=======
+# ---------------------------------------------------------------------------
+# path nagigation stuff
+# ---------------------------------------------------------------------------
+
+show_pwd_change() {
+    typeset pwd="$PWD"
+    typeset oldpwd="$OLDPWD"
+
+    [[ $pwd == $HOME/* ]] && pwd="~/${pwd#$HOME/}"
+    [[ $oldpwd == $HOME/* ]] && oldpwd="~/${oldpwd#$HOME/}"
+    
+    echo "[$pwd <- $oldpwd]" >&2
+}
+
+alias cd1='cd ..; show_pwd_change'
+alias cd2='cd ../..; show_pwd_change'
+alias cd3='cd ../../..; show_pwd_change'
+alias cd4='cd ../../../..; show_pwd_change'
+alias cd5='cd ../../../../..; show_pwd_change'
+alias cd6='cd ../../../../../..; show_pwd_change'
+alias cd7='cd ../../../../../../..; show_pwd_change'
+alias cd8='cd ../../../../../../../..; show_pwd_change'
+
+cdu() {
+    typeset until_what="$1"
+    typeset cd_back_max="${2:-99}"
+    typeset -i cd_operations=0
+    typeset dir_start="$PWD"
+
+    while [ $PWD != "/" -a $cd_operations -lt $cd_back_max ]
+    do
+        cd ..
+        cd_operations=cd_operations+1
+
+        if [ -e "$until_what" ]
+        then
+            { /bin/ls -l |sed '/ '"$until_what"'/s/$/ ***/'; } >&2
+            echo -e "\n[$PWD <- $dir_start]\n" >&2
+            return 0
+        fi
+    done
+
+    echo "Failed..." >&2
+    return 1
+}
+
+jcat() {
+    [[ $# -eq 1 ]] || { echo "Need a json file"; return 2; }
+
+    typeset file="$1"
+
+    test -f "$file" || { echo "File \"$file\" not found!"; reutrn 1; }
+
+    jq < "$file"
+}
+
+jbcat() {
+    jcat "$1" | cat
+}
+
+
+>>>>>>> 6904dd8dad107b5f3a392e0c0bd1d9c7c22617a4
 # ----------------------------------------------------------------------------
 # tmux
 # ----------------------------------------------------------------------------
