@@ -297,6 +297,19 @@ cdu() {
     return 1
 }
 
+jcat() {
+    [[ $# -eq 1 ]] || { echo "Need a json file"; return 2; }
+
+    typeset file="$1"
+
+    test -f "$file" || { echo "File \"$file\" not found!"; reutrn 1; }
+
+    jq < "$file"
+}
+
+jbcat() {
+    jcat "$1" | cat
+}
 
 
 # ----------------------------------------------------------------------------
