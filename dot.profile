@@ -7,7 +7,6 @@ test -d "$HOME/app/bin" && PATH="$_:$PATH"
 test -d "$HOME/app/node/bin" && PATH="$_:$PATH"  # nodejs
 test -f "$HOME/.cargo/env" && . $_               # rust (env will extend PATH)
 test -d "$HOME/app/node/bin" && PATH="$_:$PATH"  # node-js
-test -d "$HOME/.fzf/bin" && PATH="$_:$PATH"      # FZF
 
 export PATH
 

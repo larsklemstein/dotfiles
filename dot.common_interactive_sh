@@ -1,6 +1,5 @@
 # ----------------------------------------------------------------------------
 # basic stuff # ----------------------------------------------------------------------------
-
 test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
 _os_info=$(uname -v)
@@ -36,12 +35,6 @@ alias nvimdiff=vimdiff
 
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
-# activate Xresources
-alias mx='xrdb -merge ~/.Xresources'
-
-# nvim
-alias lsswp='/bin/ls -1 $HOME/.local/share/nvim/swap/* 2>/dev/null'
-alias evc="$EDITOR $HOME/.config/nvim/init.vim"
 
 # ----------------------------------------------------------------------------
 # fzf/ripgrep/fd stuff
@@ -52,10 +45,8 @@ alias bat='bat --color=auto --theme=gruvbox-dark'
 if test -f ~/.fzf.bash
 then
     . ~/.fzf.bash
-    echo "fzf flash..."
 
-    FZF_DEFAULT_OPTS='--multi --border=horizontal -e --theme=gruvbox-dark'
-    FZF_DEFAULT_OPTS+='--line-range=:100 --style=header,numbers {}"'
+    FZF_DEFAULT_OPTS='--height 40% --layout=default --border'
     export FZF_DEFAULT_OPTS
 
     if [[ "$_os_info" != Darwin* ]] && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
@@ -66,10 +57,6 @@ then
         export FZF_DEFAULT_COMMAND='fd . -t f'
     fi
 fi
-
-lsz() {
-	FZF_DEFAULT_OPTS="--ansi --preview-window right:60% --preview 'bat --theme=gruvbox-dark --color=always --style=header,grid --line-range :300 {}'" fzf
-}
 
 if [[ "$_os_info" == Darwin* ]]
 then
@@ -202,8 +189,6 @@ mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-export FZF_DEFAULT_OPTS='--multi -e'
-
 if [[ "$_os_info" != Darwin* ]] && test -f /etc/os-release \
     && grep -q '^NAME="Debian ' /etc/os-release
 then
@@ -252,54 +237,6 @@ error() {
 }
 
 
-# ---------------------------------------------------------------------------
-# path nagigation stuff
-# ---------------------------------------------------------------------------
-
-show_pwd_change() {
-    typeset pwd="$PWD"
-    typeset oldpwd="$OLDPWD"
-
-    [[ $pwd == $HOME/* ]] && pwd="~/${pwd#$HOME/}"
-    [[ $oldpwd == $HOME/* ]] && oldpwd="~/${oldpwd#$HOME/}"
-    
-    echo "[$pwd <- $oldpwd]" >&2
-}
-
-alias cd1='cd ..; show_pwd_change'
-alias cd2='cd ../..; show_pwd_change'
-alias cd3='cd ../../..; show_pwd_change'
-alias cd4='cd ../../../..; show_pwd_change'
-alias cd5='cd ../../../../..; show_pwd_change'
-alias cd6='cd ../../../../../..; show_pwd_change'
-alias cd7='cd ../../../../../../..; show_pwd_change'
-alias cd8='cd ../../../../../../../..; show_pwd_change'
-
-cdu() {
-    typeset until_what="$1"
-    typeset cd_back_max="${2:-99}"
-    typeset -i cd_operations=0
-    typeset dir_start="$PWD"
-
-    while [ $PWD != "/" -a $cd_operations -lt $cd_back_max ]
-    do
-        cd ..
-        cd_operations=cd_operations+1
-
-        if [ -e "$until_what" ]
-        then
-            { /bin/ls -l |sed '/ '"$until_what"'/s/$/ ***/'; } >&2
-            echo -e "\n[$PWD <- $dir_start]\n" >&2
-            return 0
-        fi
-    done
-
-    echo "Failed..." >&2
-    return 1
-}
-
-
-
 # ----------------------------------------------------------------------------
 # tmux
 # ----------------------------------------------------------------------------
@@ -323,13 +260,6 @@ alias tl='tmux ls'
 docon() {
     docker exec -it "$1" /bin/bash
 }
-
-# ----------------------------------------------------------------------------
-# rust
-# ----------------------------------------------------------------------------
-
-test -f $HOME/.cargo/env && . $_
-
 
 # ----------------------------------------------------------------------------
 # optionally source local/private settings
