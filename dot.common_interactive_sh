@@ -19,6 +19,8 @@ alias grep='grep --color=auto'
 alias egrep='grep -E'
 alias fgrep='grep -F'
 
+alias ffind='2>/dev/null find'
+
 export TERM=xterm-256color
 
 export PAGER=less
