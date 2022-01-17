@@ -48,7 +48,7 @@ if test -f ~/.fzf.bash
 then
     . ~/.fzf.bash
 
-    FZF_DEFAULT_OPTS='--height 40% --layout=default --border'
+    FZF_DEFAULT_OPTS='--height 80% --layout=default --border'
     export FZF_DEFAULT_OPTS
 
     if [[ "$_os_info" != Darwin* ]] && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release

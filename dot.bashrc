@@ -1,9 +1,15 @@
 [[ $- == *i* ]] || return
 
-HISTCONTROL=ignoreboth
+# history related stuff
+export HISTCONTROL=ignoredups
+export HISTSIZE=20000
+export HISTFILESIZE=20000
+
+export HISTTIMEFORMAT='[%m-%d %H:%M] '
+export HISTIGNORE="clear:history:ls:ll:la:pwd"
+
+export PROMPT_COMMAND='history -a'
 shopt -s histappend
-HISTSIZE=2000
-HISTFILESIZE=2000
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
