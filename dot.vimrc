@@ -17,6 +17,11 @@ set timeoutlen=500
 " on Mac Iterm2: need to enable "mouse reporting"
 set mouse=a
 
+syntax on
+colorscheme gruvbox
+set background=dark
+set cursorline
+
 map <leader>h :nohl<CR>
 map <leader>n :set nu! \| :set rnu!<CR>
 map <leader>l :set list!<CR>
