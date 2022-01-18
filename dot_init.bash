@@ -52,8 +52,9 @@ then
     msg "Installing Gruvbox vim colorscheme...."
     mkdir -p $vimdir
 
-    tmpdir=$(mktemp -p /tmp -d XXXXXXXXXX)
-    trap '/bin/rm -rf $tmpdir' 0 1 2
+    cd /tmp
+    tmpdir=$(mktemp -d XXXXXXXXXX)
+    trap "/bin/rm -rf $PWD/$tmpdir" 0 1 2
 
     cd $tmpdir
 
