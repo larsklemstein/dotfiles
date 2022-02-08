@@ -4,9 +4,10 @@ test -d "$HOME/app/go/bin" && PATH="$_:$PATH"    # go itself
 test -d "$HOME/go/bin" && PATH="$_:$PATH"        # go toolchain
 
 test -d "$HOME/app/bin" && PATH="$_:$PATH" 
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"  # nodejs
-test -f "$HOME/.cargo/env" && . $_               # rust (env will extend PATH)
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"  # node-js
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # nodejs
+test -d "$HOME/.local/bin"    && PATH="$_:$PATH"  # local Python stuff etc.
+test -f "$HOME/.cargo/env" && . $_                # rust (env will extend PATH)
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # node-js
 
 export PATH
 

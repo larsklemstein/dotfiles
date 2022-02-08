@@ -27,6 +27,8 @@ alias fgrep='grep -F'
 
 alias ffind='2>/dev/null find'
 
+alias pyenv='test -f $HOME/app/py3env/bin/activate && . $_ || echo "No virtual python environment found!"'
+
 export TERM=xterm-256color
 
 export PAGER=less
