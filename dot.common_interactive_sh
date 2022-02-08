@@ -1,15 +1,21 @@
 # ----------------------------------------------------------------------------
 # basic stuff # ----------------------------------------------------------------------------
-test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
-
 _os_info=$(uname -v)
 
 case $_os_info in
     Darwin*)
-        alias ls='/bin/ls -G' ;;
+        alias ls='/bin/ls -G'
+        alias dircolors=gdircolors
+        ;;
     *)
         alias ls='/bin/ls --color=auto'
 esac
+
+
+# On Mac Os: Install coreutils via brew and create and
+# create an alias dircolors -> gdircolors
+test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
+
 
 alias ll='ls -lH'
 alias la='ls -a'
@@ -174,9 +180,6 @@ test -s $HOME/.ls_colors && . $_
 export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;39:se=49;39';
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-test -f ~/.dircolors && eval $(dircolors $_)
-
 
 export PAGER=less
 export LESS='-RC'
