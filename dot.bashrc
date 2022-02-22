@@ -42,19 +42,12 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-[ $(id -un) = root ] && PROMPT='#' || PROMPT='$'
-
-PS1='${debian_chroot:+($debian_chroot)}\u@\h:\W '$PROMPT' '
-
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
+if [ $(id -un) = root ]
+then
+    export PS1="\[\e[1;37m\e[1;41m\]\u@\h\w \e[0m\] # "
+else
+    export PS1="\u@\h\w $ "
+fi
 
 ## enable programmable completion features (you don't need to enable
 ## this, if it's already enabled in /etc/bash.bashrc and /etc/profile
