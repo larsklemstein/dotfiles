@@ -42,7 +42,9 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-PS1='${debian_chroot:+($debian_chroot)}\u@\h:\W $ '
+[ $(id -un) = root ] && PROMPT='#' || PROMPT='$'
+
+PS1='${debian_chroot:+($debian_chroot)}\u@\h:\W '$PROMPT' '
 
 
 # If this is an xterm set the title to user@host:dir
