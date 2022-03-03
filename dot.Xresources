@@ -6,6 +6,8 @@ xterm*scrollBar: false
 xterm*cursorBlink: false
 xterm*selectToClipboard: true
 xterm*loginShell: true
-xterm*font: 7x14
+! xterm*font: 7x14
+xterm*faceName: GoMono NF
+xterm*faceSize: 10
 xterm*utf8: 1
 xterm*renderFont: true
