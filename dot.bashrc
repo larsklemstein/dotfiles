@@ -1,9 +1,13 @@
 [[ $- == *i* ]] || return
 
+test -f $HOME/.bash_colors && . $_
+
 # history related stuff
 export HISTCONTROL=ignoredups
 export HISTSIZE=20000
 export HISTFILESIZE=20000
+
+alias h=history
 
 export HISTTIMEFORMAT='[%m-%d %H:%M] '
 export HISTIGNORE="clear:history:ls:ll:la:pwd"
@@ -22,14 +26,6 @@ shopt -u progcomp
 # match all files and zero or more directories and subdirectories.
 # shopt -s globstar
 
-# make less more friendly for non-text input files, see lesspipe(1)
-# [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
-# set variable identifying the chroot you work in (used in the prompt below)
-#if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-#    debian_chroot=$(cat /etc/debian_chroot)
-#fi
-
 if [ -n "$DISPLAY" ]
 then
     export TERM=xterm-256color
@@ -42,11 +38,21 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
+pa() {
+    export PS1="\u@\h \W $ "
+}
+
+pb() {
+export PS1=${Col_IBlue}'
+\u@\h \w'${Col_Off}'
+$ '
+}
+
 if [ $(id -un) = root ]
 then
-    export PS1="\[\e[1;37m\e[1;41m\]\u@\h\w \e[0m\] # "
+    export PS1="${Col_IRed}\u@\h \W ${Col_Off} # "
 else
-    export PS1="\u@\h\w $ "
+    pa
 fi
 
 ## enable programmable completion features (you don't need to enable
