@@ -30,6 +30,9 @@ alias ffind='2>/dev/null find'
 
 alias pyenv='test -f $HOME/app/py3env/bin/activate && . $_ || echo "No virtual python environment found!"'
 
+# udf == update dotfiles (git repo)
+alias udf='( df=$HOME/.xotfiles; test -d $df && { cd $df && git pull; } || echo "(git repo) dir $df not found!"; )'
+
 export TERM=xterm-256color
 
 export PAGER=less
