@@ -2,6 +2,17 @@
 
 test -f $HOME/.bash_colors && . $_
 
+_lkl_os_info=$(uname -v)
+
+case $_lkl_os_info in
+    Darwin*)
+        # to get rid off the "default shell is now zsh" message on Mac
+        export BASH_SILENCE_DEPRECATION_WARNING=1
+        ;;
+    *)
+        ;;
+esac
+
 # history related stuff
 export HISTCONTROL=ignoredups
 export HISTSIZE=20000
@@ -89,5 +100,10 @@ done
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #         this should be the last line
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+unset _lkl_os_info
+
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
