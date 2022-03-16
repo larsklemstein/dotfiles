@@ -1,15 +1,22 @@
 # ----------------------------------------------------------------------------
-# basic stuff # ----------------------------------------------------------------------------
-test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
-
+# basic stuff
+# ----------------------------------------------------------------------------
 _os_info=$(uname -v)
 
 case $_os_info in
     Darwin*)
-        alias ls='/bin/ls -G' ;;
+        alias ls='/bin/ls -G'
+        alias dircolors=gdircolors
+        ;;
     *)
         alias ls='/bin/ls --color=auto'
 esac
+
+
+# On Mac Os: Install coreutils via brew and create and
+# create an alias dircolors -> gdircolors
+test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
+
 
 alias ll='ls -lH'
 alias la='ls -a'
@@ -20,6 +27,11 @@ alias egrep='grep -E'
 alias fgrep='grep -F'
 
 alias ffind='2>/dev/null find'
+
+alias pyenv='test -f $HOME/app/py3env/bin/activate && . $_ || echo "No virtual python environment found!"'
+
+# udf == update dotfiles (git repo)
+alias udf='( df=$HOME/.dotfiles; test -d $df && { cd $df && git pull; } || echo "(git repo) dir $df not found!"; )'
 
 export TERM=xterm-256color
 
@@ -72,6 +84,25 @@ alias fnvim='nvim $(fzf)'
 alias yd='youtube-dl'
 
 unset _os_info
+
+clm() {
+    typeset n=$1
+    typeset d=$2
+
+    if [[ -z $n || $n == *[^0-9]* ]]
+    then
+        echo "???"
+        return
+    fi
+
+    if [ -z "$d" ]
+    then
+        awk '{print $'"$n"'}'
+    else
+        awk -F"$d" '{print $'"$n"'}'
+    fi
+}
+
 
 # ----------------------------------------------------------------------------
 # go stuff
@@ -175,9 +206,6 @@ export GREP_COLORS='sl=49;39:cx=49;39:mt=49;38;5;178;1:fn=49;39:ln=49;39:bn=49;3
 
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-test -f ~/.dircolors && eval $(dircolors $_)
-
-
 export PAGER=less
 export LESS='-RC'
 
@@ -236,67 +264,6 @@ cfgpull() {
 
 error() {
     echo "$*" >&2
-}
-
-
-# ---------------------------------------------------------------------------
-# path nagigation stuff
-# ---------------------------------------------------------------------------
-
-show_pwd_change() {
-    typeset pwd="$PWD"
-    typeset oldpwd="$OLDPWD"
-
-    [[ $pwd == $HOME/* ]] && pwd="~/${pwd#$HOME/}"
-    [[ $oldpwd == $HOME/* ]] && oldpwd="~/${oldpwd#$HOME/}"
-    
-    echo "[$pwd <- $oldpwd]" >&2
-}
-
-alias cd1='cd ..; show_pwd_change'
-alias cd2='cd ../..; show_pwd_change'
-alias cd3='cd ../../..; show_pwd_change'
-alias cd4='cd ../../../..; show_pwd_change'
-alias cd5='cd ../../../../..; show_pwd_change'
-alias cd6='cd ../../../../../..; show_pwd_change'
-alias cd7='cd ../../../../../../..; show_pwd_change'
-alias cd8='cd ../../../../../../../..; show_pwd_change'
-
-cdu() {
-    typeset until_what="$1"
-    typeset cd_back_max="${2:-99}"
-    typeset -i cd_operations=0
-    typeset dir_start="$PWD"
-
-    while [ $PWD != "/" -a $cd_operations -lt $cd_back_max ]
-    do
-        cd ..
-        cd_operations=cd_operations+1
-
-        if [ -e "$until_what" ]
-        then
-            { /bin/ls -l |sed '/ '"$until_what"'/s/$/ ***/'; } >&2
-            echo -e "\n[$PWD <- $dir_start]\n" >&2
-            return 0
-        fi
-    done
-
-    echo "Failed..." >&2
-    return 1
-}
-
-jcat() {
-    [[ $# -eq 1 ]] || { echo "Need a json file"; return 2; }
-
-    typeset file="$1"
-
-    test -f "$file" || { echo "File \"$file\" not found!"; reutrn 1; }
-
-    jq < "$file"
-}
-
-jbcat() {
-    jcat "$1" | cat
 }
 
 
