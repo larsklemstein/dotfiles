@@ -6,8 +6,22 @@ xterm*scrollBar: false
 xterm*cursorBlink: false
 xterm*selectToClipboard: true
 xterm*loginShell: true
-! xterm*font: 7x14
 xterm*faceName: GoMono NF
 xterm*faceSize: 10
 xterm*utf8: 1
 xterm*renderFont: true
+
+! believe or not, we have to copy the complete section
+! to satisfy the x-terminal-editor shortcut in Gnome shell...
+x-terminal-emulator*foreground: #ebdbb2
+x-terminal-emulator*background: #292929
+x-terminal-emulator*cursorColor: #a0c055
+x-terminal-emulator*scrollBar: false
+x-terminal-emulator*cursorBlink: false
+x-terminal-emulator*selectToClipboard: true
+x-terminal-emulator*loginShell: true
+x-terminal-emulator*faceName: GoMono NF
+x-terminal-emulator*faceSize: 10
+x-terminal-emulator*utf8: 1
+x-terminal-emulator*title: gterm
+x-terminal-emulator*renderFont: true
