@@ -1,3 +1,5 @@
+! This is is just a template...
+
 ! like Vim/Nvim gruvebox color scheme
 xterm*foreground: #ebdbb2
 xterm*background: #292929
@@ -7,7 +9,7 @@ xterm*cursorBlink: false
 xterm*selectToClipboard: true
 xterm*loginShell: true
 xterm*faceName: GoMono NF
-xterm*faceSize: 10
+xterm*faceSize: 9
 xterm*utf8: 1
 xterm*renderFont: true
 
@@ -21,7 +23,7 @@ x-terminal-emulator*cursorBlink: false
 x-terminal-emulator*selectToClipboard: true
 x-terminal-emulator*loginShell: true
 x-terminal-emulator*faceName: GoMono NF
-x-terminal-emulator*faceSize: 10
+x-terminal-emulator*faceSize: 9
 x-terminal-emulator*utf8: 1
 x-terminal-emulator*title: gterm
 x-terminal-emulator*renderFont: true
