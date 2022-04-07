@@ -1,23 +1,28 @@
 # ----------------------------------------------------------------------------
 # basic stuff
 # ----------------------------------------------------------------------------
-_os_info=$(uname -v)
 
-case $_os_info in
-    Darwin*)
-        alias ls='/bin/ls -G'
-        alias dircolors=gdircolors
-        ;;
-    *)
-        alias ls='/bin/ls --color=auto'
-esac
+PATH=$HOME/bin:$PATH
 
+test -d "$HOME/app/go/bin" && PATH="$_:$PATH"    # go itself
+test -d "$HOME/go/bin" && PATH="$_:$PATH"        # go toolchain
 
-# On Mac Os: Install coreutils via brew and create and
-# create an alias dircolors -> gdircolors
+test -d "$HOME/app/bin" && PATH="$_:$PATH" 
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # nodejs
+test -d "$HOME/.local/bin" && PATH="$_:$PATH"  # local Python stuff etc.
+test -f "$HOME/.cargo/env" && . $HOME/.cargo/env  # rust (env will extend PATH)
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # node-js
+
+export PATH
+
+export TMPDIR=$HOME/tmp
+test -d $TMPDIR || mkdir -vp $TMPDIR
+
+ulimit -c 0
+umask 002
 test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
-
+alias ls='/bin/ls --color=auto'
 alias ll='ls -lH'
 alias la='ls -a'
 alias lla='ls -lHa'
@@ -26,9 +31,9 @@ alias grep='grep --color=auto'
 alias egrep='grep -E'
 alias fgrep='grep -F'
 
-alias ffind='2>/dev/null find'
+alias sgc='git clone --depth=1 '
 
-alias pyenv='test -f $HOME/app/py3env/bin/activate && . $_ || echo "No virtual python environment found!"'
+alias ffind='2>/dev/null find'
 
 # udf == update dotfiles (git repo)
 alias udf='( df=$HOME/.dotfiles; test -d $df && { cd $df && git pull; } || echo "(git repo) dir $df not found!"; )'
@@ -37,7 +42,6 @@ export TERM=xterm-256color
 
 export PAGER=less
 export LESS='-RC'
-
 
 export EDITOR=vim
 export VISUAL=$EDITOR
@@ -49,41 +53,26 @@ alias nvimdiff=vimdiff
 
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
+alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
+
 
 # ----------------------------------------------------------------------------
 # fzf/ripgrep/fd stuff
 # ----------------------------------------------------------------------------
 
-alias bat='bat --color=auto --theme=gruvbox-dark'
-
-if test -f ~/.fzf.bash
+if test -f $HOME/.fzf.bash
 then
-    . ~/.fzf.bash
+    . $HOME/.fzf.bash
 
     FZF_DEFAULT_OPTS='--height 80% --layout=default --border'
     export FZF_DEFAULT_OPTS
 
-    if [[ "$_os_info" != Darwin* ]] && egrep -iq '^NAME="(Debian|Ubuntu)"' /etc/os-release
-    then
-        alias fd=fdfind
-        export FZF_DEFAULT_COMMAND='fdfind . -t f'
-    else
-        export FZF_DEFAULT_COMMAND='fd . -t f'
-    fi
+    export FZF_DEFAULT_COMMAND='fdfind . -t f'
+
+    alias fzf='fzf --preview "bat {} -f --theme gruvbox"'
+    alias mr='$EDITOR "$@" $(fzf)'
 fi
 
-if [[ "$_os_info" == Darwin* ]]
-then
-    :
-else
-	alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
-fi
-
-alias fnvim='nvim $(fzf)'
-
-alias yd='youtube-dl'
-
-unset _os_info
 
 clm() {
     typeset n=$1
@@ -210,17 +199,14 @@ export PAGER=less
 export LESS='-RC'
 
 
-test -f ~/.fzf.bash && . $_
-
-alias bat='bat --color=auto --theme=gruvbox-dark'
+alias bat='bat --color=auto --theme=gruvbox'
 
 # preview only if file size is <= 10MB
 mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-if [[ "$_os_info" != Darwin* ]] && test -f /etc/os-release \
-    && grep -q '^NAME="Debian ' /etc/os-release
+if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
 then
 	export THIS_OS=LINUX
     alias fd=fdfind
@@ -229,8 +215,6 @@ else
 	export THIS_OS=mac
     export FZF_DEFAULT_COMMAND='fd . -t f'
 fi
-
-# each good profile should traditionally have a section called "useful aliases"...
 
 # useful aliases
 
@@ -295,4 +279,5 @@ docon() {
 # optionally source local/private settings
 # ----------------------------------------------------------------------------
 
-test -s ~/.common_interactive_local_sh && . $_
+# echo .common_interactive_sh calls .commpon_interactive_local_sh
+test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
