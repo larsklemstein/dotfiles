@@ -16,6 +16,12 @@ msg() {
 
 for file in dot.*
 do
+    if [ $file = dot.Xresources ]
+    then
+        echo "Skipping $file..."
+        continue
+    fi
+
     echo "File: $file"
 
     file_link=$HOME/.${file#dot.}
