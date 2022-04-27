@@ -14,9 +14,22 @@ msg() {
     echo "[$PROGNAME] $*" >&2
 }
 
+skip_profile=n
+
+if grep -i opensuse /proc/version
+then
+    skip_profile=y
+fi
+
 for file in dot.*
 do
     if [ $file = dot.Xresources ]
+    then
+        echo "Skipping $file..."
+        continue
+    fi
+
+    if [ $file = dot.profile -a $skip_profile = y ]
     then
         echo "Skipping $file..."
         continue

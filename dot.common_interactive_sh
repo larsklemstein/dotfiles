@@ -8,10 +8,21 @@ test -d "$HOME/app/go/bin" && PATH="$_:$PATH"    # go itself
 test -d "$HOME/go/bin" && PATH="$_:$PATH"        # go toolchain
 
 test -d "$HOME/app/bin" && PATH="$_:$PATH" 
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # nodejs
-test -d "$HOME/.local/bin" && PATH="$_:$PATH"  # local Python stuff etc.
-test -f "$HOME/.cargo/env" && . $HOME/.cargo/env  # rust (env will extend PATH)
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"   # node-js
+test -d "$HOME/app/jdk/bin" && PATH="$_:$PATH" 
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"         # nodejs
+test -d "$HOME/.local/bin" && PATH="$_:$PATH"           # local Python stuff etc.
+test -f "$HOME/.cargo/env" && . $HOME/.cargo/env        # rust (env will extend PATH)
+test -d "$HOME/app/node/bin" && PATH="$_:$PATH"         # node-js
+
+if [ -d "$HOME/.pyenv/bin" ]
+then
+    PATH="$HOME/.pyenv/bin:$PATH"
+
+    eval "$(pyenv init -)"
+    eval "$(pyenv init --path)"
+
+    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+fi
 
 export PATH
 
@@ -285,6 +296,148 @@ docon() {
 # ----------------------------------------------------------------------------
 # optionally source local/private settings
 # ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# go
+# ----------------------------------------------------------------------------
+
+alias gt='go test'
+alias gtv='go test -v'
+
+cd_to_go_package_base() {
+    typeset pwd_old=$PWD
+
+    while [ ! -f $PWD/go.mod ]
+    do
+        if [ $PWD = "/" ]
+        then
+            cd $pwd_old
+            echo "failed.." >&2
+            return 1
+        fi
+
+        cd ..
+    done
+
+    return 0
+}
+
+alias gpb=cd_to_go_package_base
+
+go_packagename() {
+    typeset pwd_old=$PWD
+    cd_to_go_package_base
+
+    awk 'NR==1 {split($2, a, /\//); i = length(a); print a[i]}' go.mod
+
+    cd $pwd_old
+}
+
+alias gp=go_packagename
+
+gb() {
+    typeset pwd_old=$PWD
+
+    cd_to_go_package_base || return 1
+
+    go build .
+
+    cd $pwd_old
+}
+
+gr() {
+    typeset pwd_old=$PWD
+
+    cd_to_go_package_base || return 1
+
+    if [ ! -f main.go ]
+    then
+        echo "no main.go at top level" >&2
+        return
+    fi
+
+    typeset progname=$(go_packagename)
+
+    if [ -z "$progname" ]
+    then
+        cd $pwd_old
+        echo "progname is empty after detection attempt!?.." >&2
+        return 1
+    fi
+
+    [ -x $progname ] || gb
+
+    ./$progname "$@"
+    cd $pwd_old
+}
+
+cd_to_go_package_base() {
+    typeset pwd_old=$PWD
+
+    while [ ! -f $PWD/go.mod ]
+    do
+        if [ $PWD = "/" ]
+        then
+            cd $pwd_old
+            echo "failed.." >&2
+            return 1
+        fi
+
+        cd ..
+    done
+
+    return 0
+}
+
+alias gpb=cd_to_go_package_base
+
+go_packagename() {
+    typeset pwd_old=$PWD
+    cd_to_go_package_base
+
+    awk 'NR==1 {split($2, a, /\//); i = length(a); print a[i]}' go.mod
+
+    cd $pwd_old
+}
+
+alias gp=go_packagename
+
+gb() {
+    typeset pwd_old=$PWD
+
+    cd_to_go_package_base || return 1
+
+    go build .
+
+    cd $pwd_old
+}
+
+gr() {
+    typeset pwd_old=$PWD
+
+    cd_to_go_package_base || return 1
+
+    if [ ! -f main.go ]
+    then
+        echo "no main.go at top level" >&2
+        return
+    fi
+
+    typeset progname=$(go_packagename)
+
+    if [ -z "$progname" ]
+    then
+        cd $pwd_old
+        echo "progname is empty after detection attempt!?.." >&2
+        return 1
+    fi
+
+    [ -x $progname ] || gb
+
+    ./$progname "$@"
+    cd $pwd_old
+}
 
 # echo .common_interactive_sh calls .commpon_interactive_local_sh
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
