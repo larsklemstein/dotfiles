@@ -71,17 +71,19 @@ alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 # fzf/ripgrep/fd stuff
 # ----------------------------------------------------------------------------
 
-if test -f $HOME/.fzf.bash
+if test -f $HOME/.fzf-bash-completion.sh
 then
-    . $HOME/.fzf.bash
+    . $HOME/.fzf-bash-completion.sh
 
     FZF_DEFAULT_OPTS='--height 80% --layout=default --border'
     export FZF_DEFAULT_OPTS
 
     export FZF_DEFAULT_COMMAND='fdfind . -t f'
 
-    alias fzf='fzf --preview "bat {} -f --theme gruvbox"'
-    alias mr='$EDITOR "$@" $(fzf)'
+    [ -f $HOME/.fzf-bash-key-bindings ] && . $HOME/.fzf-bash-key-bindings
+
+    alias fzf='fzf --preview "bat {} -f"'
+    # alias fzf='fzf --preview "bat {} -f --theme gruvbox"'
 fi
 
 
@@ -224,16 +226,6 @@ mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-if test -f /etc/os-release && grep -q '^NAME="Debian ' /etc/os-release
-then
-	export THIS_OS=LINUX
-    alias fd=fdfind
-    export FZF_DEFAULT_COMMAND='fdfind . -t f'
-else
-	export THIS_OS=mac
-    export FZF_DEFAULT_COMMAND='fd . -t f'
-fi
-
 # useful aliases
 
 alias fnvim='nvim $(fzf)'
@@ -244,20 +236,10 @@ alias nvimdiff=vimdiff
 
 alias gs='git status -s'
 
+alias ssha='eval $(ssh-agent) && ssh-add'
+
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
-
-cfgpull() {
-    typeset cfg_dir
-
-    for cfg_dir in ~/.dotfiles ~/.config/nvim
-    do
-        echo "-> $cfg_dir"
-        cd $cfg_dir
-        git pull
-        cd -
-    done
-}
 
 
 # ---------------------------------------------------------------------------
@@ -292,10 +274,6 @@ alias tl='tmux ls'
 docon() {
     docker exec -it "$1" /bin/bash
 }
-
-# ----------------------------------------------------------------------------
-# optionally source local/private settings
-# ----------------------------------------------------------------------------
 
 
 # ----------------------------------------------------------------------------
@@ -414,6 +392,8 @@ gb() {
 }
 
 gr() {
+    typeset arg=${1}
+
     typeset pwd_old=$PWD
 
     cd_to_go_package_base || return 1
@@ -433,11 +413,19 @@ gr() {
         return 1
     fi
 
-    [ -x $progname ] || gb
+    if [ "$arg" = "b" -o ! -x $progname ]
+    then
+        gb
+    fi
 
     ./$progname "$@"
     cd $pwd_old
 }
 
-# echo .common_interactive_sh calls .commpon_interactive_local_sh
+alias grb='gr b'
+
+# ----------------------------------------------------------------------------
+# optionally source local/private settings
+# ----------------------------------------------------------------------------
+
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
