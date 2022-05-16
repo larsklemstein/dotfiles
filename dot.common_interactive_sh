@@ -14,7 +14,7 @@ test -d "$HOME/.local/bin" && PATH="$_:$PATH"           # local Python stuff etc
 test -f "$HOME/.cargo/env" && . $HOME/.cargo/env        # rust (env will extend PATH)
 test -d "$HOME/app/node/bin" && PATH="$_:$PATH"         # node-js
 
-if [ -d "$HOME/.pyenv/bin" ]
+if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
 then
     PATH="$HOME/.pyenv/bin:$PATH"
 
@@ -85,70 +85,6 @@ then
     alias fzf='fzf --preview "bat {} -f"'
     # alias fzf='fzf --preview "bat {} -f --theme gruvbox"'
 fi
-
-
-clm() {
-    typeset n=$1
-    typeset d=$2
-
-    if [[ -z $n || $n == *[^0-9]* ]]
-    then
-        echo "???"
-        return
-    fi
-
-    if [ -z "$d" ]
-    then
-        awk '{print $'"$n"'}'
-    else
-        awk -F"$d" '{print $'"$n"'}'
-    fi
-}
-
-
-# ----------------------------------------------------------------------------
-# go stuff
-# ----------------------------------------------------------------------------
-
-get_go_rootdir() {
-    typeset org_pwd="$PWD"
-
-    while [ "$PWD" != / -a ! -f "$PWD/main.go" ]
-    do
-        cd ..
-    done
-
-    if [ -f "$PWD/main.go" ]
-    then
-        echo "$PWD"
-    else
-        echo ""
-    fi
-
-    cd $org_pwd
-}
-
-alias groot=get_go_rootdir
-alias cdgroot='cd $(get_go_rootdir); ls -ltr'
-
-exec_in_go_root() {
-    typeset cmds="$@"
-    typeset go_root=$(get_go_rootdir)
-
-    if [ -n "$go_root" ]
-    then
-        cd $go_root
-        go $cmds
-        cd - >/dev/null
-        return 0
-    else
-        echo "Not possible!" >&2
-        return 1
-    fi
-}
-
-alias gbuild='exec_in_go_root build'
-alias grun='exec_in_go_root run main.go'
 
 
 # ---------------------------------------------------------------------------
@@ -241,32 +177,6 @@ alias ssha='eval $(ssh-agent) && ssh-add'
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 
-
-# ---------------------------------------------------------------------------
-# messaging stuff
-# ---------------------------------------------------------------------------
-
-error() {
-    echo "$*" >&2
-}
-
-
-# ----------------------------------------------------------------------------
-# tmux
-# ----------------------------------------------------------------------------
-
-sst(){
-	# the "tmux ls" trick seems to be required on at least some systems
-	# to avoid the "is not a terminal" issue.
-	#
-	ssh -t $@ 'tmux ls && tmux attach || tmux'
-}
-
-alias ta='tmux attach'
-alias td='tmux detach'
-alias tl='tmux ls'
-
-
 # ----------------------------------------------------------------------------
 # docker
 # ----------------------------------------------------------------------------
@@ -282,73 +192,6 @@ docon() {
 
 alias gt='go test'
 alias gtv='go test -v'
-
-cd_to_go_package_base() {
-    typeset pwd_old=$PWD
-
-    while [ ! -f $PWD/go.mod ]
-    do
-        if [ $PWD = "/" ]
-        then
-            cd $pwd_old
-            echo "failed.." >&2
-            return 1
-        fi
-
-        cd ..
-    done
-
-    return 0
-}
-
-alias gpb=cd_to_go_package_base
-
-go_packagename() {
-    typeset pwd_old=$PWD
-    cd_to_go_package_base
-
-    awk 'NR==1 {split($2, a, /\//); i = length(a); print a[i]}' go.mod
-
-    cd $pwd_old
-}
-
-alias gp=go_packagename
-
-gb() {
-    typeset pwd_old=$PWD
-
-    cd_to_go_package_base || return 1
-
-    go build .
-
-    cd $pwd_old
-}
-
-gr() {
-    typeset pwd_old=$PWD
-
-    cd_to_go_package_base || return 1
-
-    if [ ! -f main.go ]
-    then
-        echo "no main.go at top level" >&2
-        return
-    fi
-
-    typeset progname=$(go_packagename)
-
-    if [ -z "$progname" ]
-    then
-        cd $pwd_old
-        echo "progname is empty after detection attempt!?.." >&2
-        return 1
-    fi
-
-    [ -x $progname ] || gb
-
-    ./$progname "$@"
-    cd $pwd_old
-}
 
 cd_to_go_package_base() {
     typeset pwd_old=$PWD
@@ -422,7 +265,44 @@ gr() {
     cd $pwd_old
 }
 
-alias grb='gr b'
+alias gbr='gr b'
+
+
+# ----------------------------------------------------------------------------
+# tmux
+# ----------------------------------------------------------------------------
+
+if pstree -apps $$ | egrep -q "node,[0-9]+$HOME/\.vscode-server/bin/"
+then
+    vscode_term=y
+else
+    vscode_term=n
+fi
+
+ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
+
+if [ "$vscode_term" = n ] && command -v tmux >/dev/null && [ -z "$TMUX" ]
+then
+    if tmux ls |grep -q "^main:" 
+    then
+        if [ -n "$SSH_CONNECTION" ]
+        then
+            if tmux ls |grep -q '^main:.* (attached)$'
+            then
+                tmux detach-client -s main
+            fi
+
+            tmux attach -t main
+        elif tmux ls |grep -q '^main:.* (attached)$'
+        then
+            tmux new-session
+        else
+            tmux attach -t main
+        fi
+    else
+        tmux new-session -s main
+    fi
+fi
 
 # ----------------------------------------------------------------------------
 # optionally source local/private settings
