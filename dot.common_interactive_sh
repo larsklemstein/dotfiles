@@ -1,18 +1,12 @@
+
 # ----------------------------------------------------------------------------
 # basic stuff
 # ----------------------------------------------------------------------------
 
-PATH=$HOME/bin:$PATH
-
-test -d "$HOME/app/go/bin" && PATH="$_:$PATH"    # go itself
-test -d "$HOME/go/bin" && PATH="$_:$PATH"        # go toolchain
-
-test -d "$HOME/app/bin" && PATH="$_:$PATH" 
-test -d "$HOME/app/jdk/bin" && PATH="$_:$PATH" 
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"         # nodejs
-test -d "$HOME/.local/bin" && PATH="$_:$PATH"           # local Python stuff etc.
-test -f "$HOME/.cargo/env" && . $HOME/.cargo/env        # rust (env will extend PATH)
-test -d "$HOME/app/node/bin" && PATH="$_:$PATH"         # node-js
+for bin_dir in $HOME/bin $HOME/app/*/bin $HOME/*/bin $HOME/.*/bin
+do
+    test -d $bin_dir && PATH=$bin_dir:$PATH
+done
 
 if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
 then
@@ -43,11 +37,7 @@ alias egrep='grep -E'
 alias fgrep='grep -F'
 
 alias sgc='git clone --depth=1 '
-
 alias ffind='2>/dev/null find'
-
-# udf == update dotfiles (git repo)
-alias udf='( df=$HOME/.dotfiles; test -d $df && { cd $df && git pull; } || echo "(git repo) dir $df not found!"; )'
 
 export TERM=xterm-256color
 
@@ -268,21 +258,25 @@ gr() {
 alias gbr='gr b'
 
 
-# ----------------------------------------------------------------------------
-# tmux
-# ----------------------------------------------------------------------------
-
-if pstree -apps $$ | egrep -q "node,[0-9]+$HOME/\.vscode-server/bin/"
+# we do not want tmux in the vscode terminal, so we need to know
+if pstree -apps $$ | egrep -q -- '-code,[0-9]+( |$)'
 then
-    vscode_term=y
+    IS_VSCODE_TERM=y
 else
-    vscode_term=n
+    IS_VSCODE_TERM=n
 fi
+
+export IS_VSCODE_TERM
 
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
-if [ "$vscode_term" = n ] && command -v tmux >/dev/null && [ -z "$TMUX" ]
+ # delete all non attached, non named tmux sessions
+alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
+
+if [ "$IS_VSCODE_TERM" = n ] && command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
+    clean_tmux_sessions
+
     if tmux ls |grep -q "^main:" 
     then
         if [ -n "$SSH_CONNECTION" ]
