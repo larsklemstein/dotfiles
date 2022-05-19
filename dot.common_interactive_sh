@@ -248,7 +248,9 @@ alias gbr='gr b'
 
 
 # we do not want tmux in the vscode terminal, so we need to know
-if pstree -apps $$ | egrep -q -- '-code,[0-9]+( |$)'
+# VSCode might run as local client or via remote extension  (using node server)
+if pstree -apps $$ | \
+    egrep -q -- '-(code,[0-9]+|node,[0-9]+/.*/.vscode-server/bin/.+)'
 then
     IS_VSCODE_TERM=y
 else
