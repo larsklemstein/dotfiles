@@ -38,6 +38,8 @@ alias fgrep='grep -F'
 
 alias ffind='2>/dev/null find'
 
+alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
+
 export TERM=xterm-256color
 
 export PAGER=less
@@ -55,6 +57,16 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 
+
+
+# ----------------------------------------------------------------------------
+# homebrew
+# ----------------------------------------------------------------------------
+
+if [ -d $HOME/.linuxbrew/bin ]
+then
+    eval $($HOME/.linuxbrew/bin/brew shellenv)
+fi
 
 # ----------------------------------------------------------------------------
 # fzf/ripgrep/fd stuff
