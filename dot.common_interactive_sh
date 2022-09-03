@@ -63,10 +63,16 @@ alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 # homebrew
 # ----------------------------------------------------------------------------
 
-if [ -d $HOME/.linuxbrew/bin ]
-then
-    eval $($HOME/.linuxbrew/bin/brew shellenv)
-fi
+for brew_base in $HOME /home/linuxbrew
+do
+    brew_bin=$brew_base/.linuxbrew/bin
+
+    if [ -r $brew_bin -a -d $brew_bin ]
+    then
+        eval $($brew_bin/brew shellenv)
+        break
+    fi
+done
 
 # ----------------------------------------------------------------------------
 # fzf/ripgrep/fd stuff
@@ -227,7 +233,6 @@ gb() {
 
 gr() {
     typeset arg=${1}
-
     typeset pwd_old=$PWD
 
     cd_to_go_package_base || return 1
@@ -276,30 +281,41 @@ ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
  # delete all non attached, non named tmux sessions
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
+if [ -f $HOME/.tmux.main_name ]
+then
+    _tmux_main_name=$(< $HOME/.tmux.main_name)
+else
+    _tmux_main_name=main
+fi
+
 if [ "$IS_VSCODE_TERM" = n ] && command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
     clean_tmux_sessions
 
-    if tmux ls |grep -q "^main:" 
+    if tmux ls |grep -q "^${_tmux_main_name}:" 
     then
         if [ -n "$SSH_CONNECTION" ]
         then
-            if tmux ls |grep -q '^main:.* (attached)$'
+
+            if tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
             then
-                tmux detach-client -s main
+                tmux detach-client -s $_tmux_main_name
             fi
 
-            tmux attach -t main
-        elif tmux ls |grep -q '^main:.* (attached)$'
+            exec tmux attach -t $_tmux_main_name
+        elif tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
         then
-            tmux new-session
+            exec tmux new-session
         else
-            tmux attach -t main
+            exec tmux attach -t $_tmux_main_name
         fi
     else
-        tmux new-session -s main
+        exec tmux new-session -s $_tmux_main_name
     fi
 fi
+
+unset _tmux_main_name
+
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings

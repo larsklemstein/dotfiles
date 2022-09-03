@@ -89,3 +89,5 @@ alias mst=my_session_type
 
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
 
+
+source /home/lars/.config/broot/launcher/bash/br
