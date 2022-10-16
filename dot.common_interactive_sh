@@ -265,31 +265,39 @@ alias gbr='gr b'
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
+export IS_VSCODE_TERM=n
+
 if pstree -apps $$ | \
     egrep -q -- '-(code,[0-9]+|node,[0-9]+/.*/.vscode-server/bin/.+)'
 then
     IS_VSCODE_TERM=y
-else
-    IS_VSCODE_TERM=n
 fi
 
-export IS_VSCODE_TERM
+export IS_TMUX_SESSION=n
+
+if [ $IS_VSCODE_TERM = n ] && pstree $$ -s -t | grep -q -- '-tmux: *server'
+then
+    IS_TMUX_SESSION=y
+fi
+
+export IS_TMUX_SESSION
 
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
  # delete all non attached, non named tmux sessions
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
-if [ -f $HOME/.tmux.main_name ]
-then
-    _tmux_main_name=$(< $HOME/.tmux.main_name)
-else
-    _tmux_main_name=main
-fi
-
-if [ "$SKIP_TMUX" != "y" -a "$IS_VSCODE_TERM" = n ] && \
+if [ "$SKIP_TMUX" != "y" \
+     -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
     command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
+    if [ -f $HOME/.tmux.main_name ]
+    then
+        _tmux_main_name=$(< $HOME/.tmux.main_name)
+    else
+        _tmux_main_name=main
+    fi
+
     clean_tmux_sessions
 
     if tmux ls |grep -q "^${_tmux_main_name}:" 
@@ -316,9 +324,10 @@ then
         tmux new-session -s $_tmux_main_name
         # exec tmux new-session -s $_tmux_main_name
     fi
+
+    unset _tmux_main_name
 fi
 
-unset _tmux_main_name
 
 # could not harm under sudo conditions?!
 cd $HOME
