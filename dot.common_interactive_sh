@@ -3,7 +3,7 @@
 # basic stuff
 # ----------------------------------------------------------------------------
 
-for bin_dir in $HOME/bin $HOME/app/*/bin $HOME/*/bin $HOME/.*/bin
+for bin_dir in $HOME/app/binlocal $HOME/app/*/bin $HOME/*/bin $HOME/.*/bin
 do
     test -d $bin_dir && PATH=$bin_dir:$PATH
 done
@@ -102,7 +102,6 @@ export AWS_CMD=aws
 
 # better decide by your own and by call
 export AWS_PAGER=""
-
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
@@ -288,7 +287,8 @@ else
     _tmux_main_name=main
 fi
 
-if [ "$IS_VSCODE_TERM" = n ] && command -v tmux >/dev/null && [ -z "$TMUX" ]
+if [ "$SKIP_TMUX" != "y" -a "$IS_VSCODE_TERM" = n ] && \
+    command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
     clean_tmux_sessions
 
@@ -302,23 +302,31 @@ then
                 tmux detach-client -s $_tmux_main_name
             fi
 
-            exec tmux attach -t $_tmux_main_name
+            tmux attach -t $_tmux_main_name
+            # exec tmux attach -t $_tmux_main_name
         elif tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
         then
-            exec tmux new-session
+            tmux new-session
+            # exec tmux new-session
         else
-            exec tmux attach -t $_tmux_main_name
+            tmux attach -t $_tmux_main_name
+            # exec tmux attach -t $_tmux_main_name
         fi
     else
-        exec tmux new-session -s $_tmux_main_name
+        tmux new-session -s $_tmux_main_name
+        # exec tmux new-session -s $_tmux_main_name
     fi
 fi
 
 unset _tmux_main_name
 
+# could not harm under sudo conditions?!
+cd $HOME
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings
 # ----------------------------------------------------------------------------
 
+
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
+
