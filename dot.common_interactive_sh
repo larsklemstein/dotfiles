@@ -3,14 +3,20 @@
 # basic stuff
 # ----------------------------------------------------------------------------
 
+in_path() {
+    [[ $PATH == *:$1:* || $PATH == $1:* || $PATH = *:$1 ]]
+    return $?
+}
+
 for bin_dir in $HOME/app/binlocal $HOME/app/*/bin $HOME/*/bin $HOME/.*/bin
 do
+    in_path $bin_dir && continue
     test -d $bin_dir && PATH=$bin_dir:$PATH
 done
 
 if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
 then
-    PATH="$HOME/.pyenv/bin:$PATH"
+    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
 
     eval "$(pyenv init -)"
     eval "$(pyenv init --path)"
