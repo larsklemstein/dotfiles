@@ -29,7 +29,7 @@ export PATH
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
 
-ulimit -c 0
+ulimit -c 0 -n 4096
 umask 002
 test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
