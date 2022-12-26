@@ -8,23 +8,53 @@ in_path() {
     return $?
 }
 
-for bin_dir in $HOME/app/binlocal $HOME/app/*/bin $HOME/*/bin $HOME/.*/bin
+
+test -f $HOME/.linuxbrew.env && . $HOME/.linuxbrew.env
+
+alias open=exo-open
+
+alias fd=fdfind
+
+alias pe=pipenv
+
+alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
+
+alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
+
+peb()  {
+    [ "$PIPENV_ACTIVE" = 1 ] || return
+
+    typeset procs=$(pstree -s -g $$)    
+    typeset pipenv_pid=$(sed -e 's/.*-pipenv(//' -e 's/).*//' <<< $procs)
+    typeset env_file=/proc/$pipenv_pid/environ
+    typeset pipenv_dir=$(tr '\0' '\n' < $env_file | 
+          awk -F= '$1=="PWD" {print $2; exit;}')
+
+    [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
+}
+
+for _bin_dir in $HOME/app/binlocal $HOME/app/bin $HOME/.cargo/bin \
+    $HOME/app/app/VSCode-linux-x64
 do
-    in_path $bin_dir && continue
-    test -d $bin_dir && PATH=$bin_dir:$PATH
+    in_path $__bin_dir && continue
+    test -d $bin_dir && PATH=$_bin_dir:$PATH
 done
+unset _bin_dir
+
 
 if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
 then
-    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
-
     eval "$(pyenv init -)"
     eval "$(pyenv init --path)"
+
+    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 fi
 
+
 export PATH
+
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
@@ -64,21 +94,6 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 
 
-
-# ----------------------------------------------------------------------------
-# homebrew
-# ----------------------------------------------------------------------------
-
-for brew_base in $HOME /home/linuxbrew
-do
-    brew_bin=$brew_base/.linuxbrew/bin
-
-    if [ -r $brew_bin -a -d $brew_bin ]
-    then
-        eval $($brew_bin/brew shellenv)
-        break
-    fi
-done
 
 # ----------------------------------------------------------------------------
 # fzf/ripgrep/fd stuff
