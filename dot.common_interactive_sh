@@ -33,8 +33,8 @@ peb()  {
     [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
 }
 
-for _bin_dir in $HOME/app/binlocal $HOME/app/bin $HOME/.cargo/bin \
-    $HOME/app/app/VSCode-linux-x64
+for _bin_dir in $HOME/app/binlocal $HOME/app/go/bin $HOME/app/bin \
+    $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
 do
     in_path $__bin_dir && continue
     test -d $bin_dir && PATH=$_bin_dir:$PATH
