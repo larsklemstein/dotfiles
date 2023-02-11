@@ -33,7 +33,7 @@ peb()  {
     [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
 }
 
-for _bin_dir in $HOME/app/binlocal $HOME/app/go/bin $HOME/app/bin \
+for _bin_dir in $HOME/app/binlocal $HOME/app/go/bin $HOME/app/jdk/bin $HOME/app/bin \
     $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
 do
     in_path $__bin_dir && continue
@@ -44,10 +44,10 @@ unset _bin_dir
 
 if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
 then
+    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
+
     eval "$(pyenv init -)"
     eval "$(pyenv init --path)"
-
-    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 fi
