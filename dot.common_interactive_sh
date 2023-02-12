@@ -17,9 +17,6 @@ alias fd=fdfind
 
 alias pe=pipenv
 
-alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
-
-alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
 
 peb()  {
     [ "$PIPENV_ACTIVE" = 1 ] || return
@@ -33,6 +30,7 @@ peb()  {
     [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
 }
 
+
 for _bin_dir in $HOME/app/binlocal $HOME/app/go/bin $HOME/app/jdk/bin $HOME/app/bin \
     $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
 do
@@ -41,8 +39,7 @@ do
 done
 unset _bin_dir
 
-
-if [ -d "$HOME/.pyenv/bin" -a -z "$PYENV_SHELL" ]
+if [ -d "$HOME/.pyenv/bin" ]
 then
     in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
 
@@ -50,8 +47,10 @@ then
     eval "$(pyenv init --path)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-fi
 
+    alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
+    alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
+fi
 
 export PATH
 
