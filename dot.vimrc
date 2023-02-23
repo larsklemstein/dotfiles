@@ -14,7 +14,6 @@ set hlsearch
 let mapleader = " "
 set timeoutlen=500
 
-" on Mac Iterm2: need to enable "mouse reporting"
 set mouse=a
 
 syntax on

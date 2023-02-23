@@ -9,7 +9,23 @@ in_path() {
 }
 
 
-test -f $HOME/.linuxbrew.env && . $HOME/.linuxbrew.env
+for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
+do
+    _brew_prog=${_brew_dir}/bin/brew
+
+    if [ -x ${_brew_prog} ]
+    then
+        eval $(${_brew_prog} shellenv)
+
+		if [ -d "$_brew_dir/opt/openjdk@17" ]
+		then
+			PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
+		fi
+
+        break
+    fi
+done
+unset _brew_dir _brew_prog
 
 alias open=exo-open
 
@@ -31,7 +47,7 @@ peb()  {
 }
 
 
-for _bin_dir in $HOME/app/binlocal $HOME/app/go/bin $HOME/app/jdk/bin $HOME/app/bin \
+for _bin_dir in $HOME/binl$HOME/bin $HOME/app/go/bin \
     $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
 do
     in_path $__bin_dir && continue
@@ -304,14 +320,20 @@ export IS_TMUX_SESSION
 
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
- # delete all non attached, non named tmux sessions
+# delete all non attached, non named tmux sessions
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
+# Do Tmux handling if
+# - tmux should not be skipped
+# - is not VSCode term
+# - is not inside a tmux session
+# 
+# Tmux handling:
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
     command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
-    if [ -f $HOME/.tmux.main_name ]
+    if [ -s $HOME/.tmux.main_name ]
     then
         _tmux_main_name=$(< $HOME/.tmux.main_name)
     else
@@ -331,23 +353,21 @@ then
             fi
 
             tmux attach -t $_tmux_main_name
-            # exec tmux attach -t $_tmux_main_name
         elif tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
         then
             tmux new-session
             # exec tmux new-session
         else
             tmux attach -t $_tmux_main_name
-            # exec tmux attach -t $_tmux_main_name
         fi
     else
         tmux new-session -s $_tmux_main_name
-        # exec tmux new-session -s $_tmux_main_name
     fi
 
     unset _tmux_main_name
 fi
 
+alias ts='tmux set status'
 
 # could not harm under sudo conditions?!
 cd $HOME
