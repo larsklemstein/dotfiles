@@ -47,7 +47,7 @@ peb()  {
 }
 
 
-for _bin_dir in $HOME/binl$HOME/bin $HOME/app/go/bin \
+for _bin_dir in $HOME/bin $HOME/.local/bin $HOME/app/go/bin \
     $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
 do
     in_path $__bin_dir && continue
