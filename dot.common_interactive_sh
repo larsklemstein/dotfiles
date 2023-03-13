@@ -55,17 +55,21 @@ do
 done
 unset _bin_dir
 
-if [ -d "$HOME/.pyenv/bin" ]
+if which pyenv >/dev/null
 then
-    in_path "$HOME/.pyenv/bin" || PATH="$HOME/.pyenv/bin:$PATH"
-
-    eval "$(pyenv init -)"
+	echo "pyenv init"
     eval "$(pyenv init --path)"
+    eval "$(pyenv virtualenv-init -)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
     alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
     alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
+
+	export LDFLAGS="-Wl,-rpath,$(brew --prefix openssl)/lib"
+	export CFLAGS="$CPP-I$(brew --prefix openssl)/include"
+	export CPPFLAGS="$CFLAGS"
+	export CONFIGURE_OPTS="--with-openssl=$(brew --prefix openssl)"
 fi
 
 export PATH
