@@ -57,17 +57,17 @@ unset _bin_dir
 
 if which pyenv >/dev/null
 then
-	echo "pyenv init"
     eval "$(pyenv init --path)"
-    eval "$(pyenv virtualenv-init -)"
+    # eval "$(pyenv virtualenv-init -)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
     alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
     alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
 
-	export LDFLAGS="-Wl,-rpath,$(brew --prefix openssl)/lib"
-	export CFLAGS="$CPP-I$(brew --prefix openssl)/include"
+	# export LDFLAGS="-Wl,-rpath,$(brew --prefix openssl)/lib"
+	# export CFLAGS="$CPP-I$(brew --prefix openssl)/include"
+
 	export CPPFLAGS="$CFLAGS"
 	export CONFIGURE_OPTS="--with-openssl=$(brew --prefix openssl)"
 fi
@@ -108,30 +108,12 @@ set -o vi
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
+alias s='eval $(ssh-agent)'
+alias sa='ssh-add'
+
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
-
-
-
-# ----------------------------------------------------------------------------
-# fzf/ripgrep/fd stuff
-# ----------------------------------------------------------------------------
-
-if test -f $HOME/.fzf-bash-completion.sh
-then
-    . $HOME/.fzf-bash-completion.sh
-
-    FZF_DEFAULT_OPTS='--height 80% --layout=default --border'
-    export FZF_DEFAULT_OPTS
-
-    export FZF_DEFAULT_COMMAND='fdfind . -t f'
-
-    [ -f $HOME/.fzf-bash-key-bindings ] && . $HOME/.fzf-bash-key-bindings
-
-    alias fzf='fzf --preview "bat {} -f"'
-    # alias fzf='fzf --preview "bat {} -f --theme gruvbox"'
-fi
 
 
 # ---------------------------------------------------------------------------
@@ -207,9 +189,6 @@ mybat() {
     [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
 }
 
-# useful aliases
-
-alias fnvim='nvim $(fzf)'
 
 # git wants a command named 'vimdiff'
 alias vimdiff='nvim -d'
@@ -382,4 +361,3 @@ cd $HOME
 
 
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
-
