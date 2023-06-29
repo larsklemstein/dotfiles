@@ -48,7 +48,8 @@ peb()  {
 
 
 for _bin_dir in $HOME/bin $HOME/.local/bin $HOME/app/go/bin \
-    $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64
+    $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64 \
+	$HOME/.npm-global
 do
     in_path $__bin_dir && continue
     test -d $bin_dir && PATH=$_bin_dir:$PATH
@@ -193,6 +194,8 @@ mybat() {
 # git wants a command named 'vimdiff'
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
+
+alias git='/usr/bin/git -P'
 
 alias gs='git status -s'
 
