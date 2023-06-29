@@ -127,8 +127,8 @@ export AWS_PAGER=""
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
-    [ $# -eq 2 -o $# -eq 4 ] || \
-        { echo "usage: aws_gt profile [mfa token_code]"; return 1; }
+    [ $# -eq 4 ] || \
+        { echo "usage: aws_gt profile region mfa token_code"; return 1; }
 
     typeset profile="$1"
     typeset region="$2"
