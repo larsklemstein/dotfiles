@@ -27,11 +27,12 @@ do
 done
 unset _brew_dir _brew_prog
 
+if [ -f $HOME/.cargo/env ]
+then
+    . $HOME/.cargo/env
+fi
+
 alias open=exo-open
-
-alias fd=fdfind
-
-alias pe=pipenv
 
 
 peb()  {
