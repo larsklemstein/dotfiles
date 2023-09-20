@@ -50,7 +50,8 @@ peb()  {
 
 for _bin_dir in $HOME/bin $HOME/.local/bin $HOME/app/go/bin \
     $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64 \
-	$HOME/.npm-global
+	$HOME/app/jdk/bin $HOME/.npm-global \
+    $HOME/app/lkltools
 do
     in_path $__bin_dir && continue
     test -d $bin_dir && PATH=$_bin_dir:$PATH
@@ -60,15 +61,11 @@ unset _bin_dir
 if which pyenv >/dev/null
 then
     eval "$(pyenv init --path)"
-    # eval "$(pyenv virtualenv-init -)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
     alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
     alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
-
-	# export LDFLAGS="-Wl,-rpath,$(brew --prefix openssl)/lib"
-	# export CFLAGS="$CPP-I$(brew --prefix openssl)/include"
 
 	export CPPFLAGS="$CFLAGS"
 	export CONFIGURE_OPTS="--with-openssl=$(brew --prefix openssl)"

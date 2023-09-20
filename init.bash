@@ -110,3 +110,11 @@ test -d $font_dir || mkdir -p $_
 yes | unzip -d $font_dir $font_file
 
 msg "...Done! Copied font files to $font_dir"
+
+if which git 2>/dev/null
+then
+     git config --global init.defaultBranch main
+     msg "Set git default branch to main"
+
+     msg "!!! please set git user and email!"
+fi
