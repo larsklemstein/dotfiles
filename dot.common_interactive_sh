@@ -32,8 +32,25 @@ then
     . $HOME/.cargo/env
 fi
 
+# my stupid alias collection...
 alias open=exo-open
+alias cdw='cd $HOME/work; ls -ltr'
 
+vy() {
+    typeset py_find="$(ls *.py)"
+    [ "$py_find" = '*.py' ] && \
+        { echo "No python program here" >&2 ; return 1; }
+
+    typeset py_amount=$(ls *.py | wc -l)
+
+    if [ "$py_amount" -gt 1 ]
+    then
+        echo "Multiple python programs, I'm confused..."
+        return 1
+    fi
+
+    $EDITOR $py_find
+}
 
 peb()  {
     [ "$PIPENV_ACTIVE" = 1 ] || return
@@ -64,7 +81,8 @@ then
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-    alias pyenv_versions="pyenv install --list | egrep '^ *3\.'"
+	alias pyenv_versions='pyenv install --list|grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev)" | paste - - - - - - -'
+
     alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
 
 	export CPPFLAGS="$CFLAGS"
@@ -99,7 +117,17 @@ export TERM=xterm-256color
 export PAGER=less
 export LESS='-RC'
 
-export EDITOR=vim
+
+if which nvim >/dev/null
+then
+    export EDITOR=nvim
+elif which vim >/dev/null
+then
+    export EDITOR=vim
+else
+    export EDITOR=vi
+fi
+
 export VISUAL=$EDITOR
 
 set -o vi
@@ -354,7 +382,7 @@ fi
 alias ts='tmux set status'
 
 # could not harm under sudo conditions?!
-cd $HOME
+# cd $HOME
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings
