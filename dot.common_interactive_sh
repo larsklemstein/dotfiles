@@ -1,13 +1,38 @@
-
 # ----------------------------------------------------------------------------
 # basic stuff
 # ----------------------------------------------------------------------------
 
 in_path() {
-    [[ $PATH == *:$1:* || $PATH == $1:* || $PATH = *:$1 ]]
-    return $?
+    egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
 }
 
+
+peb()  {
+    [ "$PIPENV_ACTIVE" = 1 ] || return
+
+    typeset procs=$(pstree -s -g $$)    
+    typeset pipenv_pid=$(sed -e 's/.*-pipenv(//' -e 's/).*//' <<< $procs)
+    typeset env_file=/proc/$pipenv_pid/environ
+    typeset pipenv_dir=$(tr '\0' '\n' < $env_file | 
+          awk -F= '$1=="PWD" {print $2; exit;}')
+
+    [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
+}
+
+echo $PATH >> /tmp/p1
+
+for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin ~/.npm-global ~/app/lkltools
+do
+    if ! in_path $_bin_dir 2>/dev/null
+    then
+        PATH=$_bin_dir:$PATH
+    fi
+done
+unset _bin_dir
+
+echo $PATH >> /tmp/p2
+
+export PATH
 
 for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
 do
@@ -22,74 +47,24 @@ do
 			PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
 		fi
 
+		export HOMEBREW_NO_ENV_HINTS=y
+
         break
     fi
 done
 unset _brew_dir _brew_prog
 
-if [ -f $HOME/.cargo/env ]
+[ -f $HOME/.cargo/env ] && . $HOME/.cargo/env
+
+if test -d $HOME/.pyenv/bin
 then
-    . $HOME/.cargo/env
-fi
-
-# my stupid alias collection...
-alias open=exo-open
-alias cdw='cd $HOME/work; ls -ltr'
-
-vy() {
-    typeset py_find="$(ls *.py)"
-    [ "$py_find" = '*.py' ] && \
-        { echo "No python program here" >&2 ; return 1; }
-
-    typeset py_amount=$(ls *.py | wc -l)
-
-    if [ "$py_amount" -gt 1 ]
-    then
-        echo "Multiple python programs, I'm confused..."
-        return 1
-    fi
-
-    $EDITOR $py_find
-}
-
-peb()  {
-    [ "$PIPENV_ACTIVE" = 1 ] || return
-
-    typeset procs=$(pstree -s -g $$)    
-    typeset pipenv_pid=$(sed -e 's/.*-pipenv(//' -e 's/).*//' <<< $procs)
-    typeset env_file=/proc/$pipenv_pid/environ
-    typeset pipenv_dir=$(tr '\0' '\n' < $env_file | 
-          awk -F= '$1=="PWD" {print $2; exit;}')
-
-    [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
-}
-
-
-for _bin_dir in $HOME/bin $HOME/.local/bin $HOME/app/go/bin \
-    $HOME/.cargo/bin $HOME/app/app/VSCode-linux-x64 \
-	$HOME/app/jdk/bin $HOME/.npm-global \
-    $HOME/app/lkltools
-do
-    in_path $__bin_dir && continue
-    test -d $bin_dir && PATH=$_bin_dir:$PATH
-done
-unset _bin_dir
-
-if which pyenv >/dev/null
-then
+	export PATH=$HOME/.pyenv/bin:$PATH
     eval "$(pyenv init --path)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-	alias pyenv_versions='pyenv install --list|grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev)" | paste - - - - - - -'
-
-    alias pyenv_installed="/bin/ls -1d $(pyenv root)/versions/* | sed 's:.*/::' |sort -n -t. -k1,1 -k 2,2  -k 3,3"
-
-	export CPPFLAGS="$CFLAGS"
-	export CONFIGURE_OPTS="--with-openssl=$(brew --prefix openssl)"
+	alias pyenv_versions='echo; echo "--- Available ---"; pyenv install --list|grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | paste - - - - - - - ; echo; echo "--- Installed ---"; pyenv versions; echo'
 fi
-
-export PATH
 
 
 export TMPDIR=$HOME/tmp
@@ -98,6 +73,9 @@ test -d $TMPDIR || mkdir -vp $TMPDIR
 ulimit -c 0 -n 4096
 umask 002
 test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
+
+alias open=exo-open
+alias cdw='cd $HOME/work; ls -ltr'
 
 alias ls='/bin/ls --color=auto'
 alias ll='ls -lH'
@@ -211,22 +189,14 @@ export LESS='-RC'
 
 alias bat='bat --color=auto --theme=gruvbox'
 
-# preview only if file size is <= 10MB
-mybat() {
-    [ $(stat -t "$1" |cut -d ' ' -f2) -le 10485760 ] && bat --color=always --theme=gruvbox-dark --style=header,numbers "$1"
-}
-
-
 # git wants a command named 'vimdiff'
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
 alias git='/usr/bin/git -P'
-
 alias gs='git status -s'
 
 alias ssha='eval $(ssh-agent) && ssh-add'
-
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 
@@ -236,80 +206,6 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 
 alias gt='go test'
 alias gtv='go test -v'
-
-cd_to_go_package_base() {
-    typeset pwd_old=$PWD
-
-    while [ ! -f $PWD/go.mod ]
-    do
-        if [ $PWD = "/" ]
-        then
-            cd $pwd_old
-            echo "failed.." >&2
-            return 1
-        fi
-
-        cd ..
-    done
-
-    return 0
-}
-
-alias gpb=cd_to_go_package_base
-
-go_packagename() {
-    typeset pwd_old=$PWD
-    cd_to_go_package_base
-
-    awk 'NR==1 {split($2, a, /\//); i = length(a); print a[i]}' go.mod
-
-    cd $pwd_old
-}
-
-alias gp=go_packagename
-
-gb() {
-    typeset pwd_old=$PWD
-
-    cd_to_go_package_base || return 1
-
-    go build .
-
-    cd $pwd_old
-}
-
-gr() {
-    typeset arg=${1}
-    typeset pwd_old=$PWD
-
-    cd_to_go_package_base || return 1
-
-    if [ ! -f main.go ]
-    then
-        echo "no main.go at top level" >&2
-        return
-    fi
-
-    typeset progname=$(go_packagename)
-
-    if [ -z "$progname" ]
-    then
-        cd $pwd_old
-        echo "progname is empty after detection attempt!?.." >&2
-        return 1
-    fi
-
-    if [ "$arg" = "b" -o ! -x $progname ]
-    then
-        gb
-    fi
-
-    ./$progname "$@"
-    cd $pwd_old
-}
-
-alias gbr='gr b'
-
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
@@ -332,8 +228,6 @@ export IS_TMUX_SESSION
 
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
-# delete all non attached, non named tmux sessions
-alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
 # Do Tmux handling if
 # - tmux should not be skipped
@@ -341,10 +235,17 @@ alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v
 # - is not inside a tmux session
 # 
 # Tmux handling:
+
+SKIP_TMUX=y
+
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
     command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
+
+	# delete all non attached, non named tmux sessions, must be set here
+	alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
+
     if [ -s $HOME/.tmux.main_name ]
     then
         _tmux_main_name=$(< $HOME/.tmux.main_name)
@@ -377,16 +278,13 @@ then
     fi
 
     unset _tmux_main_name
+
+	alias ts='tmux set status'
 fi
 
-alias ts='tmux set status'
-
-# could not harm under sudo conditions?!
-# cd $HOME
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings
 # ----------------------------------------------------------------------------
-
 
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
