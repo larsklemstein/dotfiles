@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# basic stuff
+# functions
 # ----------------------------------------------------------------------------
 
 in_path() {
@@ -7,6 +7,7 @@ in_path() {
 }
 
 
+# after pipenv shell switch back to origin dir
 peb()  {
     [ "$PIPENV_ACTIVE" = 1 ] || return
 
@@ -19,8 +20,35 @@ peb()  {
     [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
 }
 
-echo $PATH >> /tmp/p1
+# print multi columns
+pmc() {
+    [ $# -eq 0 ] && { echo "???" >&2; return 1; }
+	local pstr=
 
+	local i
+	for ((i = 0; i < $1; i++))
+	do
+		[ -z "$pstr" ] && pstr='-' || pstr="$pstr -"
+	done
+
+	eval paste $pstr
+}
+
+# print header
+ph() {
+	local header="${1:-???}"
+	echo
+    echo "--- $header ---"
+}
+
+stdout_flush_print() {
+	local tmpfile=$(mktemp)
+	cat - >$tmpfile
+	cat $tmpfile
+	rm -f $tmpfile
+}
+
+# add local pathes etc.
 for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin ~/.npm-global ~/app/lkltools
 do
     if ! in_path $_bin_dir 2>/dev/null
@@ -29,10 +57,6 @@ do
     fi
 done
 unset _bin_dir
-
-echo $PATH >> /tmp/p2
-
-export PATH
 
 for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
 do
@@ -56,6 +80,8 @@ unset _brew_dir _brew_prog
 
 [ -f $HOME/.cargo/env ] && . $HOME/.cargo/env
 
+alias p6='paste - - - - - -'
+
 if test -d $HOME/.pyenv/bin
 then
 	export PATH=$HOME/.pyenv/bin:$PATH
@@ -63,9 +89,10 @@ then
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-	alias pyenv_versions='echo; echo "--- Available ---"; pyenv install --list|grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | paste - - - - - - - ; echo; echo "--- Installed ---"; pyenv versions; echo'
+	alias pyenv_versions='ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 5; ph Installed; pyenv versions | fgrep -v "* system" | tr -d "[ ]" | pmc 5; echo'
 fi
 
+export PATH
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
@@ -94,7 +121,6 @@ export TERM=xterm-256color
 
 export PAGER=less
 export LESS='-RC'
-
 
 if which nvim >/dev/null
 then
@@ -129,6 +155,7 @@ export AWS_CMD=aws
 
 # better decide by your own and by call
 export AWS_PAGER=""
+
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
@@ -153,7 +180,7 @@ aws_gt() {
         json_out="$($aws_gt_cmd 2>&1)"
     fi
 
-	rc=$?
+	typeset rc=$?
 
     [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
 
@@ -236,7 +263,7 @@ ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 # 
 # Tmux handling:
 
-SKIP_TMUX=y
+SKIP_TMUX=n
 
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
@@ -280,6 +307,12 @@ then
     unset _tmux_main_name
 
 	alias ts='tmux set status'
+fi
+
+if test -d $(brew --prefix)/opt/fzf
+then
+	. $(brew --prefix)/opt/fzf/shell/key-bindings.bash
+	export FZF_DEFAULT_OPTS='--border sharp --height=60% '
 fi
 
 
