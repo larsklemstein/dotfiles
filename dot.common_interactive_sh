@@ -78,9 +78,16 @@ do
 done
 unset _brew_dir _brew_prog
 
-[ -f $HOME/.cargo/env ] && . $HOME/.cargo/env
+if [ -f $HOME/.cargo/env ]
+then
+    . $HOME/.cargo/env
 
-alias p6='paste - - - - - -'
+    alias cgb='cargo build'
+    alias cgbr='cargo build --release'
+    alias cgr='cargo run'
+
+    export RUST_BACKTRACE=1
+fi
 
 if test -d $HOME/.pyenv/bin
 then
@@ -89,6 +96,7 @@ then
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
+	alias p6='paste - - - - - -'
 	alias pyenv_versions='ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 5; ph Installed; pyenv versions | fgrep -v "* system" | tr -d "[ ]" | pmc 5; echo'
 fi
 
@@ -231,8 +239,13 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 # go
 # ----------------------------------------------------------------------------
 
-alias gt='go test'
-alias gtv='go test -v'
+if which go >/dev/null
+then
+    alias got='go test'
+    alias gotv='go test -v'
+    alias gob='go build .'
+    alias gor='go run .'
+fi
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
@@ -265,13 +278,14 @@ ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
 SKIP_TMUX=n
 
+alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
+
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
     command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
 
 	# delete all non attached, non named tmux sessions, must be set here
-	alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
     if [ -s $HOME/.tmux.main_name ]
     then
@@ -312,7 +326,11 @@ fi
 if test -d $(brew --prefix)/opt/fzf
 then
 	. $(brew --prefix)/opt/fzf/shell/key-bindings.bash
-	export FZF_DEFAULT_OPTS='--border sharp --height=60% '
+	export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+
+    alias ffzf='fzf --preview="test -e {} && bat {}"'
+
+	alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
 fi
 
 
