@@ -85,9 +85,9 @@ then
     alias cb='cargo build'
     alias cbr='cargo build --release'
     alias cr='cargo run'
-fi
 
-alias p6='paste - - - - - -'
+    export RUST_BACKTRACE=1
+fi
 
 if test -d $HOME/.pyenv/bin
 then
@@ -241,10 +241,13 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 # go
 # ----------------------------------------------------------------------------
 
-alias gt='go test'
-alias gtv='go test -v'
-alias gr='go run .'
-alias gb='go build .'
+if which go >/dev/null
+then
+    alias gt='go test'
+    alias gtv='go test -v'
+    alias gr='go run .'
+    alias gb='go build .'
+fi
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
@@ -325,7 +328,11 @@ fi
 if test -d $(brew --prefix)/opt/fzf
 then
 	. $(brew --prefix)/opt/fzf/shell/key-bindings.bash
-	export FZF_DEFAULT_OPTS='--border sharp --height=60% '
+	export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+
+    alias ffzf='fzf --preview="test -e {} && bat {}"'
+
+	alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
 fi
 
 
