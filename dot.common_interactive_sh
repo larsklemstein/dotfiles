@@ -73,6 +73,8 @@ do
 
 		export HOMEBREW_NO_ENV_HINTS=y
 
+		export BREW_BIN="$_brew_dir/bin"
+
         break
     fi
 done
@@ -96,7 +98,7 @@ then
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-	alias pyenv_versions='ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; ph Installed; pyenv versions | fgrep -v "* system" | tr -d "[ ]" | pmc 8; echo;'
+	alias pyenv_versions='ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 fi
 
 export PATH
@@ -120,12 +122,16 @@ alias grep='grep --color=auto'
 alias egrep='grep -E'
 alias fgrep='grep -F'
 
+alias dua="$BREW_BIN/dua -t4 interactive"
+
 alias ffind='2>/dev/null find'
 
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
 alias pyt='pytest -v'
 alias pytm='pytest -v --color=no'
+
+alias dua="$BREW_BIN/dua -t4 interactive"
 
 export TERM=xterm-256color
 
@@ -224,14 +230,11 @@ export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quo
 export PAGER=less
 export LESS='-RC'
 
-alias bat='bat --color=auto --theme=gruvbox'
+alias bat="$BREW_BIN/bat --color=auto --theme=gruvbox"
 
 # git wants a command named 'vimdiff'
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
-
-alias git='/usr/bin/git -P'
-alias gs='git status -s'
 
 alias ssha='eval $(ssh-agent) && ssh-add'
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
@@ -333,6 +336,7 @@ then
     alias ffzf='fzf --preview="test -e {} && bat {}"'
 
 	alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
+
 fi
 
 
