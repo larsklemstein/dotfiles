@@ -35,7 +35,7 @@ pmc() {
 }
 
 # print header
-ph() {
+_ph() {
 	local header="${1:-???}"
 	echo
     echo "--- $header ---"
@@ -98,7 +98,7 @@ then
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-	alias pyenv_versions='ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
+	alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 fi
 
 export PATH
@@ -235,6 +235,20 @@ alias bat="$BREW_BIN/bat --color=auto --theme=gruvbox"
 # git wants a command named 'vimdiff'
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
+
+alias glog='git log'
+alias grlog='git log --reverse'
+
+alias ga='echo; boxes -d peek -s 60 $HOME/.git_aliases_overview.txt; echo'
+
+# show current git branch (not all branches as with 'git branch')
+alias gbr='git rev-parse --abbrev-ref HEAD'
+
+# push local branch to origin
+alias gpbr='git push --set-upstream origin $(gbr)'
+
+
+export GIT_PAGER=/bin/cat
 
 alias ssha='eval $(ssh-agent) && ssh-add'
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
