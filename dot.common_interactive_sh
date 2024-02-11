@@ -114,7 +114,7 @@ alias open=exo-open
 alias cdw='cd $HOME/work; ls -ltr'
 
 alias ls='/bin/ls --color=auto'
-alias ll='ls -lH'
+alias ll='ls -lh'
 alias la='ls -a'
 alias lla='ls -lHa'
 
@@ -132,6 +132,7 @@ alias pyt='pytest -v'
 alias pytm='pytest -v --color=no'
 
 alias dua="$BREW_BIN/dua -t4 interactive"
+
 
 export TERM=xterm-256color
 
@@ -161,6 +162,14 @@ alias sa='ssh-add'
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
+
+
+wp() {
+    [ $# -eq 1 ] || { echo "Need pythpn script path" >&2; return; } 
+    local python_script="$1"
+
+    nodemon --watch "$python_script" --exec "python3 $python_script"
+}
 
 
 # ---------------------------------------------------------------------------
