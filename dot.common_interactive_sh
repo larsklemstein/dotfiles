@@ -6,18 +6,24 @@ in_path() {
     egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
 }
 
+# convinient wrapper for jsonlint
+jl() {
+    [ $# -eq 1 ] || { echo "Need a json file..." >&2; return 1; }
+    local json_file="$1"
 
-# after pipenv shell switch back to origin dir
-peb()  {
-    [ "$PIPENV_ACTIVE" = 1 ] || return
+    local tmp_file=$(mktemp)
+    jsonlint -p "$json_file" >$tmp_file 2>&1
+    json_rc=$?
 
-    typeset procs=$(pstree -s -g $$)    
-    typeset pipenv_pid=$(sed -e 's/.*-pipenv(//' -e 's/).*//' <<< $procs)
-    typeset env_file=/proc/$pipenv_pid/environ
-    typeset pipenv_dir=$(tr '\0' '\n' < $env_file | 
-          awk -F= '$1=="PWD" {print $2; exit;}')
-
-    [ -d "$pipenv_dir" ] && cd "$pipenv_dir"
+    if [ $json_rc -eq 0 ]
+    then
+        echo "-> OK <-" 
+    else
+        /bin/cat "$json_file"
+    fi
+    
+    /bin/rm -f $tmp_file
+    return $json_rc
 }
 
 # print multi columns
@@ -41,13 +47,6 @@ _ph() {
     echo "--- $header ---"
 }
 
-stdout_flush_print() {
-	local tmpfile=$(mktemp)
-	cat - >$tmpfile
-	cat $tmpfile
-	rm -f $tmpfile
-}
-
 # add local pathes etc.
 for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin ~/.npm-global ~/app/lkltools
 do
@@ -66,7 +65,7 @@ do
     then
         eval $(${_brew_prog} shellenv)
 
-		if [ -d "$_brew_dir/opt/openjdk@17" ]
+		if [ -d "$_brew_dir/opt/openjdk@17" ] && ! in_path "$_brew_dir/opt/openjdk@17/bin" 
 		then
 			PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
 		fi
@@ -80,6 +79,8 @@ do
 done
 unset _brew_dir _brew_prog
 
+
+# activate rust if available
 if [ -f $HOME/.cargo/env ]
 then
     . $HOME/.cargo/env
@@ -89,6 +90,12 @@ then
     alias cr='cargo run'
 
     export RUST_BACKTRACE=1
+fi
+
+# activate nvm if available
+if [ -f $HOME/.nvm.rc ]
+then
+    . $HOME/.nvm.rc
 fi
 
 if test -d $HOME/.pyenv/bin
@@ -123,8 +130,6 @@ alias egrep='grep -E'
 alias fgrep='grep -F'
 
 alias dua="$BREW_BIN/dua -t4 interactive"
-
-alias ffind='2>/dev/null find'
 
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
