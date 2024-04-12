@@ -169,14 +169,6 @@ alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 
 
-wp() {
-    [ $# -eq 1 ] || { echo "Need pythpn script path" >&2; return; } 
-    local python_script="$1"
-
-    nodemon --watch "$python_script" --exec "python3 $python_script"
-}
-
-
 # ---------------------------------------------------------------------------
 # aws stuff
 # ---------------------------------------------------------------------------
@@ -284,8 +276,8 @@ fi
 # VSCode might run as local client or via remote extension  (using node server)
 export IS_VSCODE_TERM=n
 
-if pstree -apps $$ | \
-    egrep -q -- '-(code,[0-9]+|node,[0-9]+/.*/.vscode-server/bin/.+)'
+if pstree -apps $$ | grep -v '[g][r][e][p]' | \
+  egrep -q '\.vscode-server/cli/.*/code-server|/vs/.*/shellIntegration\.sh'
 then
     IS_VSCODE_TERM=y
 fi
@@ -301,14 +293,6 @@ export IS_TMUX_SESSION
 
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
-
-# Do Tmux handling if
-# - tmux should not be skipped
-# - is not VSCode term
-# - is not inside a tmux session
-# 
-# Tmux handling:
-
 SKIP_TMUX=n
 
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
@@ -317,43 +301,40 @@ if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
     command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
-
-	# delete all non attached, non named tmux sessions, must be set here
-
-    if [ -s $HOME/.tmux.main_name ]
+    if [ -n "$SSH_CONNECTION" ]
     then
-        _tmux_main_name=$(< $HOME/.tmux.main_name)
-    else
-        _tmux_main_name=main
-    fi
-
-    clean_tmux_sessions
-
-    if tmux ls |grep -q "^${_tmux_main_name}:" 
-    then
-        if [ -n "$SSH_CONNECTION" ]
+        if tmux ls >/dev/null
         then
+            while true
+            do
+                echo ""
+                echo "*** Found tmux session(s) ***"
+                echo ""
+                tmux ls | boxes -d stone
 
-            if tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
-            then
-                tmux detach-client -s $_tmux_main_name
-            fi
+                echo ""
+                echo 'ENTER for new session, otherwise session name'
+                echo -n "-> "
 
-            tmux attach -t $_tmux_main_name
-        elif tmux ls |grep -q "^${_tmux_main_name}:.* (attached)\$"
-        then
-            tmux new-session
-            # exec tmux new-session
+                while true
+                do
+                    read input
+                    if [ "$input" = "" ]
+                    then
+                        tmux new-session
+                    else
+                        tmux attach -t $input
+                    fi
+                done
+            done
         else
-            tmux attach -t $_tmux_main_name
+            echo b
+            tmux new-session
         fi
     else
-        tmux new-session -s $_tmux_main_name
+        echo c
+        tmux new-session
     fi
-
-    unset _tmux_main_name
-
-	alias ts='tmux set status'
 fi
 
 if test -d $(brew --prefix)/opt/fzf
@@ -365,6 +346,13 @@ then
 
 	alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
 
+fi
+
+if [ -d "$HOME/.nvm" ]
+then
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # nvm itself
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # nvm bash_completion
 fi
 
 
