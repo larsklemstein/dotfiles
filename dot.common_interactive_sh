@@ -323,7 +323,12 @@ then
                     then
                         tmux new-session
                     else
-                        tmux attach -t $input
+                        if tmux ls | cut -d: -f1 | grep -q "^$input$"
+                        then
+                            tmux attach -t $input
+                        else
+                            echo "No such session..." >&2
+                        fi
                     fi
                 done
             done
