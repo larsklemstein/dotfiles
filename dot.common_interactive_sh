@@ -1,29 +1,94 @@
 # ----------------------------------------------------------------------------
+# tmux handling right at the sart to not loose amy time
+# ----------------------------------------------------------------------------
+
+_start_tmux=y
+
+export IS_VSCODE_TERM=n
+export IS_TMUX_SESSION=n
+
+if pstree -apps $$ | grep -v '[g][r][e][p]' | \
+  egrep -q '\.vscode-server/cli/.*/code-server|/vs/.*/shellIntegration\.sh'
+then
+    IS_VSCODE_TERM=y
+fi
+
+if [ "$SKIP_TMUX" != "y" \
+     -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
+    command -v tmux >/dev/null && [ -z "$TMUX" ]
+then
+    if [ -n "$SSH_CONNECTION" ]
+    then
+        if tmux ls >/dev/null
+        then
+            # --> let use decide to attach to existing
+            #     ssh session or create new one
+            while [ $_start_tmux = y ]
+            do
+                echo ""
+                echo "*** Found tmux session(s) ***"
+
+                while true
+                do
+                    _input=$({ tmux ls; echo "New_session"; } | fzf --height 10)
+
+                    if [ -z "$_input" ]
+                    then
+                        boxes -d info <<< "Start no tmux session"
+                        _start_tmux=n
+                        break
+                    fi
+
+                    if [ "$_input" = "New_session" ]
+                    then
+                        unset _input
+                        tmux new-session
+                        _start_tmux=n
+                        break
+                    else
+                        _input=$(cut -d: -f1 <<< $_input)
+                        echo "input: $_input"
+                        if tmux ls | cut -d: -f1 | grep -q "^$_input$"
+                        then
+                            tmux attach -t $_input
+                            unset _input
+                            _start_tmux=n
+                            break
+                        else
+                            echo "No such session..." >&2
+                        fi
+                    fi
+                done
+            done
+        else
+            # --> ssh session, but no old sessions found
+            tmux new-session
+            return
+        fi
+    else
+        # --> no ssh session
+        tmux new-session
+    fi
+fi
+
+unset _start_tmux
+
+alias trn='tmux rename-session'
+
+tls() {
+    tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' | boxes -d peek
+}
+
+
+# so, now we either run in a tmux session or not...
+
+
+# ----------------------------------------------------------------------------
 # functions
 # ----------------------------------------------------------------------------
 
 in_path() {
     egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
-}
-
-# convinient wrapper for jsonlint
-jl() {
-    [ $# -eq 1 ] || { echo "Need a json file..." >&2; return 1; }
-    local json_file="$1"
-
-    local tmp_file=$(mktemp)
-    jsonlint -p "$json_file" >$tmp_file 2>&1
-    json_rc=$?
-
-    if [ $json_rc -eq 0 ]
-    then
-        echo "-> OK <-" 
-    else
-        /bin/cat "$json_file"
-    fi
-    
-    /bin/rm -f $tmp_file
-    return $json_rc
 }
 
 # print multi columns
@@ -48,7 +113,8 @@ _ph() {
 }
 
 # add local pathes etc.
-for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin ~/.npm-global ~/app/lkltools
+for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin \
+    ~/.fzf/bin ~/.npm-global ~/app/lkltools  
 do
     if ! in_path $_bin_dir 2>/dev/null
     then
@@ -56,6 +122,8 @@ do
     fi
 done
 unset _bin_dir
+
+[ -x ~/.fzf/bin/fzf ] && eval "$(fzf --bash)"
 
 for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
 do
@@ -112,6 +180,7 @@ export PATH
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
+
 
 ulimit -c 0 -n 4096
 umask 002
@@ -275,96 +344,15 @@ fi
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
 export IS_VSCODE_TERM=n
-
-if pstree -apps $$ | grep -v '[g][r][e][p]' | \
-  egrep -q '\.vscode-server/cli/.*/code-server|/vs/.*/shellIntegration\.sh'
-then
-    IS_VSCODE_TERM=y
-fi
-
-export IS_TMUX_SESSION=n
-
 if [ $IS_VSCODE_TERM = n ] && pstree $$ -s -t | grep -q -- '-tmux: *server'
 then
     IS_TMUX_SESSION=y
 fi
 
-export IS_TMUX_SESSION
-
 ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
-SKIP_TMUX=n
 
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
-
-_start_tmux=y
-
-if [ "$SKIP_TMUX" != "y" \
-     -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
-    command -v tmux >/dev/null && [ -z "$TMUX" ]
-then
-    if [ -n "$SSH_CONNECTION" ]
-    then
-        if tmux ls >/dev/null
-        then
-            # --> let use decide to attach to existing
-            #     ssh session or create new one
-            while [ $_start_tmux = y ]
-            do
-                echo ""
-                echo "*** Found tmux session(s) ***"
-
-                while true
-                do
-                    _input=$({ tmux ls; echo "New_session"; } | fzf --height 10)
-
-                    if [ -z "$_input" ]
-                    then
-                        boxes -d info <<< "Start no tmux session"
-                        _start_tmux=n
-                        break
-                    fi
-
-                    if [ "$_input" = "New_session" ]
-                    then
-                        unset _input
-                        tmux new-session
-                        _start_tmux=n
-                        break
-                    else
-                        _input=$(cut -d: -f1 <<< $_input)
-                        echo "input: $_input"
-                        if tmux ls | cut -d: -f1 | grep -q "^$_input$"
-                        then
-                            tmux attach -t $_input
-                            unset _input
-                            _start_tmux=n
-                            break
-                        else
-                            echo "No such session..." >&2
-                        fi
-                    fi
-                done
-            done
-        else
-            # --> ssh session, but no old sessions found
-            echo tmux new-session
-            return
-        fi
-    else
-        # --> no ssh session
-        tmux new-session
-    fi
-fi
-
-unset _start_tmux
-
-alias trn='tmux rename-session'
-
-tls() {
-    tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' | boxes -d peek
-}
-
 if test -d $(brew --prefix)/opt/fzf
 then
 	. $(brew --prefix)/opt/fzf/shell/key-bindings.bash

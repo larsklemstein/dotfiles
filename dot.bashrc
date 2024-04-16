@@ -79,8 +79,6 @@ my_session_type() {
 
 alias mst=my_session_type
 
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
-
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #         this should be the last line

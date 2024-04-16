@@ -5,4 +5,3 @@ then
         . ~/.bashrc
     fi
 fi
-. "$HOME/.cargo/env"
