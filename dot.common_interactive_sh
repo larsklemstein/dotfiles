@@ -30,7 +30,7 @@ then
 
                 while true
                 do
-                    _input=$({ tmux ls; echo "New_session"; } | fzf --height 10)
+                    _input=$({ echo "->New_session"; tmux ls; } | fzf --height 10)
 
                     if [ -z "$_input" ]
                     then
@@ -39,7 +39,7 @@ then
                         break
                     fi
 
-                    if [ "$_input" = "New_session" ]
+                    if [ "$_input" = "->New_session" ]
                     then
                         unset _input
                         tmux new-session
@@ -74,6 +74,8 @@ fi
 unset _start_tmux
 
 alias trn='tmux rename-session'
+alias tua='tmux ls | grep -v "(attached)" | cut -d: -f1'
+alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
 
 tls() {
     tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' | boxes -d peek
