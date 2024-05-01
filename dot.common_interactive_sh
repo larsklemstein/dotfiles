@@ -391,12 +391,14 @@ fi
 
 unset _start_tmux
 
-alias trn='tmux rename-session'
+alias tns='tmux rename-session'
+alias tnw='tmux rename-window'
 alias tua='tmux ls | grep -v "(attached)" | cut -d: -f1'
 alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
+alias tswap='tmux swap-pane -U'
 
 tls() {
-    tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' | boxes -d peek
+    tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' 
 }
 
 # ----------------------------------------------------------------------------
