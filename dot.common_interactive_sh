@@ -1,5 +1,6 @@
 # so, now we either run in a tmux session or not...
 
+PO="$PATH"
 
 # ----------------------------------------------------------------------------
 # functions
@@ -31,7 +32,7 @@ _ph() {
 }
 
 # add local pathes etc.
-for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk}/bin \
+for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
     ~/.fzf/bin ~/.npm-global ~/app/lkltools  
 do
     if ! in_path $_bin_dir 2>/dev/null
@@ -60,6 +61,13 @@ do
 
 		export BREW_BIN="$_brew_dir/bin"
 
+	    if [ -d $_bew_dir/lib/ruby/gems/*/bin ]
+		then
+			_gem_bin=$_bew_dir/lib/ruby/gems/*/bin
+			in_path $_gem_bin || PATH=$_gem_bin:$PATH
+			unset _gem_bin
+		fi
+
         break
     fi
 done
@@ -79,22 +87,20 @@ then
 fi
 
 # activate nvm if available
-if [ -f $HOME/.nvm.rc ]
+if [ -f $HOME/.nvm.rc ] && [ -z "$NVM_DIR" ]
 then
     . $HOME/.nvm.rc
 fi
 
-if test -d $HOME/.pyenv/bin
+if test -d $HOME/.pyenv/bin && [ -z "$PYENV_VIRTUALENV_DISABLE_PROMPT" ]
 then
-	export PATH=$HOME/.pyenv/bin:$PATH
+	PATH=$HOME/.pyenv/bin:$PATH
     eval "$(pyenv init --path)"
 
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
 	alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 fi
-
-export PATH
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
@@ -308,7 +314,7 @@ then
     # nvm special handling to ensure correct PATH var
     if grep -q '/\.nvm/versions' <<< "$PATH"
     then
-        export PATH=$(
+        PATH=$(
             tr : '\n' <<< "$PATH" | awk '
             BEGIN {
                 new_path = "";
@@ -400,6 +406,15 @@ alias tswap='tmux swap-pane -U'
 tls() {
     tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' 
 }
+
+if which modpath >/dev/null
+then
+	# eval $(modpath --eval)
+	:
+fi
+
+export PATH
+
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings
