@@ -32,7 +32,8 @@ _ph() {
 }
 
 # add local pathes etc.
-for _bin_dir in ~/bin ~/.local/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
+for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
+    ~/app/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
     ~/.fzf/bin ~/.npm-global ~/app/lkltools  
 do
     if ! in_path $_bin_dir 2>/dev/null
@@ -92,7 +93,7 @@ then
     . $HOME/.nvm.rc
 fi
 
-if test -d $HOME/.pyenv/bin && [ -z "$PYENV_VIRTUALENV_DISABLE_PROMPT" ]
+if test -d $HOME/.pyenv/bin
 then
 	PATH=$HOME/.pyenv/bin:$PATH
     eval "$(pyenv init --path)"
@@ -128,6 +129,10 @@ alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done
 
 alias pyt='pytest -v'
 alias pytm='pytest -v --color=no'
+
+per() {
+	pipenv run ./$*
+}
 
 alias dua="$BREW_BIN/dua -t4 interactive"
 
@@ -270,7 +275,7 @@ fi
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
 export IS_VSCODE_TERM=n
-if [ $IS_VSCODE_TERM = n ] && pstree $$ -s -t | grep -q -- '-tmux: *server'
+if [ $IS_VSCODE_TERM = n -a "$TERM_PROGRAM" = tmux ]
 then
     IS_TMUX_SESSION=y
 fi
@@ -307,7 +312,7 @@ _start_tmux=y
 export IS_VSCODE_TERM=n
 export IS_TMUX_SESSION=n
 
-if pstree -apps $$ | grep -v '[g][r][e][p]' | egrep -q '/\.vscode-server/cli/serv'
+if [ "$TERM_PROGRAM" = "vscode" ]
 then
     IS_VSCODE_TERM=y
 
@@ -354,7 +359,7 @@ then
 
                 while true
                 do
-                    _input=$({ echo "->New_session"; tmux ls; } | fzf --height 10)
+                    _input=$({ echo "->New_session"; tmux ls | egrep -v '^[0-9]+:'; } | fzf --height 10)
 
                     if [ -z "$_input" ]
                     then
