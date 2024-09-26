@@ -32,9 +32,10 @@ _ph() {
 }
 
 # add local pathes etc.
+
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
     ~/app/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
-    ~/.fzf/bin ~/.npm-global ~/app/lkltools  
+    ~/.npm-global ~/app/lkltools  
 do
     if ! in_path $_bin_dir 2>/dev/null
     then
@@ -42,8 +43,6 @@ do
     fi
 done
 unset _bin_dir
-
-[ -x ~/.fzf/bin/fzf ] && eval "$(fzf --bash)"
 
 for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
 do
@@ -59,7 +58,6 @@ do
 		fi
 
 		export HOMEBREW_NO_ENV_HINTS=y
-
 		export BREW_BIN="$_brew_dir/bin"
 
 	    if [ -d $_bew_dir/lib/ruby/gems/*/bin ]
@@ -80,36 +78,35 @@ if [ -f $HOME/.cargo/env ]
 then
     . $HOME/.cargo/env
 
-    alias cb='cargo build'
-    alias cbr='cargo build --release'
-    alias cr='cargo run'
-
     export RUST_BACKTRACE=1
 fi
 
-# activate nvm if available
-if [ -f $HOME/.nvm.rc ] && [ -z "$NVM_DIR" ]
-then
-    . $HOME/.nvm.rc
-fi
+# lazy init..
+pyenv() {
+    unset pyenv
 
-if test -d $HOME/.pyenv/bin
-then
-	PATH=$HOME/.pyenv/bin:$PATH
-    eval "$(pyenv init --path)"
+    if test -d $HOME/.pyenv/bin
+    then
+        PATH=$HOME/.pyenv/bin:$PATH
+        eval "$(pyenv init --path)"
 
-    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+        export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
-	alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
-fi
+        alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
+
+        pyenv $@
+    else
+        echo "No pyenv installation found :-(" >&2
+    fi
+}
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
 
-
 ulimit -c 0 -n 4096
 umask 002
-test -s $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
+
+eval $(dircolors $HOME/.dircolors)
 
 alias open=exo-open
 alias cdw='cd $HOME/work; ls -ltr'
@@ -136,22 +133,12 @@ per() {
 
 alias dua="$BREW_BIN/dua -t4 interactive"
 
-
 export TERM=xterm-256color
 
 export PAGER=less
 export LESS='-RC'
 
-if which nvim >/dev/null
-then
-    export EDITOR=nvim
-elif which vim >/dev/null
-then
-    export EDITOR=vim
-else
-    export EDITOR=vi
-fi
-
+export EDITOR=nvim
 export VISUAL=$EDITOR
 
 set -o vi
@@ -159,12 +146,42 @@ set -o vi
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
+# ---------------------------------------------------------------------------
+# ssh-agent stuff
+# ---------------------------------------------------------------------------
+
+# we want a ssh-agent always:
+ps -u $(id -un) | egrep -q  '[s]sh-agent$' || eval $(ssh-agent)
+
 alias s='eval $(ssh-agent)'
 alias sa='ssh-add'
-
 alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
+
+
+# ---------------------------------------------------------------------------
+# fzf stuff
+# ---------------------------------------------------------------------------
+
+# . $(brew --prefix)/opt/fzf/shell/key-bindings.bash
+#
+
+# lazy init...
+fzf() {
+    unset fzf
+
+    # take fzf from $PATH now...
+    eval "$(fzf --bash)"
+
+    export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+
+    alias ffzf='fzf --preview="test -e {} && bat {}"'
+
+    alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
+
+    fzf $@
+}
 
 
 # ---------------------------------------------------------------------------
@@ -243,8 +260,6 @@ alias nvimdiff=vimdiff
 alias glog='git log'
 alias grlog='git log --reverse'
 
-alias ga='echo; boxes -d peek -s 60 $HOME/.git_aliases_overview.txt; echo'
-
 # show current git branch (not all branches as with 'git branch')
 alias gbr='git rev-parse --abbrev-ref HEAD'
 
@@ -254,23 +269,7 @@ alias gpbr='git push --set-upstream origin $(gbr)'
 export GIT_PAGER=/bin/cat
 
 
-test -f ~/.config/broot/launcher/bash/br && . $_
-
-alias ssha='eval $(ssh-agent) && ssh-add'
-alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
-
-
-# ----------------------------------------------------------------------------
-# go
-# ----------------------------------------------------------------------------
-
-if which go >/dev/null
-then
-    alias gt='go test'
-    alias gtv='go test -v'
-    alias gr='go run .'
-    alias gb='go build .'
-fi
+# test -f ~/.config/broot/launcher/bash/br && . $_
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
@@ -280,27 +279,22 @@ then
     IS_TMUX_SESSION=y
 fi
 
-ps -u $(id -un) | egrep -q '[s]sh-agent$' || eval $(ssh-agent)
 
+# lazy init...
+nvm() {
+    unset nvm
 
-alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
-if test -d $(brew --prefix)/opt/fzf
-then
-	. $(brew --prefix)/opt/fzf/shell/key-bindings.bash
-	export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+    if [ -d "$HOME/.nvm" ]
+    then
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # nvm itself
+        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # nvm bash_completion
 
-    alias ffzf='fzf --preview="test -e {} && bat {}"'
-
-	alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
-
-fi
-
-if [ -d "$HOME/.nvm" ]
-then
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # nvm itself
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # nvm bash_completion
-fi
+        nvm $@
+    else
+        echo "No nvm installation found :-(" >&2
+    fi
+}
 
 
 # ----------------------------------------------------------------------------
@@ -311,36 +305,6 @@ _start_tmux=y
 
 export IS_VSCODE_TERM=n
 export IS_TMUX_SESSION=n
-
-if [ "$TERM_PROGRAM" = "vscode" ]
-then
-    IS_VSCODE_TERM=y
-
-    # nvm special handling to ensure correct PATH var
-    if grep -q '/\.nvm/versions' <<< "$PATH"
-    then
-        PATH=$(
-            tr : '\n' <<< "$PATH" | awk '
-            BEGIN {
-                new_path = "";
-            }
-
-            {
-                if ($1 ~/\.nvm\/versions/) {
-                    nvm_path = $1;
-                }
-                else {
-                    new_path = ":" $0 new_path;
-                }
-            }
-
-            END {
-                new_path = nvm_path new_path;
-                print(new_path);
-            }
-        ')
-    fi
-fi
 
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
@@ -404,19 +368,12 @@ unset _start_tmux
 
 alias tns='tmux rename-session'
 alias tnw='tmux rename-window'
-alias tua='tmux ls | grep -v "(attached)" | cut -d: -f1'
+alias tlsa='tmux ls | grep -v "(attached)" | cut -d: -f1'
 alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
 alias tswap='tmux swap-pane -U'
+alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
-tls() {
-    tmux ls | awk -F: '{printf("%15s - %s\n", $1, $2)}' 
-}
-
-if which modpath >/dev/null
-then
-	# eval $(modpath --eval)
-	:
-fi
+alias tls='tmux ls | cut -d: -f1'
 
 export PATH
 
