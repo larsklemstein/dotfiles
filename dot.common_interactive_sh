@@ -3,7 +3,7 @@
 PO="$PATH"
 
 # ----------------------------------------------------------------------------
-# functions
+# (generic) functions
 # ----------------------------------------------------------------------------
 
 in_path() {
@@ -13,25 +13,34 @@ in_path() {
 # print multi columns
 pmc() {
     [ $# -eq 0 ] && { echo "???" >&2; return 1; }
-	local pstr=
+    local pstr=
 
-	local i
-	for ((i = 0; i < $1; i++))
-	do
-		[ -z "$pstr" ] && pstr='-' || pstr="$pstr -"
-	done
+    local i
+    for ((i = 0; i < $1; i++))
+    do
+        [ -z "$pstr" ] && pstr='-' || pstr="$pstr -"
+    done
 
-	eval paste $pstr
+    eval paste $pstr
 }
 
 # print header
 _ph() {
-	local header="${1:-???}"
-	echo
+    local header="${1:-???}"
+    echo
     echo "--- $header ---"
 }
 
 # add local pathes etc.
+
+mark_list_item() {
+    awk '/'$1'/ { $0 = $0 " <---"; } { print($0); }'
+}
+
+
+# ----------------------------------------------------------------------------
+# The holy $PATH
+# ----------------------------------------------------------------------------
 
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
     ~/app/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
@@ -52,20 +61,20 @@ do
     then
         eval $(${_brew_prog} shellenv)
 
-		if [ -d "$_brew_dir/opt/openjdk@17" ] && ! in_path "$_brew_dir/opt/openjdk@17/bin" 
-		then
-			PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
-		fi
+        if [ -d "$_brew_dir/opt/openjdk@17" ] && ! in_path "$_brew_dir/opt/openjdk@17/bin" 
+        then
+            PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
+        fi
 
-		export HOMEBREW_NO_ENV_HINTS=y
-		export BREW_BIN="$_brew_dir/bin"
+        export HOMEBREW_NO_ENV_HINTS=y
+        export BREW_BIN="$_brew_dir/bin"
 
-	    if [ -d $_bew_dir/lib/ruby/gems/*/bin ]
-		then
-			_gem_bin=$_bew_dir/lib/ruby/gems/*/bin
-			in_path $_gem_bin || PATH=$_gem_bin:$PATH
-			unset _gem_bin
-		fi
+        if [ -d $_bew_dir/lib/ruby/gems/*/bin ]
+        then
+            _gem_bin=$_bew_dir/lib/ruby/gems/*/bin
+            in_path $_gem_bin || PATH=$_gem_bin:$PATH
+            unset _gem_bin
+        fi
 
         break
     fi
@@ -131,7 +140,7 @@ alias pyt='pytest -v'
 alias pytm='pytest -v --color=no'
 
 per() {
-	pipenv run ./$*
+    pipenv run ./$*
 }
 
 alias dua="$BREW_BIN/dua -t4 interactive"
@@ -170,21 +179,14 @@ alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 # . $(brew --prefix)/opt/fzf/shell/key-bindings.bash
 #
 
-# lazy init...
-fzf() {
-    unset fzf
+# take fzf from $PATH now...
+eval "$(fzf --bash)"
 
-    # take fzf from $PATH now...
-    eval "$(fzf --bash)"
+export FZF_DEFAULT_OPTS='--border sharp --height=60%'
 
-    export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+alias ffzf='fzf --preview="test -e {} && bat {}"'
 
-    alias ffzf='fzf --preview="test -e {} && bat {}"'
-
-    alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
-
-    fzf $@
-}
+alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
 
 
 # ---------------------------------------------------------------------------
@@ -220,7 +222,7 @@ aws_gt() {
         json_out="$($aws_gt_cmd 2>&1)"
     fi
 
-	typeset rc=$?
+    typeset rc=$?
 
     [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
 
@@ -370,13 +372,35 @@ fi
 unset _start_tmux
 
 alias tns='tmux rename-session'
+alias tnsd='tmux rename-session $(basename $PWD)'
 alias tnw='tmux rename-window'
-alias tlsa='tmux ls | grep -v "(attached)" | cut -d: -f1'
+alias tcs="tmux display-message -p '#S'" # tmux current session
+alias tlsa='tmux ls | grep "(attached)" | cut -d: -f1 | mark_list_item $(tcs)'
+alias tls='tmux ls | cut -d: -f1 | mark_list_item $(tcs)'
 alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
 alias tswap='tmux swap-pane -U'
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
-alias tls='tmux ls | cut -d: -f1'
+# (cd to) tmux session home
+cdth() {
+    local my_session=$(tcs)
+    local dir
+
+    for dir in $HOME/{work,edu}/$my_session
+    do
+        if [ -d $dir ]
+        then
+            cd $dir || return 1
+            echo "" >&2
+            echo "-> $PWD" >&2
+            echo "" >&2
+            return 0
+        fi
+    done
+
+    echo "I'm homeless..." >&2
+    return 1
+}
 
 export PATH
 
