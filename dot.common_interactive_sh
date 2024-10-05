@@ -90,23 +90,13 @@ then
     export RUST_BACKTRACE=1
 fi
 
-# lazy init..
-pyenv() {
-    unset pyenv
+if test -d $HOME/.pyenv/bin
+then
+    PATH=$HOME/.pyenv/bin:$PATH
+    eval "$(pyenv init --path)"
 
-    if test -d $HOME/.pyenv/bin
-    then
-        PATH=$HOME/.pyenv/bin:$PATH
-        eval "$(pyenv init --path)"
-
-        export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-
-
-        pyenv $@
-    else
-        echo "No pyenv installation found :-(" >&2
-    fi
-}
+    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+fi
 
 # must be outsize the lazy init function
 alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
@@ -123,10 +113,18 @@ eval $(dircolors $HOME/.dircolors)
 alias open=exo-open
 alias cdw='cd $HOME/work; ls -ltr'
 
-alias ls='/bin/ls --color=auto'
-alias ll='ls -lh'
-alias la='ls -a'
-alias lla='ls -lHa'
+if which lsd >/dev/null
+then
+    alias ls="$(which lsd) --icon-theme=unicode"
+    alias ll='ls -l'
+    alias la='ls -a'
+    alias lla='ls -la'
+else
+    alias ls='/bin/ls --color=auto'
+    alias ll='ls -lh'
+    alias la='ls -a'
+    alias lla='ls -lHa'
+fi
 
 alias grep='grep --color=auto'
 alias egrep='grep -E'
@@ -134,16 +132,13 @@ alias fgrep='grep -F'
 
 alias dua="$BREW_BIN/dua -t4 interactive"
 
-alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
+alias nrg='rg --color=never'
 
-alias pyt='pytest -v'
-alias pytm='pytest -v --color=no'
+alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
 per() {
     pipenv run ./$*
 }
-
-alias dua="$BREW_BIN/dua -t4 interactive"
 
 export TERM=xterm-256color
 

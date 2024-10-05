@@ -63,12 +63,19 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 5
-
+vim.opt.scrolloff = 3
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+vim.keymap.set('n', '<F1>', '<cmd>bprevious<CR>')
+vim.keymap.set('n', '<F2>', '<cmd>bnext<CR>')
+
+vim.keymap.set('n', '<F3>', '<cmd>tabprevious<CR>')
+vim.keymap.set('n', '<F4>', '<cmd>tabnext<CR>')
+
+vim.keymap.set('i', '<C-e>', '<C-x><C-e>')
 
 -- Disable arrow keys in normal mode
 vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
