@@ -7,7 +7,7 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed
 vim.g.have_nerd_font = true
 
-vim.cmd("colorscheme gruvbox")
+vim.cmd("colorscheme zaibatsu")
 
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -63,12 +63,28 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 5
+vim.opt.scrolloff = 2
 
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+vim.keymap.set('n', '<F1>', '<cmd>bprevious<CR>')
+vim.keymap.set('n', '<F2>', '<cmd>bnext<CR>')
+
+vim.keymap.set('n', '<F3>', '<cmd>tabprevious<CR>')
+vim.keymap.set('n', '<F4>', '<cmd>tabnext<CR>')
+
+vim.keymap.set('n', '<C-L>', ':nohls<CR><C-L>')
+
+-- scroll up/down while in insert mode
+vim.keymap.set('i', '<C-e>', '<C-x><C-e>')
+vim.keymap.set('i', '<C-y>', '<C-x><C-y>')
+
+-- execute current buffer as local script
+vim.keymap.set('n', '<F5>', '<cmd>!./%<CR>')
+
 
 -- Disable arrow keys in normal mode
 vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
