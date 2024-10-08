@@ -1,7 +1,3 @@
-# so, now we either run in a tmux session or not...
-
-PO="$PATH"
-
 # ----------------------------------------------------------------------------
 # (generic) functions
 # ----------------------------------------------------------------------------
@@ -37,13 +33,17 @@ mark_list_item() {
     awk '/'$1'/ { $0 = $0 " <---"; } { print($0); }'
 }
 
+THIS_OS=linux
+[ $(uname -s) = 'Darwin' ] && THIS_OS=mac
+export THIS_OS
+
 
 # ----------------------------------------------------------------------------
 # The holy $PATH
 # ----------------------------------------------------------------------------
 
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
-    ~/app/bin ~/app/{go,jdk,VSCode-linux-x64}/bin \
+    ~/app/bin ~/app/jenkins-cli ~/app/{go,jdk,VSCode-linux-x64}/bin \
     ~/.npm-global ~/app/lkltools  
 do
     if ! in_path $_bin_dir 2>/dev/null
@@ -53,7 +53,7 @@ do
 done
 unset _bin_dir
 
-for _brew_dir in $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
+for _brew_dir in /opt/homebrew $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
 do
     _brew_prog=${_brew_dir}/bin/brew
 
@@ -108,9 +108,10 @@ test -d $TMPDIR || mkdir -vp $TMPDIR
 ulimit -c 0 -n 4096
 umask 002
 
-eval $(dircolors $HOME/.dircolors)
+test -f $HOME/.dircolors && eval $(dircolors $HOME/.dircolors)
 
-alias open=exo-open
+test $THIS_OS = linux && alias open=exo-open
+
 alias cdw='cd $HOME/work; ls -ltr'
 
 if which lsd >/dev/null
