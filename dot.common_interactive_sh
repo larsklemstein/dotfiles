@@ -101,7 +101,7 @@ fi
 # must be outsize the lazy init function
 alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 
-alias p3=python3
+
 
 
 export TMPDIR=$HOME/tmp
@@ -118,7 +118,11 @@ alias cdw='cd $HOME/work; ls -ltr'
 
 if which lsd >/dev/null
 then
-    alias ls="$(which lsd) --icon-theme=unicode"
+    #  alias ls="$(which lsd) --icon-theme=unicode"
+
+    # for unknown reason icons does not work in Ipad blink app
+    # as sometimes(!) tail characters are cut off
+    alias ls="$(which lsd) --icon=never"
     alias ll='ls -l'
     alias la='ls -a'
     alias lla='ls -la'
