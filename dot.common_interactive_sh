@@ -192,9 +192,13 @@ eval "$(fzf --bash)"
 
 export FZF_DEFAULT_OPTS='--border sharp --height=60%'
 
-alias ffzf='fzf --preview="test -e {} && bat {}"'
+alias ffzf='fzf --preview="test -e {} && bat --style=numbers --color=always {}"'
 
-alias fvi='$VISUAL $(fzf --height=80% --border --preview="bat {}")'
+fze() {
+    local choosen=$(ffzf)
+
+    [ -n "$choosen" ] && $EDITOR $choosen
+}
 
 
 # ---------------------------------------------------------------------------
