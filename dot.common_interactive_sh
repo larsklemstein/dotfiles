@@ -101,6 +101,8 @@ fi
 # must be outsize the lazy init function
 alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 
+alias p3=python3
+
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
@@ -138,6 +140,12 @@ alias nrg='rg --color=never'
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
 per() {
+    if [ ! -f ./Pipfile ]
+    then
+        echo "No Pipfile found here, abort!" >&2
+        return 1
+    fi
+
     pipenv run ./$*
 }
 
