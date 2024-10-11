@@ -7,7 +7,7 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed
 vim.g.have_nerd_font = true
 
-vim.cmd("colorscheme zaibatsu")
+vim.cmd("colorscheme sorbet")
 
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -18,12 +18,19 @@ vim.opt.expandtab = true
 
 vim.opt.mouse = 'a'
 
-vim.opt.showmode = false
+vim.opt.showmode = true
+
+vim.opt.updatecount = 0
+vim.g.loaded_matchparen = false
+
+-- disabled due super slow startup time on python3 files,
+-- probably I need to replace this through another file detection plugin
+vim.g.loaded_python3_provider = 0
 
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
--- vim.opt.clipboard = 'unnamedplus'
+vim.opt.clipboard = 'unnamedplus'
 
 
 -- Enable break indent
