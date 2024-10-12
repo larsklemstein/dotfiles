@@ -1,0 +1,40 @@
+live_config_reload = true
+
+[env]
+TERM = "xterm-256color"
+
+[window]
+decorations = "buttonless"
+dynamic_padding = false
+opacity = 0.9
+
+[window.padding]
+x = 5
+y = 0
+
+[font]
+size = 14.0
+
+[font.bold]
+family = "Go Mono NF"
+style = "Heavy"
+
+[font.bold_italic]
+family = "JetBrainsMono Nerd Font"
+style = "Heavy Italic"
+
+[font.italic]
+family = "Go Mono NF"
+style = "Medium Italic"
+
+[font.normal]
+family = "Go Mono NF"
+style = "Medium"
+
+[window.dimensions]
+columns = 100
+lines = 40
+
+[shell]
+program = "/bin/bash"
+args = ["-l"]
