@@ -82,6 +82,10 @@ done
 unset _brew_dir _brew_prog
 
 
+# ----------------------------------------------------------------------------
+# rust stuff
+# ----------------------------------------------------------------------------
+
 # activate rust if available
 if [ -f $HOME/.cargo/env ]
 then
@@ -98,11 +102,48 @@ then
     export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 fi
 
-# must be outsize the lazy init function
+
+# ----------------------------------------------------------------------------
+# python stuff
+# ----------------------------------------------------------------------------
+
 alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
 
 
+alias p3=python3
 
+per() {
+    if [ ! -f ./Pipfile ]
+    then
+        echo "No Pipfile found here, abort!" >&2
+        return 1
+    fi
+
+    pipenv run ./$*
+}
+
+pyc() {
+    local pyfile="$1"
+
+    echo "" >&2
+
+    echo "Check types:" >&2
+    pyright "$pyfile"
+    echo "[rc=$?]"
+
+    echo "" >&2
+
+    echo "Check style:" >&2
+    flake8 "$pyfile"
+    echo "[rc=$?]"
+
+    echo "" >&2
+}
+
+
+# ---------------------------------------------------------------------------
+# The nore or less usual stuff
+# ---------------------------------------------------------------------------
 
 export TMPDIR=$HOME/tmp
 test -d $TMPDIR || mkdir -vp $TMPDIR
@@ -143,16 +184,6 @@ alias nrg='rg --color=never'
 
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
-per() {
-    if [ ! -f ./Pipfile ]
-    then
-        echo "No Pipfile found here, abort!" >&2
-        return 1
-    fi
-
-    pipenv run ./$*
-}
-
 export TERM=xterm-256color
 
 export PAGER=less
@@ -165,6 +196,9 @@ set -o vi
 
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
+
+alias pstree='pstree -g3'
+
 
 # ---------------------------------------------------------------------------
 # ssh-agent stuff
@@ -315,7 +349,7 @@ nvm() {
 
 
 # ----------------------------------------------------------------------------
-# tmux handling...
+# tmux stuff
 # ----------------------------------------------------------------------------
 
 _start_tmux=y

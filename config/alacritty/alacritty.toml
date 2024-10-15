@@ -4,32 +4,33 @@ live_config_reload = true
 TERM = "xterm-256color"
 
 [window]
-decorations = "buttonless"
+# decorations = "buttonless"
 dynamic_padding = false
 opacity = 0.9
+title = "Das Terminal"
 
 [window.padding]
 x = 5
 y = 0
 
 [font]
-size = 14.0
+size = 16.0
 
 [font.bold]
-family = "Go Mono NF"
+family = "Hack Nerd Font Mono"
 style = "Heavy"
 
 [font.bold_italic]
-family = "JetBrainsMono Nerd Font"
+family = "Hack Nerd Font Mono"
 style = "Heavy Italic"
 
 [font.italic]
-family = "Go Mono NF"
+family = "Hack Nerd Font Mono"
 style = "Medium Italic"
 
 [font.normal]
-family = "Go Mono NF"
-style = "Medium"
+family = "Hack Nerd Font Mono"
+#style = "Medium"
 
 [window.dimensions]
 columns = 100
