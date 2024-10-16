@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# (generic) functions
+# generic stuff
 # ----------------------------------------------------------------------------
 
 in_path() {
@@ -37,6 +37,44 @@ THIS_OS=linux
 [ $(uname -s) = 'Darwin' ] && THIS_OS=mac
 export THIS_OS
 
+export TERM=xterm-256color
+
+fancy_print=$(which lolcat)
+[ -n "$fancy_print" ] || fancy_print=/bin/cat
+
+alias C=clear
+
+CC() {
+    clear
+    for _ in $(seq $LINES); do echo; done
+}
+
+NN() {
+    local nf=$HOME/.nuke.big
+    if [ ! -f $nf ]
+    then
+        CC
+        return
+    fi
+
+    local nl=$(wc -l $nf | awk '{print($1)}')
+
+    local nw=62
+    local nwa=$(((COLUMNS-62)/2))
+
+    local sa=$((LINES-nl))
+    local sl=$((sa/2))
+
+
+    local indent=""
+    for ((i = 0; i < $nwa; i++)); do
+        indent+=" "
+    done
+
+    for ((i=0; i < $sl; i++)); do echo; done
+    sed "s/^/$indent/" $nf | $fancy_print
+    for ((i=0; i < $sl; i++)); do echo; done
+}
 
 # ----------------------------------------------------------------------------
 # The holy $PATH
@@ -44,7 +82,7 @@ export THIS_OS
 
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
     ~/app/bin ~/app/jenkins-cli ~/app/{go,jdk,VSCode-linux-x64}/bin \
-    ~/.npm-global ~/app/lkltools  
+    ~/.npm-global ~/app/lkltools ~/.rd/bin
 do
     if ! in_path $_bin_dir 2>/dev/null
     then
@@ -69,9 +107,9 @@ do
         export HOMEBREW_NO_ENV_HINTS=y
         export BREW_BIN="$_brew_dir/bin"
 
-        if [ -d $_bew_dir/lib/ruby/gems/*/bin ]
+        if [ -d $_brew_dir/lib/ruby/gems/*/bin ]
         then
-            _gem_bin=$_bew_dir/lib/ruby/gems/*/bin
+            _gem_bin=$_brew_dir/lib/ruby/gems/*/bin
             in_path $_gem_bin || PATH=$_gem_bin:$PATH
             unset _gem_bin
         fi
@@ -184,7 +222,6 @@ alias nrg='rg --color=never'
 
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
-export TERM=xterm-256color
 
 export PAGER=less
 export LESS='-RC'
@@ -204,12 +241,14 @@ alias pstree='pstree -g3'
 # ssh-agent stuff
 # ---------------------------------------------------------------------------
 
-# we want a ssh-agent always:
-ps -u $(id -un) | egrep -q  '[s]sh-agent$' || eval $(ssh-agent)
-
 alias s='eval $(ssh-agent)'
+
+# we want a ssh-agent always:
+ps x | grep -q  '[s]sh-agent$' || s
+
 alias sa='ssh-add'
-alias kill_ssh_agents='for p in $(ps -u $LOGNAME |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
+
+alias kill_ssh_agents='for p in $(ps x |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
 
 alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 
@@ -322,14 +361,6 @@ export GIT_PAGER=/bin/cat
 
 # test -f ~/.config/broot/launcher/bash/br && . $_
 
-# we do not want tmux in the vscode terminal, so we need to know
-# VSCode might run as local client or via remote extension  (using node server)
-export IS_VSCODE_TERM=n
-if [ $IS_VSCODE_TERM = n -a "$TERM_PROGRAM" = tmux ]
-then
-    IS_TMUX_SESSION=y
-fi
-
 
 # lazy init...
 nvm() {
@@ -352,10 +383,19 @@ nvm() {
 # tmux stuff
 # ----------------------------------------------------------------------------
 
-_start_tmux=y
-
+# we do not want tmux in the vscode terminal, so we need to know
+# VSCode might run as local client or via remote extension  (using node server)
 export IS_VSCODE_TERM=n
 export IS_TMUX_SESSION=n
+
+if [ $IS_VSCODE_TERM = n -a "$TERM_PROGRAM" = tmux ]
+then
+    IS_TMUX_SESSION=y
+fi
+
+_start_tmux=y
+
+SKIP_TMUX=n 
 
 if [ "$SKIP_TMUX" != "y" \
      -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \

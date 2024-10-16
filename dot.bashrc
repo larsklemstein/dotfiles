@@ -2,6 +2,8 @@
 
 test -f $HOME/.bash_colors && . $_
 
+# unset variables should alert us
+
 # history related stuff
 export HISTCONTROL=ignoredups
 export HISTSIZE=20000
@@ -38,21 +40,30 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-pa() {
+# --- sophisticated prompt handling to impress team mates
+PA() {
     export PS1="\u@\h \W $ "
 }
 
-pb() {
+PB() {
 export PS1=${Col_IBlue}'
 \u@\h \w'${Col_Off}'
 $ '
 }
 
+alias PS="export PS1='$ '"
+
+PXS() {
+    export PS1="
+"
+}
+
+
 if [ $(id -un) = root ]
 then
     export PS1="${Col_IRed}\u@\h \W ${Col_Off} # "
 else
-    pa
+    PA
 fi
 
 ## enable programmable completion features (you don't need to enable
@@ -81,11 +92,7 @@ alias mst=my_session_type
 
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#         this should be the last line
+#         this should be the last lines
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
-
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/lklemstein/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
