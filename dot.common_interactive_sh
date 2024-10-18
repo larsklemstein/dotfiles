@@ -82,7 +82,7 @@ NN() {
 
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
     ~/app/bin ~/app/jenkins-cli ~/app/{go,jdk,VSCode-linux-x64}/bin \
-    ~/.npm-global ~/app/lkltools ~/.rd/bin
+    ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
 do
     if ! in_path $_bin_dir 2>/dev/null
     then
