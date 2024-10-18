@@ -356,6 +356,8 @@ alias gbr='git rev-parse --abbrev-ref HEAD'
 # push local branch to origin
 alias gpbr='git push --set-upstream origin $(gbr)'
 
+alias udf='(cd $HOME/.dotfiles; git pull; )'
+
 export GIT_PAGER=/bin/cat
 
 
@@ -385,10 +387,11 @@ nvm() {
 
 # we do not want tmux in the vscode terminal, so we need to know
 # VSCode might run as local client or via remote extension  (using node server)
-export IS_VSCODE_TERM=n
 export IS_TMUX_SESSION=n
 
-if [ $IS_VSCODE_TERM = n -a "$TERM_PROGRAM" = tmux ]
+[ -z "$IS_VSC_TERM" ] && IS_VSC_TERM=n
+
+if [ "$IS_VSC_TERM" = n -a "$TERM_PROGRAM" = tmux ]
 then
     IS_TMUX_SESSION=y
 fi
@@ -398,8 +401,8 @@ _start_tmux=y
 SKIP_TMUX=n 
 
 if [ "$SKIP_TMUX" != "y" \
-     -a "$IS_VSCODE_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
-    command -v tmux >/dev/null && [ -z "$TMUX" ]
+     -a "$IS_VSC_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
+command -v tmux >/dev/null && [ -z "$TMUX" ]
 then
     if [ -n "$SSH_CONNECTION" ]
     then
@@ -489,7 +492,6 @@ cdth() {
 }
 
 export PATH
-
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings
