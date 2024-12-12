@@ -96,3 +96,13 @@ alias mst=my_session_type
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/lklemstein/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
+
+PATH="/Users/lklemstein/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/Users/lklemstein/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/Users/lklemstein/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/Users/lklemstein/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/Users/lklemstein/perl5"; export PERL_MM_OPT;

@@ -261,7 +261,12 @@ alias fonts="fc-list |awk -v nix= '{\$1=nix; print;}' |cut -d: -f1| sort -u"
 #
 
 # take fzf from $PATH now...
-eval "$(fzf --bash)"
+if [ -n "$ZSH_NAME" ]
+then
+    eval "$(fzf --zsh)"
+else
+    eval "$(fzf --bash)"
+fi
 
 export FZF_DEFAULT_OPTS='--border sharp --height=60%'
 
