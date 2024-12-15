@@ -80,7 +80,7 @@ NN() {
 # The holy $PATH
 # ----------------------------------------------------------------------------
 
-for _bin_dir in ~/bin ~/.local/bin ~/go/bin \
+for _bin_dir in ~/bin ~/.local/bin ~/go/bin ~/.rd/bin \
     ~/app/bin ~/app/jenkins-cli ~/app/{go,jdk,VSCode-linux-x64}/bin \
     ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
 do
