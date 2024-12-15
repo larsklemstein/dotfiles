@@ -40,43 +40,12 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-# --- sophisticated prompt handling to impress team mates
-PA() {
-    export PS1="\u@\h \W $ "
-}
-
-PB() {
-export PS1=${Col_IBlue}'
-\u@\h \w'${Col_Off}'
-$ '
-}
-
-alias PS="export PS1='$ '"
-
-PXS() {
-    export PS1="
-"
-}
-
-
 if [ $(id -un) = root ]
 then
     export PS1="${Col_IRed}\u@\h \W ${Col_Off} # "
 else
     PA
 fi
-
-## enable programmable completion features (you don't need to enable
-## this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-## sources /etc/bash.bashrc).
-#if ! shopt -oq posix; then
-#  if [ -f /usr/share/bash-completion/bash_completion ]; then
-#    . /usr/share/bash-completion/bash_completion
-#  elif [ -f /etc/bash_completion ]; then
-#    . /etc/bash_completion
-#  fi
-#fi
-
 
 my_session_type() {
     local login_shell interactive
@@ -96,13 +65,3 @@ alias mst=my_session_type
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
-
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/lklemstein/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
-
-PATH="/Users/lklemstein/perl5/bin${PATH:+:${PATH}}"; export PATH;
-PERL5LIB="/Users/lklemstein/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
-PERL_LOCAL_LIB_ROOT="/Users/lklemstein/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-PERL_MB_OPT="--install_base \"/Users/lklemstein/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=/Users/lklemstein/perl5"; export PERL_MM_OPT;
