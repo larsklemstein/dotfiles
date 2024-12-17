@@ -7,6 +7,6 @@ precmd() { vcs_info }
 zstyle ':vcs_info:git:*' formats '%b '
 
 setopt PROMPT_SUBST
-PROMPT='%F{white}%2~ %F{magenta}${vcs_info_msg_0_}%f$ '
+PROMPT='%F{white}%2~ %F{magenta}${vcs_info_msg_0_}%f%% '
 
 . $HOME/.common_interactive_sh
