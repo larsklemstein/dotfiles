@@ -39,6 +39,28 @@ export THIS_OS
 
 export TERM=xterm-256color
 
+# cd (to) path of
+cdpo() {
+    [ $# -ne 1 ] && { echo '???' >&2; return 1; }
+    local prog="$1"
+    local fullpath=$(which $prog 2>/dev/null)
+
+    if type $prog | grep -q 'is an alias'
+    then
+        echo "Is an alias" >&2
+        return 1
+    fi
+
+    if [ -n "$fullpath" ]
+    then
+        cd ${fullpath%/*}
+        return 0
+    else
+        echo "Not found" >&1
+        return 1
+    fi
+}
+
 fancy_print=$(which lolcat)
 [ -n "$fancy_print" ] || fancy_print=/bin/cat
 
@@ -87,6 +109,7 @@ do
     if ! in_path $_bin_dir 2>/dev/null
     then
         PATH=$_bin_dir:$PATH
+        echo "added $_bin_dir"
     fi
 done
 unset _bin_dir
@@ -496,6 +519,7 @@ cdth() {
     return 1
 }
 
+readonly PATH
 export PATH
 
 # ----------------------------------------------------------------------------
