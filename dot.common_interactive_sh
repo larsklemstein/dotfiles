@@ -109,7 +109,6 @@ do
     if ! in_path $_bin_dir 2>/dev/null
     then
         PATH=$_bin_dir:$PATH
-        echo "added $_bin_dir"
     fi
 done
 unset _bin_dir
