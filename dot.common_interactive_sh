@@ -129,13 +129,6 @@ do
         export HOMEBREW_NO_ENV_HINTS=y
         export BREW_BIN="$_brew_dir/bin"
 
-        if [ -d $_brew_dir/lib/ruby/gems/*/bin ]
-        then
-            _gem_bin=$_brew_dir/lib/ruby/gems/*/bin
-            in_path $_gem_bin || PATH=$_gem_bin:$PATH
-            unset _gem_bin
-        fi
-
         break
     fi
 done
