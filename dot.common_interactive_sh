@@ -2,6 +2,10 @@
 # generic stuff
 # ----------------------------------------------------------------------------
 
+msg() {
+    echo "$*" >&2
+}
+
 in_path() {
     egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
 }
@@ -378,6 +382,17 @@ alias gpbr='git push --set-upstream origin $(gbr)'
 
 alias udf='(cd $HOME/.dotfiles; git pull; )'
 
+mkbranch() {
+    [ $# -eq 1 -o $# -eq 2 ] \
+        || { msg "usage: mkbranch branch [origin]"; return 1; }
+
+    local branch="$1"
+    local remote="${2:-origin}"
+
+    git checkout -b "$branch" || return 1
+    git push $remote $branch
+}
+
 export GIT_PAGER=/bin/cat
 
 
@@ -511,7 +526,6 @@ cdth() {
     return 1
 }
 
-readonly PATH
 export PATH
 
 # ----------------------------------------------------------------------------
