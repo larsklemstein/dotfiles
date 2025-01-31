@@ -380,6 +380,10 @@ alias gbr='git rev-parse --abbrev-ref HEAD'
 # push local branch to origin
 alias gpbr='git push --set-upstream origin $(gbr)'
 
+alias glbr='git branch -r | cut -d/ -f2- | grep -v HEAD'
+
+alias glbrce='glbr | grep -i --color=never "^ce-" | boxes -d peek'
+
 alias udf='(cd $HOME/.dotfiles; git pull; )'
 
 mkbranch() {
@@ -533,3 +537,20 @@ export PATH
 # ----------------------------------------------------------------------------
 
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
+#!/bin/bash -eu
+
+gco() {
+    local branches=$(git branch -l | fgrep -v '*')
+
+    local branch_choosen=$(fzf -d ' ' <<< "$branches")
+
+    if [ -n "$branch_choosen" ]
+    then
+        branch_choosen=$(tr -d ' ' <<< $branch_choosen)
+        git checkout "$branch_choosen"
+        git pull
+        return $?
+    else
+        return 1
+    fi
+}
