@@ -10,6 +10,27 @@ in_path() {
     egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
 }
 
+export_unique_PATH() {
+    local new_path=
+
+    for item in $(tr ':' '\n' <<< $PATH)
+    do
+        if [[ $new_path =~ (^|:)$item(:|$) ]]
+        then
+            continue
+        fi
+
+        if [ -z "$new_path" ]
+        then
+            new_path=$item
+        else
+            new_path=$new_path:$item
+        fi
+    done
+
+    export PATH="$new_path"
+}
+
 # print multi columns
 pmc() {
     [ $# -eq 0 ] && { echo "???" >&2; return 1; }
@@ -36,6 +57,18 @@ _ph() {
 mark_list_item() {
     awk '/'$1'/ { $0 = $0 " <---"; } { print($0); }'
 }
+
+edit_path() {
+    local tmpf=$(mktemp)
+
+    tr : '\n' <<< $PATH | sed '/^$/d' >$tmpf
+
+    ${EDITOR:-vi} $tmpf
+
+    export PATH=$(tr '\n' : < $tmpf)
+    /bin/rm -f $tmpf
+}
+
 
 THIS_OS=linux
 [ $(uname -s) = 'Darwin' ] && THIS_OS=mac
@@ -151,20 +184,16 @@ do
     then
         eval $(${_brew_prog} shellenv)
 
-        if [ -d "$_brew_dir/opt/openjdk@17" ] && ! in_path "$_brew_dir/opt/openjdk@17/bin" 
-        then
-            PATH="$_brew_dir/opt/openjdk@17/bin:$PATH"
-        fi
-
         export HOMEBREW_NO_ENV_HINTS=y
         export BREW_BIN="$_brew_dir/bin"
 
-        test -f $_brew_dir/opt/asdf/libexec/asdf.sh && . $_ 
+        test -f $_brew_dir/opt/asdf/libexec/asdf.sh && . $_
 
         break
     fi
 done
 unset _brew_dir _brew_prog
+
 
 
 # ----------------------------------------------------------------------------
@@ -224,6 +253,13 @@ pyc() {
 
     echo "" >&2
 }
+
+
+# ---------------------------------------------------------------------------
+# asdf
+# ---------------------------------------------------------------------------
+
+[ -d $HOME/.asdf/shims ] && PATH=$HOME/.asdf/shims:$PATH
 
 
 # ---------------------------------------------------------------------------
@@ -558,27 +594,13 @@ cdth() {
     return 1
 }
 
-export PATH
+# this should really, really be (almost) at end...
+export_unique_PATH
+
 
 # ----------------------------------------------------------------------------
-# source optionally local/private settings
+# source optionally local/private settings (which hopefully does not mess up
+# $PATH too much...
 # ----------------------------------------------------------------------------
-
+#
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
-#!/bin/bash -eu
-
-gco() {
-    local branches=$(git branch -l | fgrep -v '*')
-
-    local branch_choosen=$(fzf -d ' ' <<< "$branches")
-
-    if [ -n "$branch_choosen" ]
-    then
-        branch_choosen=$(tr -d ' ' <<< $branch_choosen)
-        git checkout "$branch_choosen"
-        git pull
-        return $?
-    else
-        return 1
-    fi
-}

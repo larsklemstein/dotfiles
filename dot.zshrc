@@ -14,4 +14,6 @@ HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
+which direnv >/dev/null && eval "$(direnv hook zsh)"
+
 . $HOME/.common_interactive_sh
