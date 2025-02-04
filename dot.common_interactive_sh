@@ -61,7 +61,7 @@ mark_list_item() {
 edit_path() {
     local tmpf=$(mktemp)
 
-    tr : '\n' <<< $PATH | sed '/^$/d' >$tmpf
+    tr : '\n' <<< $PATH | egrep -v '^ *(#|$)' >$tmpf
 
     ${EDITOR:-vi} $tmpf
 
@@ -166,10 +166,10 @@ NN() {
 # ----------------------------------------------------------------------------
 
 for _bin_dir in ~/bin ~/.local/bin ~/go/bin ~/.rd/bin \
-    ~/app/bin ~/app/jenkins-cli ~/app/{go,jdk,VSCode-linux-x64}/bin \
+    ~/app/bin ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
     ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
 do
-    if ! in_path $_bin_dir 2>/dev/null
+    if test -d $_bin_dir && ! in_path $_bin_dir 2>/dev/null
     then
         PATH=$_bin_dir:$PATH
     fi
