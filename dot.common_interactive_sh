@@ -58,17 +58,49 @@ mark_list_item() {
     awk '/'$1'/ { $0 = $0 " <---"; } { print($0); }'
 }
 
+show_path() {
+    tr -s : '\n' <<< $PATH
+}
+
 edit_path() {
     local tmpf=$(mktemp)
 
-    tr : '\n' <<< $PATH | egrep -v '^ *(#|$)' >$tmpf
+    show_path >$tmpf
 
     ${EDITOR:-vi} $tmpf
 
-    export PATH=$(tr '\n' : < $tmpf)
+    export PATH=$(tr '\n' : < $tmpf | egrep -v '^ *(#|$)')
     /bin/rm -f $tmpf
 }
 
+locate_prog() {
+    local _prog="$1"
+    local _path=$(which $_prog)
+    local which_rc=$?
+
+    if [[ "$_path" =~ "not found" ]]
+    then
+        echo "Not found" >&2
+        return 1
+    elif [[ "$_path" =~ "^$_prog: aliased to" ]]
+    then
+        echo "Is an alias" >&2
+        return 1
+    fi
+
+    local _basepath=${_path%/*}
+    local p
+
+    show_path | while read p
+    do
+        if grep -q "^$_basepath" <<< "$p"
+        then
+            echo "==> $p"
+        else
+            echo "    $p"
+        fi
+    done
+}
 
 THIS_OS=linux
 [ $(uname -s) = 'Darwin' ] && THIS_OS=mac
