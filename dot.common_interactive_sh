@@ -45,13 +45,6 @@ pmc() {
     eval paste $pstr
 }
 
-# print header
-_ph() {
-    local header="${1:-???}"
-    echo
-    echo "--- $header ---"
-}
-
 # add local pathes etc.
 
 mark_list_item() {
@@ -118,22 +111,6 @@ secage() {
     echo $(($(date +%s)-$(stat -t "$thing" | cut -d' ' -f13)))
 }
 
-asdf_plugins() {
-    local cache=$HOME/.asdf_plugin_list
-    local pattern=${1:-.}
-    local is_cached=y
-
-    if [ ! -f $cache ] || [ -f $cache -a $(secage $cache) -gt $((3600*8)) ]
-    then
-        echo "Re-build cache..." >&2
-        asdf plugin list-all >$cache
-        is_cached=n
-    fi
-
-    awk '$1 ~/'"$pattern"'/' $cache
-    [ "$is_cached" ] && echo '[cached]' >&2
-}
-
 # cd (to) path of
 cdpo() {
     [ $# -ne 1 ] && { echo '???' >&2; return 1; }
@@ -197,7 +174,7 @@ NN() {
 # The holy $PATH
 # ----------------------------------------------------------------------------
 
-for _bin_dir in ~/bin ~/.local/bin ~/go/bin ~/.rd/bin \
+for _bin_dir in ~/bin ~/.local/bin ~/.rd/bin \
     ~/app/bin ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
     ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
 do
@@ -219,8 +196,6 @@ do
         export HOMEBREW_NO_ENV_HINTS=y
         export BREW_BIN="$_brew_dir/bin"
 
-        test -f $_brew_dir/opt/asdf/libexec/asdf.sh && . $_
-
         break
     fi
 done
@@ -240,23 +215,9 @@ then
     export RUST_BACKTRACE=1
 fi
 
-if test -d $HOME/.pyenv/bin
-then
-    PATH=$HOME/.pyenv/bin:$PATH
-    eval "$(pyenv init --path)"
-
-    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-fi
-
-
 # ----------------------------------------------------------------------------
 # python stuff
 # ----------------------------------------------------------------------------
-
-alias pyenv_versions='_ph Available; pyenv install --list| grep "^ *3" | tr -d " " | egrep -v "(^3\.[0-3]\.|dev|a[0-9])" | pmc 8; _ph Installed; pyenv versions | grep -v "system" | sed -e "s/^\*//" -e "s/(.*//" | tr -d "[ ]" | pmc 8; echo;'
-
-
-alias p3=python3
 
 per() {
     if [ ! -f ./Pipfile ]
@@ -285,13 +246,6 @@ pyc() {
 
     echo "" >&2
 }
-
-
-# ---------------------------------------------------------------------------
-# asdf
-# ---------------------------------------------------------------------------
-
-[ -d $HOME/.asdf/shims ] && PATH=$HOME/.asdf/shims:$PATH
 
 
 # ---------------------------------------------------------------------------
