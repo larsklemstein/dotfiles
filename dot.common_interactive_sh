@@ -552,6 +552,8 @@ unset _start_tmux
 alias tns='tmux rename-session'
 alias tnsd='tmux rename-session $(basename $PWD)'
 alias tnw='tmux rename-window'
+alias tnwp='tmux rename-window ${PWD##*/}'
+alias tp=tnwp
 alias tcs="tmux display-message -p '#S'" # tmux current session
 alias tlsa='tmux ls | grep "(attached)" | cut -d: -f1 | mark_list_item $(tcs)'
 alias tls='tmux ls | cut -d: -f1 | mark_list_item $(tcs)'
@@ -588,5 +590,5 @@ export_unique_PATH
 # source optionally local/private settings (which hopefully does not mess up
 # $PATH too much...
 # ----------------------------------------------------------------------------
-#
+
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
