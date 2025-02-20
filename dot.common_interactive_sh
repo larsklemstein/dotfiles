@@ -10,6 +10,16 @@ in_path() {
     egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
 }
 
+
+# try to *not* pollute everything too much...
+is_worker_path() {
+    test $PWD = $HOME && return 1
+    test $PWD = $HOME/work && return 1
+    test $PWD = $HOME/edu && return 1
+
+    return 0
+}
+
 export_unique_PATH() {
     local new_path=
 
@@ -215,6 +225,7 @@ then
     export RUST_BACKTRACE=1
 fi
 
+
 # ----------------------------------------------------------------------------
 # python stuff
 # ----------------------------------------------------------------------------
@@ -345,6 +356,33 @@ fze() {
     local choosen=$(ffzf)
 
     [ -n "$choosen" ] && $EDITOR $choosen
+}
+
+# ---------------------------------------------------------------------------
+# mise stuff
+# ---------------------------------------------------------------------------
+
+
+# mise tool set
+mst() {
+    if ! is_worker_path
+    then
+        echo "Do not run here!"
+        return 1
+    fi
+
+    local choice=$(mise list | awk '{print($1 " " $2)}' | fzf)
+    choice=${choice/ /@}
+    choice=${choice/\/}
+
+    mise use $choice
+}
+
+# mise tool list
+# Problem: works only in project root. TODO: find Mise project root automatically
+# before executing this
+msl() {
+    awk '/\[tools\]/ {in_tools = 1; next;}/\[.*\]/ {in_tools=0; next;} { if (in_tools && /=/) {gsub(/"/, ""); printf("%s %s\n", $1, $3)}}' .config/mise/config.toml
 }
 
 
