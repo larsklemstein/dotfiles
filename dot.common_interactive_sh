@@ -359,7 +359,60 @@ fze() {
 }
 
 # ---------------------------------------------------------------------------
-# mise stuff
+# generic project related stuff
+# ---------------------------------------------------------------------------
+
+
+# return the searched item (given by sub path) backwards;
+# e.g. you could searvh for the project .gitignore file from any subdir
+# in the project
+fep() {
+    [ $# -eq 2 -o $# -eq 3 ] || \
+        { echo "Usage: fep start item [max_steps]" >&2; return 2; }
+
+    local start="$1"
+    local item="$2"
+    local max_steps=${3:-30}
+
+    local dir="$start"
+
+    [ "$dir" = . ] && dir="$PWD"
+
+    while [ "$dir" != "/" -a $((max_steps)) -gt 0 ]
+    do
+        local item_path="${dir}/${item}"
+
+        if [ -e "$item_path" ]
+        then
+            echo "$item_path"
+            return 0
+        fi
+
+        dir="${dir%/*}"
+        max_steps=$((max_steps-1))
+    done
+
+    return 1
+}
+
+fepb() {
+    [ $# -eq 2 -o $# -eq 3 ] || \
+        { echo "Usage: fepb start item [max_steps]" >&2; return 2; }
+
+    local start="$1"
+    local item="$2"
+    local max_steps=${3:-30}
+
+    local item_path=$(fep "$start" "$item" $max_steps) 
+    [ -z "$item_path" ] && return 1
+
+    echo ${item_path%/$item}
+    return 0
+}
+
+
+# ---------------------------------------------------------------------------
+# mise related stuff
 # ---------------------------------------------------------------------------
 
 
@@ -377,6 +430,18 @@ mst() {
 
     mise use $choice
 }
+
+
+mstat() {
+    local mise_cfg=.config/mise/config.toml
+    local project_base=$(fepb $PWD $mise_cfg)
+
+    [ -n "$project_base" ] || \
+        { echo "No $mise_cfg found" >&2; return 1; }
+
+    MISE_PROJECT_ROOT=$project_base . $project_base/${mise_cfg%/*}/enter_project.rc
+}
+
 
 # mise tool list
 # Problem: works only in project root. TODO: find Mise project root automatically
@@ -629,4 +694,5 @@ export_unique_PATH
 # $PATH too much...
 # ----------------------------------------------------------------------------
 
+echo pre_local
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
