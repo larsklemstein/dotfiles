@@ -275,22 +275,36 @@ test $THIS_OS = linux && alias open=exo-open
 
 alias cdw='cd $HOME/work; ls -ltr'
 
-if which lsd >/dev/null
-then
-    #  alias ls="$(which lsd) --icon-theme=unicode"
+alias ls="$(which lsd)"
+alias ll='ls -l'
+alias la='ls -a'
+alias lla='ls -la'
+alias llt='ls -l --tree'
+alias llg='ls -l --git'
+alias lltg='ls --git --tree'
+alias llgt='ls --git --tree'
 
-    # for unknown reason icons does not work in Ipad blink app
-    # as sometimes(!) tail characters are cut off
-    alias ls="$(which lsd)"
-    alias ll='ls -l'
-    alias la='ls -a'
-    alias lla='ls -la'
-else
-    alias ls='/bin/ls --color=auto'
-    alias ll='ls -lh'
-    alias la='ls -a'
-    alias lla='ls -lHa'
-fi
+pll() {
+    local dir="${1:-$PWD}"
+
+    [ "$dir" = $PWD ] && dir=$PWD
+
+    if [ -d .git ]
+    then
+        echo
+        lsd -l --git --tree -I __pycache__ -I node_modules "$dir"
+    else
+        echo "Dir $dir does not seem to be a git folder" >&2
+    fi
+
+    (
+        cd $dir
+        git branch | sed 's/^ *\* */Git branch: /' | boxes -d ansi-rounded
+    )
+
+    echo
+}
+
 
 alias grep='grep --color=auto'
 alias egrep='grep -E'
@@ -348,8 +362,13 @@ else
     eval "$(fzf --bash)"
 fi
 
-export FZF_DEFAULT_OPTS='--border sharp --height=60%'
+export FZF_DEFAULT_OPTS='--extended --layout=default --color=dark --style=full:rounded --height=20% --tmux 90%'
 
+export FZF_DEFAULT_COMMAND='fd --no-hidden -E __pycache__ -E node_modules'
+
+export FZF_CTRL_T_COMMAND='fd --strip-cwd-prefix'
+
+export FZF_CTRL_T_OPTS="--bind='ctrl-p:execute:bat --style=numbers {}' --bind='ctrl-e:execute:nvim {}' --preview='test -f {} && bat --color=always --theme=gruvbox-dark --style=plain --line-range=:50 {} --paging=never || lsd --tree -I __pycache__ -I node_modules --depth=8 --color=always {}'"
 alias ffzf='fzf --preview="test -e {} && bat --style=numbers --color=always {}"'
 
 fze() {
@@ -357,6 +376,7 @@ fze() {
 
     [ -n "$choosen" ] && $EDITOR $choosen
 }
+
 
 # ---------------------------------------------------------------------------
 # generic project related stuff
@@ -694,5 +714,5 @@ export_unique_PATH
 # $PATH too much...
 # ----------------------------------------------------------------------------
 
-echo pre_local
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
+
