@@ -572,106 +572,6 @@ mkbranch() {
 
 export GIT_PAGER=/bin/cat
 
-
-# test -f ~/.config/broot/launcher/bash/br && . $_
-
-
-## lazy init...
-#nvm() {
-#    unset nvm
-#
-#    if [ -d "$HOME/.nvm" ]
-#    then
-#        export NVM_DIR="$HOME/.nvm"
-#        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # nvm itself
-#        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # nvm bash_completion
-#
-#        nvm $@
-#    else
-#        echo "No nvm installation found :-(" >&2
-#    fi
-#}
-#
-
-# ----------------------------------------------------------------------------
-# tmux stuff
-# ----------------------------------------------------------------------------
-
-# we do not want tmux in the vscode terminal, so we need to know
-# VSCode might run as local client or via remote extension  (using node server)
-export IS_TMUX_SESSION=n
-
-[ -z "$IS_VSC_TERM" ] && IS_VSC_TERM=n
-
-if [ "$IS_VSC_TERM" = n -a "$TERM_PROGRAM" = tmux ]
-then
-    IS_TMUX_SESSION=y
-fi
-
-_start_tmux=y
-
-SKIP_TMUX=n 
-
-if [ "$SKIP_TMUX" != "y" \
-     -a "$IS_VSC_TERM" = n -a "$IS_TMUX_SESSION" = n ] && \
-command -v tmux >/dev/null && [ -z "$TMUX" ]
-then
-    if [ -n "$SSH_CONNECTION" ]
-    then
-        if tmux ls >/dev/null
-        then
-            # --> let use decide to attach to existing
-            #     ssh session or create new one
-            while [ $_start_tmux = y ]
-            do
-                echo ""
-                echo "*** Found tmux session(s) ***"
-
-                while true
-                do
-                    _input=$({ echo "->New_session"; tmux ls | egrep -v '^[0-9]+:'; } | fzf --height 10)
-
-                    if [ -z "$_input" ]
-                    then
-                        boxes -d info <<< "Start no tmux session"
-                        _start_tmux=n
-                        break
-                    fi
-
-                    if [ "$_input" = "->New_session" ]
-                    then
-                        unset _input
-                        tmux new-session
-                        _start_tmux=n
-                        break
-                    else
-                        _input=$(cut -d: -f1 <<< $_input)
-                        echo "input: $_input"
-                        if tmux ls | cut -d: -f1 | grep -q "^$_input$"
-                        then
-                            tmux attach -t $_input
-                            unset _input
-                            _start_tmux=n
-                            break
-                        else
-                            echo "No such session..." >&2
-                        fi
-                    fi
-                done
-            done
-        else
-            # --> ssh session, but no old sessions found
-            tmux new-session
-            return
-        fi
-    else
-        # --> no ssh session
-        tmux new-session
-    fi
-fi
-
-unset _start_tmux
-
 alias tns='tmux rename-session'
 alias tnsd='tmux rename-session $(basename $PWD)'
 alias tnw='tmux rename-window'
@@ -684,27 +584,6 @@ alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
 alias tswap='tmux swap-pane -U'
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
 
-# (cd to) tmux session home
-cdth() {
-    local my_session=$(tcs)
-    local dir
-
-    for dir in $HOME/{work,edu}/$my_session
-    do
-        if [ -d $dir ]
-        then
-            cd $dir || return 1
-            echo "" >&2
-            echo "-> $PWD" >&2
-            echo "" >&2
-            return 0
-        fi
-    done
-
-    echo "I'm homeless..." >&2
-    return 1
-}
-
 # this should really, really be (almost) at end...
 export_unique_PATH
 
@@ -715,4 +594,3 @@ export_unique_PATH
 # ----------------------------------------------------------------------------
 
 test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
-
