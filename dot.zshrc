@@ -10,7 +10,7 @@ setopt PROMPT_SUBST
 
 # alias is_vscode_shell="pstree -p $$ | sed -n 2,4p | grep -q '/Applications/Visual Studio Code.app/Contents/MacOS/Electro'"
 
-PROMPT='%F{white}%2~ %F{magenta}${vcs_info_msg_0_}%f%% '
+PROMPT="$(/bin/hostname -s | tr '[:upper:]' '[:lower:]')"' %F{white}%2~ %F{magenta}${vcs_info_msg_0_}%f%% '
 
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
