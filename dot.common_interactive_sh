@@ -41,26 +41,6 @@ export_unique_PATH() {
     export PATH="$new_path"
 }
 
-# print multi columns
-pmc() {
-    [ $# -eq 0 ] && { echo "???" >&2; return 1; }
-    local pstr=
-
-    local i
-    for ((i = 0; i < $1; i++))
-    do
-        [ -z "$pstr" ] && pstr='-' || pstr="$pstr -"
-    done
-
-    eval paste $pstr
-}
-
-# add local pathes etc.
-
-mark_list_item() {
-    awk '/'$1'/ { $0 = $0 " <---"; } { print($0); }'
-}
-
 show_path() {
     tr -s : '\n' <<< $PATH
 }
@@ -107,16 +87,6 @@ locate_prog() {
 
 export TERM=xterm-256color
 
-# print file or dir age in sec
-#
-secage() {
-    thing="$1"
-    [ $# -eq 1 ] || { echo "??" 2>&1; return 1; }
-    [ -f "$thing" -o -d "$thing" ] || { echo "$thing does not exist" 2>&1; return 1; }
-
-    echo $(($(date +%s)-$(stat -t "$thing" | cut -d' ' -f13)))
-}
-
 # cd (to) path of
 cdpo() {
     [ $# -ne 1 ] && { echo '???' >&2; return 1; }
@@ -147,33 +117,6 @@ alias C=clear
 CC() {
     clear
     for _ in $(seq $LINES); do echo; done
-}
-
-NN() {
-    local nf=$HOME/.nuke.big
-    if [ ! -f $nf ]
-    then
-        CC
-        return
-    fi
-
-    local nl=$(wc -l $nf | awk '{print($1)}')
-
-    local nw=62
-    local nwa=$(((COLUMNS-62)/2))
-
-    local sa=$((LINES-nl))
-    local sl=$((sa/2))
-
-
-    local indent=""
-    for ((i = 0; i < $nwa; i++)); do
-        indent+=" "
-    done
-
-    for ((i=0; i < $sl; i++)); do echo; done
-    sed "s/^/$indent/" $nf | $fancy_print
-    for ((i=0; i < $sl; i++)); do echo; done
 }
 
 # ----------------------------------------------------------------------------
@@ -210,50 +153,14 @@ unset _brew_dir _brew_prog
 
 
 # ----------------------------------------------------------------------------
-# rust stuff
+# rust
 # ----------------------------------------------------------------------------
-
-# activate rust if available
 if [ -f $HOME/.cargo/env ]
 then
     . $HOME/.cargo/env
 
     export RUST_BACKTRACE=1
 fi
-
-
-# ----------------------------------------------------------------------------
-# python stuff
-# ----------------------------------------------------------------------------
-
-per() {
-    if [ ! -f ./Pipfile ]
-    then
-        echo "No Pipfile found here, abort!" >&2
-        return 1
-    fi
-
-    pipenv run ./$*
-}
-
-pyc() {
-    local pyfile="$1"
-
-    echo "" >&2
-
-    echo "Check types:" >&2
-    pyright "$pyfile"
-    echo "[rc=$?]"
-
-    echo "" >&2
-
-    echo "Check style:" >&2
-    flake8 "$pyfile"
-    echo "[rc=$?]"
-
-    echo "" >&2
-}
-
 
 # ---------------------------------------------------------------------------
 # Misc
@@ -307,9 +214,8 @@ alias pstree='pstree -g3'
 
 
 # ---------------------------------------------------------------------------
-# ssh-agent stuff
+# ssh
 # ---------------------------------------------------------------------------
-
 alias s='eval $(ssh-agent)'
 
 # we want a ssh-agent always:
@@ -349,7 +255,17 @@ fze() {
 # ---------------------------------------------------------------------------
 # mise
 # ---------------------------------------------------------------------------
-# mise tool set
+case $SHELL in
+    */bash)
+        eval "$(mise activate bash)" ;;
+    */zsh)
+        eval "$(mise activate zsh)"
+        ;;
+    *)
+        echo "Don't know how to init mise for shell $SHELL" >&2
+esac
+
+
 mst() {
     if ! is_worker_path
     then
@@ -467,8 +383,6 @@ alias tnw='tmux rename-window'
 alias tnwp='tmux rename-window ${PWD##*/}'
 alias tp=tnwp
 alias tcs="tmux display-message -p '#S'" # tmux current session
-alias tlsa='tmux ls | grep "(attached)" | cut -d: -f1 | mark_list_item $(tcs)'
-alias tls='tmux ls | cut -d: -f1 | mark_list_item $(tcs)'
 alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
 alias tswap='tmux swap-pane -U'
 alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
