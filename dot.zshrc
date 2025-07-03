@@ -17,4 +17,6 @@ HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
+eval "$(mise activate zsh)"
+
 . $HOME/.common_interactive_sh
