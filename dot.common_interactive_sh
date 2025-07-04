@@ -357,9 +357,8 @@ alias gbr='git rev-parse --abbrev-ref HEAD'
 # push local branch to origin
 alias gpbr='git push --set-upstream origin $(gbr)'
 
-alias glbr='git branch -r | cut -d/ -f2- | grep -v HEAD'
-
-alias glbrce='glbr | grep -i --color=never "^ce-" | boxes -d peek'
+# show remote origin url
+alias gor="git remote -v | awk '/^origin/ && NR==1 { print(\$2)}'"
 
 mkbranch() {
     [ $# -eq 1 -o $# -eq 2 ] \
