@@ -199,6 +199,9 @@ alias nrg='rg --color=never'
 
 alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
 
+# set tabby tab name title
+alias tn="printf '\033]2;%s\007'"
+
 export PAGER=less
 export LESS='-RC'
 
