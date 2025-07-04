@@ -348,8 +348,7 @@ alias bat="$BREW_BIN/bat --color=auto --theme=gruvbox"
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
-alias glog='git log'
-alias grlog='git log --reverse'
+alias gl='git log --reverse'
 
 # show current git branch (not all branches as with 'git branch')
 alias gbr='git rev-parse --abbrev-ref HEAD'
