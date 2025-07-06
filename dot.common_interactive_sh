@@ -362,6 +362,46 @@ alias gpbr='git push --set-upstream origin $(gbr)'
 # show remote origin url
 alias gor="git remote -v | awk '/^origin/ && NR==1 { print(\$2)}'"
 
+mk_gitignore() {
+/bin/cat >.gitignore <<EOF
+.DS_Store
+
+__pycache__
+*.pyc
+
+npm_modules
+
+*.o
+
+.env
+EOF
+}
+
+ginit() {
+    local dir="${1:-}"
+
+    if [ -n "$dir" ]
+    then
+        test -d "$dir" && { msg "dir \"$dir\" already exists"; return 1; }
+        mkdir -p "$dir"
+        cd "$dir"
+    fi
+
+    if [ ! -f README.md ]
+    then
+        echo -e "# Description\n\nBla..." >README.md
+    fi
+
+    mk_gitignore
+
+    git init || return 1
+
+    git add -A . || return 1
+
+    git commit -m "iniial version"
+}
+
+
 mkbranch() {
     [ $# -eq 1 -o $# -eq 2 ] \
         || { msg "usage: mkbranch branch [origin]"; return 1; }
