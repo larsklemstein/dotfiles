@@ -431,6 +431,8 @@ alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v
 # this should really, really be (almost) at end...
 export_unique_PATH
 
+test -n "$SSH_CONNECTION" && which neofetch >/dev/null && neofetch
+
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings (which hopefully does not mess up
