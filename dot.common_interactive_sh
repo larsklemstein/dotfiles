@@ -240,7 +240,7 @@ else
     eval "$(fzf --bash)"
 fi
 
-export FZF_DEFAULT_OPTS='--extended --layout=default --color=dark --style=full:rounded --height=20% --tmux 90%'
+export FZF_DEFAULT_OPTS='--extended --layout=default --color=dark --style=full:rounded --height=50% --tmux 90%'
 
 export FZF_DEFAULT_COMMAND='fd --no-hidden -E __pycache__ -E node_modules'
 
@@ -412,6 +412,19 @@ mkbranch() {
     git checkout -b "$branch" || return 1
     git push $remote $branch
 }
+
+chbranch() {
+    local choosen=$(git branch -a | grep -v '^ *\*' \
+    | sed -e s'/^  *//' -e 's%remotes/origin/%%' | fzf)
+
+    [ -n "$choosen" ] && {
+        git checkout "$choosen" || return 1
+        echo "Switched to branch $choosen"
+    }
+}
+
+alias mbr=mkbranch
+alias cbr=chbranch
 
 export GIT_PAGER=/bin/cat
 
