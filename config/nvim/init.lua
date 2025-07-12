@@ -7,8 +7,6 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed
 vim.g.have_nerd_font = true
 
-vim.cmd("colorscheme sorbet")
-
 vim.opt.number = true
 vim.opt.relativenumber = true
 
@@ -109,7 +107,7 @@ vim.call('plug#begin')
 
 Plug 'nordtheme/vim'
 Plug 'preservim/nerdtree'
-Plug 'tpope/vim-commentaryee'
+Plug 'tpope/vim-commentary'
 
 vim.call('plug#end')
 
