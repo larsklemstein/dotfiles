@@ -98,3 +98,19 @@ vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+
+
+local vim = vim
+local Plug = vim.fn['plug#']
+
+vim.call('plug#begin')
+
+-- Shorthand notation for GitHub; translates to https://github.com/junegunn/seoul256.vim.git
+
+Plug 'nordtheme/vim'
+Plug 'preservim/nerdtree'
+Plug 'tpope/vim-commentaryee'
+
+vim.call('plug#end')
+
+vim.cmd('silent! colorscheme nord')
