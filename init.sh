@@ -6,8 +6,6 @@
 
 typeset DIR_BASENAME=${PWD##*/}
 
-typeset GRUVBOX_GIT=https://github.com/morhetz/gruvbox
-
 typeset PROGNAME=${0##*/}
 
 msg() {
@@ -71,21 +69,6 @@ cd /tmp
 tmpdir=$(mktemp -d XXXXXXXXXX)
 trap "/bin/rm -rf $PWD/$tmpdir" 0 1 2
 
-vimdir=$HOME/.vim
-
-if [ ! -d "$vimdir" ]
-then
-    msg "Installing Gruvbox vim colorscheme...."
-    mkdir -p $vimdir
-
-    cd $tmpdir
-
-    git clone --depth 1 $GRUVBOX_GIT
-
-    mv gruvbox/colors $vimdir
-    mv gruvbox/autoload $vimdir
-fi
-
 msg "Install GoMono font..."
 os_info=$(uname -v)
 
@@ -118,3 +101,21 @@ then
 
      msg "!!! please set git user and email!"
 fi
+
+test -d $HOME/.config || mkdir -p "$HOME/.config"
+
+for config_dir in config
+do
+    config_dest=$HOME/.config/${config_dir##*/}
+    if [ -d "$config_dest" |
+    then
+        msg "Config dir $config_dest already there, won't touch it..."
+        continue
+    fi
+
+    (
+        cd $HOME/.config
+        ln -s ../.dotfiles/config/${config_dir##*/} ${config_dir##*/}
+        msg "Created symlink $config_dest"
+    )
+done

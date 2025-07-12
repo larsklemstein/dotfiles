@@ -180,14 +180,14 @@ test $THIS_OS = linux && alias open=exo-open
 
 alias cdw='cd $HOME/work; ls -ltr'
 
-alias ls="$(which lsd)"
+alias ls="eza --icons=auto"
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
-alias llt='ls -l --tree'
-alias llg='ls -l --git'
-alias lltg='ls --git --tree'
-alias llgt='ls --git --tree'
+alias llt='ll --tree'
+alias llg='ll --git'
+alias lltg='ll --git --tree'
+alias llgt='ll --git --tree'
 
 alias grep='grep --color=auto'
 alias egrep='grep -E'
