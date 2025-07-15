@@ -116,7 +116,7 @@ Plug 'nvim-telescope/telescope.nvim'
 
 vim.call('plug#end')
 
-vim.cmd('colorscheme sorbet')
+vim.cmd('colorscheme nord')
 
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
