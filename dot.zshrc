@@ -18,3 +18,5 @@ SAVEHIST=10000
 setopt appendhistory
 
 . $HOME/.common_interactive_sh
+
+source /Users/larsklemstein/.config/broot/launcher/bash/br

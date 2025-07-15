@@ -180,6 +180,8 @@ test $THIS_OS = linux && alias open=exo-open
 
 alias cdw='cd $HOME/work; ls -ltr'
 
+export EZA_CONFIG_DIR=$HOME/.config/eza
+
 alias ls="eza --icons=auto"
 alias ll='ls -l'
 alias la='ls -a'
@@ -246,13 +248,20 @@ export FZF_DEFAULT_COMMAND='fd --no-hidden -E __pycache__ -E node_modules'
 
 export FZF_CTRL_T_COMMAND='fd --strip-cwd-prefix'
 
-export FZF_CTRL_T_OPTS="--bind='ctrl-p:execute:bat --style=numbers {}' --bind='ctrl-e:execute:nvim {}' --preview='test -f {} && bat --color=always --theme=gruvbox-dark --style=plain --line-range=:50 {} --paging=never || lsd --tree -I __pycache__ -I node_modules --depth=8 --color=always {}'"
-alias ffzf='fzf --preview="test -e {} && bat --style=numbers --color=always {}"'
+export FZF_CTRL_T_OPTS="--bind='ctrl-p:execute:bat --style=numbers {}' --bind='ctrl-e:execute:nvim {}' --preview='test -f {} && bat --color=always --theme=gruvbox-dark --style=plain --line-range=:50 {} --paging=never || eza --tree -I __pycache__ -I node_modules -L=8 --color=always {}'"
+
+# alias ffzf='fzf --preview="test -e {} && bat --style=numbers --color=always {}"'
 
 fze() {
     local choosen=$(ffzf)
 
     [ -n "$choosen" ] && $EDITOR $choosen
+}
+
+fcd() {
+    local choosen=$(fd -t directory| fzf)
+
+    [ -n "$choosen" ] && cd $choosen
 }
 
 # ---------------------------------------------------------------------------
@@ -444,7 +453,12 @@ alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v
 # this should really, really be (almost) at end...
 export_unique_PATH
 
-test -n "$SSH_CONNECTION" && which neofetch >/dev/null && neofetch
+if test -z "$MADE_NEOFETCH_CALL" && \
+    test -n "$SSH_CONNECTION" && which neofetch >/dev/null
+then
+    neofetch
+    export MADE_NEOFETCH_CALL=y
+fi
 
 
 # ----------------------------------------------------------------------------

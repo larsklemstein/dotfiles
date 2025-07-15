@@ -97,7 +97,6 @@ vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
-
 local vim = vim
 local Plug = vim.fn['plug#']
 
@@ -109,6 +108,21 @@ Plug 'nordtheme/vim'
 Plug 'preservim/nerdtree'
 Plug 'tpope/vim-commentary'
 
+Plug 'nvim-telescope/telescope-fzy-native.nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+
 vim.call('plug#end')
 
-vim.cmd('silent! colorscheme nord')
+vim.cmd('colorscheme sorbet')
+
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+
+-- This will load fzy_native and have it override the default file sorter
+require('telescope').load_extension('fzy_native')
