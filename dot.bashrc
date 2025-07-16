@@ -60,9 +60,3 @@ export PS1='${PWD##*/} $ '
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
-
-### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/lklemstein/.rd/bin:$PATH"
-### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
-
-source /Users/larsklemstein/.config/broot/launcher/bash/br
