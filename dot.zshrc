@@ -20,3 +20,5 @@ setopt appendhistory
 . $HOME/.common_interactive_sh
 
 source /Users/larsklemstein/.config/broot/launcher/bash/br
+
+source /Users/lklemstein/.config/broot/launcher/bash/br
