@@ -114,6 +114,8 @@ Plug 'nvim-tree/nvim-web-devicons'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 
+Plug 'github/copilot.vim'
+
 vim.call('plug#end')
 
 -- set colorscheme dpeened on on env environment variable SSH_TERMINAL_IPAD
