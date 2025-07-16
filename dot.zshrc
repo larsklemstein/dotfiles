@@ -17,8 +17,7 @@ HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
+test -f $HOME/.config/broot/launcher/bash/br && source $_
+
 . $HOME/.common_interactive_sh
 
-source /Users/larsklemstein/.config/broot/launcher/bash/br
-
-source /Users/lklemstein/.config/broot/launcher/bash/br
