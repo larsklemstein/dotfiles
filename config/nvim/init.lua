@@ -116,7 +116,12 @@ Plug 'nvim-telescope/telescope.nvim'
 
 vim.call('plug#end')
 
-vim.cmd('colorscheme nord')
+-- set colorscheme dpeened on on env environment variable SSH_TERMINAL_IPAD
+if vim.env.SSH_TERMINAL_IPAD then
+  vim.cmd('colorscheme habamax')
+else
+  vim.cmd('colorscheme nord')
+end 
 
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
