@@ -125,6 +125,13 @@ else
   vim.cmd('colorscheme nord')
 end 
 
+-- disable Copilot if file $HOME/.config/nvim/copilot_disabled exists
+if vim.fn.filereadable(vim.env.HOME .. '/.copilot_disabled') == 1 then
+  vim.g.copilot_enabled = false
+else
+  vim.g.copilot_enabled = true
+end
+
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
