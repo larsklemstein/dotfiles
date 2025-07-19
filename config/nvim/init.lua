@@ -137,3 +137,29 @@ vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find f
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
 vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+
+-- use CTRL-J to accept Copilot suggestions
+vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
+  expr = true,
+  replace_keycodes = false
+})
+vim.g.copilot_no_tab_map = true
+
+-- use CTRL-D to deny Copilot suggestions
+vim.keymap.set('i', '<C-D>', 'copilot#Dismiss()', {
+  expr = true,
+  replace_keycodes = false
+})
+
+-- use leader dc to toggle Copilot
+vim.keymap.set('n', '<leader>cc', function()
+  if not vim.g.copilot_enabled then
+    vim.cmd('Copilot enable')
+    vim.g.copilot_enabled = true
+    print('Copilot enabled')
+  else
+    vim.cmd('Copilot disable')
+    print('Copilot disabled')
+    vim.g.copilot_enabled = false
+  end
+end, { desc = 'Toggle Copilot' })
