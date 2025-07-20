@@ -359,7 +359,9 @@ aws_gt() {
 export PAGER=less
 export LESS='-RC'
 
-alias bat="$BREW_BIN/bat --color=auto --theme=gruvbox"
+alias bat="$BREW_BIN/bat --color=auto --theme=Nord"
+alias pbat='bat -p'
+alias nbat='bat -n'
 
 
 # ----------------------------------------------------------------------------
