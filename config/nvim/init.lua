@@ -163,3 +163,8 @@ vim.keymap.set('n', '<leader>cc', function()
     vim.g.copilot_enabled = false
   end
 end, { desc = 'Toggle Copilot' })
+
+if vim.env.SSH_CLIENT and vim.env.SSH_CLIENT:match('^10%.0%.112%.71 ') then
+  vim.cmd('colorscheme habamax')
+  print('Using habamax colorscheme')
+end
