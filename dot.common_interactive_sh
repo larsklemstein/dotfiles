@@ -471,6 +471,8 @@ then
     export MADE_NEOFETCH_CALL=y
 fi
 
+test -f $HOME/.config/broot/launcher/bash/br && source $_
+
 
 # ----------------------------------------------------------------------------
 # source optionally local/private settings (which hopefully does not mess up

@@ -1,14 +1,18 @@
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 autoload -Uz vcs_info
+autoload -Uz compinit && compinit
+
+# enable auto-completion
+# this is needed for the completion of git commands
+zstyle ':completion:*' completer _complete _ignored _approximate _correct
+
 
 precmd() { vcs_info }
 
 zstyle ':vcs_info:git:*' formats '%b '
 
 setopt PROMPT_SUBST
-
-# alias is_vscode_shell="pstree -p $$ | sed -n 2,4p | grep -q '/Applications/Visual Studio Code.app/Contents/MacOS/Electro'"
 
 PROMPT="$(/bin/hostname -s | tr '[:upper:]' '[:lower:]')"' %F{white}%2~ %F{magenta}${vcs_info_msg_0_}%f%% '
 
@@ -17,7 +21,4 @@ HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
-test -f $HOME/.config/broot/launcher/bash/br && source $_
-
 . $HOME/.common_interactive_sh
-
