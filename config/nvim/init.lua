@@ -1,14 +1,14 @@
-require("globals")
+require("config.globals")
 
-require("keymaps")
-require("options")
+require("config.keymaps")
+require("config.options")
 
-require("plugins_load")
+require("config.plugins_load")
 
-require("nvim_tree")
-require("telescope")
-require("blamer")
-require("copilot")
-require("lsp")
+require("config.nvim_tree")
+require("config.telescope")
+require("config.blamer")
+require("config.copilot")
+require("config.lsp")
 
-require("set_colorscheme")
+require("config.set_colorscheme")

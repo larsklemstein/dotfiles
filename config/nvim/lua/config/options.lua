@@ -61,3 +61,5 @@ vim.opt.mouse = 'a'
 vim.opt.showmode = true
 
 vim.opt.updatecount = 0
+
+vim.opt.winborder = 'rounded'
