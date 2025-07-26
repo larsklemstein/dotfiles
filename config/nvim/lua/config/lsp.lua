@@ -3,6 +3,7 @@ vim.lsp.enable("lua_ls")
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
+
     if client:supports_method("textDocument/completion") then
       vim.opt.completeopt = { "menu", "menuone", "noinsert", "fuzzy", "popup" }
       vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
@@ -13,4 +14,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
 })
 
-vim.api.nvim_create_autocmd()
+vim.diagnostic.config({
+    virtual_lines = true,
+    update_in_insert = true,
+})
