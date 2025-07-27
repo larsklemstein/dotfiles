@@ -10,5 +10,6 @@ require("config.telescope")
 require("config.blamer")
 require("config.copilot")
 require("config.lsp")
+require("config.lint")
 
 require("config.set_colorscheme")

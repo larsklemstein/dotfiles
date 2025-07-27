@@ -1,4 +1,6 @@
 vim.lsp.enable("lua_ls")
+vim.lsp.enable("yaml_ls")
+vim.lsp.enable("bash_ls")
 
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
@@ -16,5 +18,5 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 vim.diagnostic.config({
     virtual_lines = true,
-    update_in_insert = true,
+    update_in_insert = false,
 })

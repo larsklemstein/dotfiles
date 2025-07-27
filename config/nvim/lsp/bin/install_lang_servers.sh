@@ -12,6 +12,7 @@ servers_from_npm=(
 servers_from_brew=(
     pyright
     rust-analyzer
+    yaml-language-server
 )
 
 for server in "${servers_from_npm[@]}"

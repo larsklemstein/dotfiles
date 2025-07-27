@@ -13,5 +13,6 @@ Plug 'nvim-lua/plenary.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'github/copilot.vim'
 Plug 'APZelos/blamer.nvim'
+Plug 'mfussenegger/nvim-lint'
 
 vim.call('plug#end')
