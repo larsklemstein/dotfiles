@@ -13,3 +13,7 @@ require("nvim-tree").setup({
   },
 })
 
+
+-- vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tt', ':NvimTreeFindFileToggle<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tf', ':NvimTreeFindFile<CR>', { noremap = true, silent = true })

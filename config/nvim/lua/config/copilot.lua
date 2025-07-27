@@ -1,4 +1,10 @@
 
+-- use CTRL-J to accept Copilot suggestions
+vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
+  expr = true,
+  replace_keycodes = false
+})
+
 -- use CTRL-D to deny Copilot suggestions
 vim.keymap.set('i', '<C-D>', 'copilot#Dismiss()', {
   expr = true,
