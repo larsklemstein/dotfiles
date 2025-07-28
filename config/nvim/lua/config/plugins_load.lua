@@ -14,5 +14,6 @@ Plug 'neovim/nvim-lspconfig'
 -- Plug 'github/copilot.vim'
 Plug 'APZelos/blamer.nvim'
 Plug 'mfussenegger/nvim-lint'
+Plug 'vague2k/vague.nvim'
 
 vim.call('plug#end')
