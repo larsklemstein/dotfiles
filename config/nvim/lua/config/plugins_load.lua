@@ -11,8 +11,9 @@ Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'nvim-tree/nvim-web-devicons'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'neovim/nvim-lspconfig'
--- Plug 'github/copilot.vim'
+Plug 'github/copilot.vim'
 Plug 'APZelos/blamer.nvim'
 Plug 'mfussenegger/nvim-lint'
+Plug 'kdheepak/lazygit.nvim'
 
 vim.call('plug#end')
