@@ -24,9 +24,11 @@ vim.keymap.set('n', '<leader>cc', function()
   end
 end, { desc = 'Toggle Copilot' })
 
-if vim.env.SSH_CLIENT and vim.env.SSH_CLIENT:match('^10%.0%.112%.71 ') then
-  vim.cmd('colorscheme habamax')
-  print('Using habamax colorscheme')
+-- set colormode default, if env var SSH_CONNECTION is 10.0.112.72, else habaxmax
+if vim.env.SSH_CONNECTION and vim.env.SSH_CONNECTION:match('10%.0%.112%.72') then
+  vim.g.copilot_colormode = 'default'
+else
+  vim.g.copilot_colormode = 'habaxmax'
 end
 
 -- use CTRL-J to accept Copilot suggestions
