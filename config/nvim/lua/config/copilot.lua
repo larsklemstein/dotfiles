@@ -31,11 +31,6 @@ else
   vim.g.copilot_colormode = 'habaxmax'
 end
 
--- use CTRL-J to accept Copilot suggestions
-vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
-  expr = true,
-  replace_keycodes = false
-})
 vim.g.copilot_no_tab_map = true
 
 -- disable Copilot if file $HOME/.config/nvim/copilot_disabled exists
@@ -44,3 +39,4 @@ if vim.fn.filereadable(vim.env.HOME .. '/.copilot_disabled') == 1 then
 else
   vim.g.copilot_enabled = true
 end
+

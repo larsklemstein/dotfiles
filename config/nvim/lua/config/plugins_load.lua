@@ -1,4 +1,4 @@
-local vim = vim
+-- local vim = vim
 local Plug = vim.fn['plug#']
 
 vim.call('plug#begin')
@@ -14,8 +14,12 @@ Plug 'github/copilot.vim'
 Plug 'APZelos/blamer.nvim'
 Plug 'mfussenegger/nvim-lint'
 Plug 'kdheepak/lazygit.nvim'
-Plug 'thesimonho/kanagawa-paper.nvim'
 Plug 'nvim-lualine/lualine.nvim'
-Plug 'folke/zen-mode.nvim'
+
+
+-- color schemes
+Plug 'thesimonho/kanagawa-paper.nvim'
+Plug 'Mofiqul/dracula.nvim'
+
 
 vim.call('plug#end')
