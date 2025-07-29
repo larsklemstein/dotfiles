@@ -13,7 +13,9 @@ Plug 'neovim/nvim-lspconfig'
 Plug 'github/copilot.vim'
 Plug 'APZelos/blamer.nvim'
 Plug 'mfussenegger/nvim-lint'
-Plug 'vague2k/vague.nvim'
 Plug 'kdheepak/lazygit.nvim'
+Plug 'thesimonho/kanagawa-paper.nvim'
+Plug 'nvim-lualine/lualine.nvim'
+Plug 'folke/zen-mode.nvim'
 
 vim.call('plug#end')

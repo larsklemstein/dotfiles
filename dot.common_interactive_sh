@@ -189,9 +189,7 @@ test $THIS_OS = linux && alias open=exo-open
 
 alias cdw='cd $HOME/work; ls -ltr'
 
-export EZA_CONFIG_DIR=$HOME/.config/eza
-
-alias ls="eza --icons=auto"
+alias ls="lsd --group-directories-first"
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'

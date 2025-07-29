@@ -18,6 +18,7 @@ vim.keymap.set('i', '<C-y>', '<C-x><C-y>')
 -- execute current buffer as local script
 vim.keymap.set('n', '<F5>', '<cmd>!./%<CR>')
 
+vim.keymap.set('n', '<C-C>', ':Commentary<CR>')
 
 -- Disable arrow keys in normal mode
 vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
