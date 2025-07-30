@@ -6,7 +6,7 @@ if not ok then
 end
 
 lint.linters_by_ft = {
-   -- python = {'pyright'},
+   python = {'ruff'},
    yaml = {'yamllint'},
 }
 

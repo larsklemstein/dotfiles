@@ -1,5 +1,7 @@
 vim.lsp.enable("lua_ls")
 vim.lsp.enable("yaml_ls")
+vim.lsp.enable("python_ls")
+-- vim.lsp.enable("ruff_ls")
 
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
@@ -11,6 +13,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.keymap.set("i", "<C-Space>", function()
           vim.lsp.completion.get()
         end)
+    end
+
+    if client.name == 'ruff' then
+      -- Disable hover in favor of Pyright
+      client.server_capabilities.hoverProvider = false
     end
   end,
 })

@@ -11,6 +11,7 @@ require("config.blamer")
 -- require("config.copilot")
 require("config.lualine")
 require("config.lsp")
+require("config.treesitter")
 -- Load lint config after plugins are loaded
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
