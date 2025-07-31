@@ -3,7 +3,6 @@
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
 
-
 -- Enable break indent
 vim.opt.breakindent = true
 
@@ -25,7 +24,7 @@ vim.opt.signcolumn='yes:1'
 
 -- Decrease mapped sequence wait time
 -- Displays which-key popup sooner
-vim.opt.timeoutlen = 300
+vim.opt.timeoutlen = 800
 
 -- Configure how new splits should be opened
 vim.opt.splitright = true
