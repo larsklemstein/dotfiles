@@ -28,10 +28,11 @@ vim.diagnostic.config({
     update_in_insert = false,
     signs = {
         text = {
-            [vim.diagnostic.severity.WARN] = 'W',
-            [vim.diagnostic.severity.HINT] = 'H',
-            [vim.diagnostic.severity.INFO] = 'I',
-            [vim.diagnostic.severity.ERROR] = 'E',
+            [vim.diagnostic.severity.HINT] = '👉',
+            [vim.diagnostic.severity.WARN] = '⚠️',
+            [vim.diagnostic.severity.INFO] = 'ℹ️',
+            [vim.diagnostic.severity.ERROR] = '❌',
         },
     }
 })
+
