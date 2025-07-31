@@ -193,10 +193,10 @@ alias ls="lsd --group-directories-first"
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
-alias llt='ll --tree'
+alias llt='ll --tree -I __pycache__'
 alias llg='ll --git'
-alias lltg='ll --git --tree'
-alias llgt='ll --git --tree'
+alias lltg='ll --git --tree -I __pycache__'
+alias llgt='ll --git --tree -I __pycache__'
 
 alias grep='grep --color=auto'
 alias egrep='grep -E'
