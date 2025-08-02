@@ -22,7 +22,7 @@ vim.opt.updatetime = 250
 -- to make diagnostics less interruptive
 vim.opt.signcolumn='yes:1'
 
--- Decrease mapped sequence wait time
+-- Decrease mapped sequence wait time xxx
 -- Displays which-key popup sooner
 vim.opt.timeoutlen = 800
 
@@ -60,8 +60,10 @@ vim.opt.expandtab = true
 
 vim.opt.mouse = 'a'
 
-vim.opt.showmode = true
+vim.opt.showmode = false
 
 vim.opt.updatecount = 0
 
 vim.opt.winborder = 'rounded'
+
+vim.wo.fillchars='eob: '

@@ -30,6 +30,12 @@ vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 vim.keymap.set("n", "<right>", vim.diagnostic.goto_next)
 vim.keymap.set("n", "<left>", vim.diagnostic.goto_prev)
 
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+
+-- quit options
+vim.keymap.set("n", "<leader>qq", ':qa<CR>')
+vim.keymap.set("n", "<leader>qw", ':xa<CR>')
+vim.keymap.set("n", "<leader>ww", ':close<CR>')
 
