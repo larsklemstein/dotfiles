@@ -1,4 +1,4 @@
-vim.cmd [[colorscheme vague ]]
+vim.cmd [[colorscheme tokyonight]]
 
  require("vague").setup({
   transparent = false, -- don't set background

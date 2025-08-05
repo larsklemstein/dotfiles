@@ -16,6 +16,7 @@ Plug 'mfussenegger/nvim-lint'
 Plug 'kdheepak/lazygit.nvim'
 Plug 'nvim-lualine/lualine.nvim'
 -- Plug 'folke/flash.nvim'
+Plug 'folke/tokyonight.nvim'
 Plug 'vague2k/vague.nvim'
 Plug 'lewis6991/gitsigns.nvim'
 
