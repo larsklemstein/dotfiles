@@ -4,8 +4,7 @@ vim.g.blamer_delay = 500
 
 -- Available options: 'line', 'block', 'cursor'.
 -- use icon in the prefix
--- vim.g.blamer_prefix = '  󰀃 '
-vim.g.blamer_prefix = '  ☞  '
+vim.g.blamer_prefix = '  󰀃 '
 
 -- make blame text cursive
 vim.g.blamer_cursive = 1
