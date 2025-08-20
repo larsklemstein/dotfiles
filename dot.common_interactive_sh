@@ -2,6 +2,8 @@
 # generic stuff
 # ----------------------------------------------------------------------------
 
+alias vi=nvi
+
 msg() {
     echo "$*" >&2
 }
@@ -108,9 +110,6 @@ cdpo() {
         return 1
     fi
 }
-
-fancy_print=$(which lolcat)
-[ -n "$fancy_print" ] || fancy_print=/bin/cat
 
 alias C=clear
 

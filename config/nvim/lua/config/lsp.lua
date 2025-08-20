@@ -1,6 +1,10 @@
 vim.lsp.enable("lua_ls")
 vim.lsp.enable("yaml_ls")
-vim.lsp.enable("python_ls")
+vim.lsp.enable("pyright")
+vim.lsp.enable("gopls")
+vim.lsp.enable("ts_ls")
+vim.lsp.enable("bash_ls")
+vim.lsp.enable("rust_analyzer")
 
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
@@ -35,3 +39,5 @@ vim.diagnostic.config({
     }
 })
 
+
+-- vim.lsp.config('bash')
