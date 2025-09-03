@@ -3,6 +3,7 @@
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
 
+
 -- Enable break indent
 vim.opt.breakindent = true
 

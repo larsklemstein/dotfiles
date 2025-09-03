@@ -28,7 +28,6 @@ vim.api.nvim_create_autocmd({ "TextChanged" }, {
    end,
 })
 
-
 local goci = lint.linters.golangcilint
 
 goci.args = {
