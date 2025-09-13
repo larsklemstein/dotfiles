@@ -27,3 +27,13 @@ require("config.set_colorscheme")
 -- Let nvim-cmp own completion UI
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.shortmess:append("c")
+
+vim.cmd('filetype plugin indent on')
+
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = '*.go',
+  callback = function()
+    pcall(vim.lsp.buf.format, { async = false })
+  end,
+})
+

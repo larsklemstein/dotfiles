@@ -1,38 +1,56 @@
---require("nvim-treesitter.configs").setup({
---  ensure_installed = { "c", "lua", "vim", "vimdoc", "yaml", "python", "rust"  },
--- })
-
 -- lua/config/treesitter.lua
-vim.g.ts_setup_done = false
 
+local langs = { 'go','lua','python','typescript','tsx','json','yaml','bash' }
+
+-- One-time setup, guarded so it runs only after the plugin is available
+local configured = false
 local function ts_setup()
-  if vim.g.ts_setup_done then return end
-  local ok, configs = pcall(require, 'nvim-treesitter.configs')
-  if not ok then return end
+  if configured then return end
+  local ok_configs, configs = pcall(require, 'nvim-treesitter.configs')
+  if not ok_configs then return end
+
+  pcall(function() require('nvim-treesitter.install').prefer_git = true end)
 
   configs.setup({
-    ensure_installed = { 'go','lua','python','typescript','tsx','json','yaml','bash' },
-    highlight = { enable = true },
-    indent    = { enable = true },
+    ensure_installed = langs,
+    auto_install = true,
+    highlight = { enable = true, additional_vim_regex_highlighting = false },
+    indent    = { enable = true, disable = { 'go' } }, -- TS indent OFF for Go
     incremental_selection = {
       enable = true,
       keymaps = {
-        init_selection = "gnn",
-        node_incremental = "grn",
-        scope_incremental = "grc",
-        node_decremental = "grm",
+        init_selection = 'gnn',
+        node_incremental = 'grn',
+        scope_incremental = 'grc',
+        node_decremental = 'grm',
       },
     },
   })
 
-  vim.g.ts_setup_done = true
+  configured = true
 end
 
--- Try once on startup (in case treesitter is already loaded)
+-- Try once when UI is ready (in case plugin already loaded)
 vim.api.nvim_create_autocmd('VimEnter', { callback = ts_setup })
 
--- Ensure setup runs the moment a matching filetype loads the plugin
+-- And again when one of these filetypes opens (vim-plug loads the plugin here)
+vim.api.nvim_create_autocmd('FileType', { pattern = langs, callback = ts_setup })
+
+-- --- Go-specific indentation: use ONLY smartindent (no TS indent, no cindent) ---
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'go','lua','python','typescript','tsx','json','yaml','bash' },
-  callback = ts_setup,
+  pattern = 'go',
+  callback = function()
+    -- ensure only one indent engine is active
+    vim.opt_local.indentexpr  = ''      -- no TS indent function
+    vim.opt_local.cindent     = false   -- disable cindent (prevents double indent)
+    vim.opt_local.smartindent = true
+    vim.opt_local.autoindent  = true
+
+    -- gofmt/goimports settings
+    vim.opt_local.expandtab   = false
+    vim.opt_local.tabstop     = 8
+    vim.opt_local.shiftwidth  = 0
+    vim.opt_local.softtabstop = 0
+  end,
 })
+
