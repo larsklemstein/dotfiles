@@ -123,7 +123,7 @@ CC() {
 # ----------------------------------------------------------------------------
 
 for _bin_dir in ~/bin ~/.local/bin ~/.rd/bin \
-    ~/app/bin ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
+    ~/app/bin ~/app/groovy-lsp ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
     ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
 do
     if test -d $_bin_dir && ! in_path $_bin_dir 2>/dev/null
