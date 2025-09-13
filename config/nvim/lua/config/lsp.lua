@@ -55,7 +55,6 @@ caps = require("cmp_nvim_lsp").default_capabilities(caps)
 
 -- Common on_attach (keymaps, tweaks per client)
 local on_attach = function(client, bufnr)
-  -- Example useful LSP maps (optional)
   local map = function(mode, lhs, rhs) vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true }) end
   map("n", "gd", vim.lsp.buf.definition)
   map("n", "gr", vim.lsp.buf.references)
@@ -64,20 +63,24 @@ local on_attach = function(client, bufnr)
   map("n", "<leader>rn", vim.lsp.buf.rename)
   map({ "n", "i" }, "<C-k>", vim.lsp.buf.signature_help)
 
-  -- If Ruff is attached, use Pyright hover instead
+  -- Prefer Pyright hover over Ruff hover
   if client.name == "ruff" then
     client.server_capabilities.hoverProvider = false
+  end
+
+  -- Let **Jedi** provide completion (docstrings in completion items),
+  -- keep **Pyright** for types/diagnostics/defs/hover.
+  if client.name == "pyright" then
+    client.server_capabilities.completionProvider = nil
+  end
+  if client.name == "jedi_language_server" then
+    -- We rely on Pyright for diagnostics and hover to avoid double messages.
+    client.server_capabilities.hoverProvider = false
+    -- (Diagnostics already disabled in init_options below)
   end
 end
 
 -- 4) Server setups
--- NOTE: lspconfig names differ from your old vim.lsp.enable names:
---   bash_ls      -> bashls
---   terraform_lsp-> terraformls
---   ts_ls        -> tsserver
---   yaml_ls      -> yamlls
---   groovy_ls    -> groovyls
--- others (lua_ls, pyright, gopls, rust_analyzer) are the same.
 
 lspconfig.bashls.setup({ capabilities = caps, on_attach = on_attach })
 
@@ -101,37 +104,45 @@ lspconfig.lua_ls.setup({
   },
 })
 
-require("lspconfig").pyright.setup({
-  capabilities = require("cmp_nvim_lsp").default_capabilities(),
+-- Pyright: types, diagnostics, go-to, hover (NO completion)
+lspconfig.pyright.setup({
+  capabilities = caps,
+  on_attach = on_attach,
+  root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
   settings = {
     python = {
       analysis = {
-        useLibraryCodeForTypes = true,   -- pull info/doc from libs when possible
+        useLibraryCodeForTypes = true,
         autoImportCompletions = true,
-        typeCheckingMode = "basic",      -- or "strict" if you like
+        typeCheckingMode = "basic",     -- or "strict"
         diagnosticMode = "workspace",
-        indexing = true,                 -- newer pyright supports this; safe if present
+        indexing = true,                -- safe if supported; ignored otherwise
       },
     },
   },
 })
 
+-- Jedi LS: completions with docstrings (diagnostics off)
+lspconfig.jedi_language_server.setup({
+  capabilities = caps,
+  on_attach = on_attach,
+  root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
+  init_options = {
+    completion = { disableSnippets = false },
+    diagnostics = { enable = false },   -- avoid overlap; Pyright handles diagnostics
+  },
+})
 
 lspconfig.rust_analyzer.setup({ capabilities = caps, on_attach = on_attach })
 
 lspconfig.terraformls.setup({ capabilities = caps, on_attach = on_attach })
 
--- TypeScript / JavaScript (new name is ts_ls)
-require("lspconfig").ts_ls.setup({
+-- TypeScript / JavaScript (new name is ts_ls; tsserver is deprecated)
+lspconfig.ts_ls.setup({
   capabilities = caps,
   on_attach = on_attach,
   single_file_support = false,
-  root_dir = require("lspconfig.util").root_pattern(
-    "tsconfig.json",
-    "jsconfig.json",
-    "package.json",
-    ".git"
-  ),
+  root_dir = util.root_pattern("tsconfig.json", "jsconfig.json", "package.json", ".git"),
   init_options = {
     hostInfo = "neovim",
     preferences = {
@@ -144,4 +155,3 @@ require("lspconfig").ts_ls.setup({
 })
 
 lspconfig.yamlls.setup({ capabilities = caps, on_attach = on_attach })
-
