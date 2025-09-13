@@ -13,8 +13,8 @@ require("config.lualine")
 require("config.lsp")
 require("config.treesitter")
 require("config.cmp")
-require("config.cmp")
-require("config.ray")
+require("config.message_line")
+
 -- Load lint config after plugins are loaded
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
@@ -27,11 +27,3 @@ require("config.set_colorscheme")
 -- Let nvim-cmp own completion UI
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.shortmess:append("c")
-
--- Hard-disable builtin popup/fuzzy if something else re-adds them
-vim.cmd([[
-  set completeopt-=preview
-  set completeopt-=popup
-  set completeopt-=fuzzy
-]])
-
