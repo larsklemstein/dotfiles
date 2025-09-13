@@ -14,7 +14,7 @@ Plug 'APZelos/blamer.nvim'
 Plug 'mfussenegger/nvim-lint'
 Plug 'kdheepak/lazygit.nvim'
 Plug 'nvim-lualine/lualine.nvim'
-Plug 'CopilotC-Nvim/CopilotChat.nvim'
+-- Plug 'CopilotC-Nvim/CopilotChat.nvim'
 -- Plug 'folke/flash.nvim'
 Plug 'folke/tokyonight.nvim'
 Plug 'vague2k/vague.nvim'
@@ -26,4 +26,4 @@ Plug 'Mofiqul/dracula.nvim'
 
 vim.call('plug#end')
 
-require("CopilotChat").setup()
+-- require("CopilotChat").setup()
