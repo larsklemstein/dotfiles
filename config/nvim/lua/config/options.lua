@@ -68,3 +68,6 @@ vim.opt.updatecount = 0
 vim.opt.winborder = 'rounded'
 
 vim.wo.fillchars='eob: '
+
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.shortmess:append("c")

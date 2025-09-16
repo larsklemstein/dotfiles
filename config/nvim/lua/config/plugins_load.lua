@@ -28,6 +28,8 @@ Plug 'saadparwaiz1/cmp_luasnip'
 Plug 'rafamadriz/friendly-snippets'
 Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
 
+Plug 'folke/flash.nvim'
+
 -- Linting
 Plug('mfussenegger/nvim-lint',        { ['event'] = 'BufWritePost' })  -- lazy on save
 

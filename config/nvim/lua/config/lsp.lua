@@ -203,12 +203,13 @@ lspconfig.eslint.setup({
   on_attach = function(client, bufnr)
     on_attach(client, bufnr)
 
-    for _, c in ipairs(vim.lsp.get_active_clients({ bufnr = bufnr })) do
-      if c.name == "ts_ls" then
-        c.server_capabilities.documentFormattingProvider = false
-        c.server_capabilities.documentRangeFormattingProvider = false
-      end
+    for _, c in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+        if c.name == "ts_ls" then
+            c.server_capabilities.documentFormattingProvider = false
+            c.server_capabilities.documentRangeFormattingProvider = false
+        end
     end
+
 
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
