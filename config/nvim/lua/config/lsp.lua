@@ -72,15 +72,6 @@ local on_attach = function(client, bufnr)
   if client.name == "ruff" then
     client.server_capabilities.hoverProvider = false
   end
-
-  -- Let **Jedi** provide completion (docstrings in completion items),
-  -- keep **Pyright** for types/diagnostics/defs/hover.
-  if client.name == "pyright" then
-    client.server_capabilities.completionProvider = nil
-  end
-  if client.name == "jedi_language_server" then
-    client.server_capabilities.hoverProvider = false
-  end
 end
 
 -- 4) Server setups
@@ -124,19 +115,6 @@ lspconfig.pyright.setup({
     },
   },
 })
-
--- Python: Jedi LS (docstring completions, diagnostics off)
-lspconfig.jedi_language_server.setup({
-  capabilities = caps,
-  on_attach = on_attach,
-  root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
-  init_options = {
-    completion = { disableSnippets = false },
-    diagnostics = { enable = false },
-  },
-})
-
-
 
 
 -- Python: Ruff — format on save (LSP), optional CLI auto-fix after save
@@ -282,4 +260,3 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     vim.fn.winrestview(view)
   end,
 })
-
