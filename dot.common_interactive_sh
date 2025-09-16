@@ -175,6 +175,9 @@ fi
 # ----------------------------------------------------------------------------
 alias ur='uv run'
 
+alias vea='test -f .venv/bin/activate && source $_ || echo "No venv here!" >&2'
+alias ved='test -n "$VIRTUAL_ENV" && test -d "$VIRTUAL_ENV" && deactivate || echo "Not in a venv!" >&2'
+
 
 # ----------------------------------------------------------------------------
 # git wants a command named 'vimdiff'
