@@ -10,6 +10,8 @@ servers_from_npm=(
 )
 
 servers_from_brew=(
+    bash-language-server
+    shfmt
     lua-language-server
     pyright
     rust-analyzer
@@ -17,14 +19,12 @@ servers_from_brew=(
     yaml-language-server
 )
 
-for seryamver in "${servers_from_npm[@]}"
-do
+for server in "${servers_from_npm[@]}"; do
     echo "npm install ${server}..." >&2
     npm install -g "$server"
 done
 
-for server in "${servers_from_brew[@]}"
-do
+for server in "${servers_from_brew[@]}"; do
     echo "brew install ${server}..." >&2
     brew install "$server"
 done

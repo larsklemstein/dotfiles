@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [ "$1" = "a" ]; then
+    echo "A"
+else
+    echo "B"
+fi
