@@ -12,6 +12,9 @@ Plug 'nvim-lua/plenary.nvim'
 Plug('nvim-telescope/telescope.nvim', { ['cmd'] = 'Telescope' })       -- lazy on :Telescope
 Plug('nvim-tree/nvim-tree.lua',       { ['on']  = 'NvimTreeToggle' })  -- lazy on :NvimTreeToggle
 Plug 'nvim-tree/nvim-web-devicons'    -- optional (icons)
+
+Plug 'stevearc/conform.nvim'
+
 Plug('lewis6991/gitsigns.nvim',       { ['event'] = 'BufRead' })       -- lazy on first buffer read
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'tpope/vim-commentary'
