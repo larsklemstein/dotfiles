@@ -123,6 +123,21 @@ lspconfig.bashls.setup({
 	},
 })
 
+vim.filetype.add({
+	extension = { sh = "sh" },
+	filename = { [".bashrc"] = "bash" },
+	pattern = {
+		[".*"] = {
+			function(_, bufnr)
+				local first = (vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or "")
+				if first:match("^#!/.*bash") then
+					return "bash"
+				end
+			end,
+		},
+	},
+})
+
 -- Go
 lspconfig.gopls.setup({
 	capabilities = caps,
