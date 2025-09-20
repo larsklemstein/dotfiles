@@ -47,7 +47,7 @@ vim.diagnostic.config({
 	virtual_lines = false,
 	virtual_text = { source = "always" },
 	update_in_insert = false,
-	severity_sort = true, -- nicer UX: show most important first
+	severity_sort = true,
 	signs = {
 		text = {
 			[vim.diagnostic.severity.HINT] = "•",
@@ -90,7 +90,6 @@ vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { 
 -- 3a) Diagnostics filter: Pyright types-only; Ruff normalize; dedup per publish
 local orig_publish = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
--- Cache diagnostic tag constant once
 local DIAG_TAG_UNNECESSARY = (
 	vim.lsp.protocol
 	and vim.lsp.protocol.DiagnosticTag
@@ -144,15 +143,10 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 		local client = vim.lsp.get_client_by_id(ctx.client_id)
 		local filtered, seen = {}, {}
 		for _, d in ipairs(result.diagnostics) do
-			-- Normalize Ruff source variants/casing
 			if d.source and d.source:lower():match("^ruff") then
 				d.source = "ruff"
 			end
-
 			if client and client.name == "pyright" then
-				-- TYPES-ONLY RULE:
-				-- Keep only codes like "reportSomething", excluding blocklisted "unused" etc.
-				-- Drop syntax/parse/indentation (no code or not "report*").
 				local code = d.code
 				local code_str = (type(code) == "string") and code or ""
 				local is_report = code_str:match("^report")
@@ -161,8 +155,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 					goto continue
 				end
 			end
-
-			-- Dedup within this batch
 			local key = diag_key(d)
 			if not seen[key] then
 				seen[key] = true
@@ -224,7 +216,7 @@ vim.api.nvim_create_user_command("LspDiagDump", function()
 	end
 end, {})
 
--- Toggle inlay hints (Neovim 0.10+ API, with compatibility)
+-- Toggle inlay hints
 vim.api.nvim_create_user_command("ToggleInlayHints", function()
 	local ih = vim.lsp.inlay_hint
 	if not ih or not ih.enable then
@@ -232,8 +224,6 @@ vim.api.nvim_create_user_command("ToggleInlayHints", function()
 		return
 	end
 	local bufnr = vim.api.nvim_get_current_buf()
-
-	-- Read current state (try both signatures)
 	local enabled = false
 	if ih.is_enabled then
 		local ok, val = pcall(ih.is_enabled, bufnr)
@@ -244,13 +234,10 @@ vim.api.nvim_create_user_command("ToggleInlayHints", function()
 			enabled = val
 		end
 	end
-
-	-- Toggle (try both signatures)
-	local ok = pcall(ih.enable, bufnr, not enabled) -- 0.10 style
+	local ok = pcall(ih.enable, bufnr, not enabled)
 	if not ok then
 		pcall(ih.enable, not enabled, { bufnr = bufnr })
-	end -- 0.11 style
-
+	end
 	vim.notify("Inlay hints " .. ((not enabled) and "enabled" or "disabled"), vim.log.levels.INFO)
 end, {})
 
@@ -270,19 +257,18 @@ local function on_attach(client, bufnr)
 		vim.cmd("split")
 		vim.lsp.buf.definition()
 	end)
-
 	if client.name == "ruff" then
 		client.server_capabilities.hoverProvider = false
 	end
 end
 
--- A couple of handy diagnostic keymaps (optional)
+-- Handy diagnostic keymaps
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 
 -- 4) Servers (misc simple)
-for _, srv in ipairs({ "groovyls", "terraformls" }) do
+for _, srv in ipairs({ "terraformls" }) do
 	if lspconfig[srv] then
 		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
 	end
@@ -305,7 +291,7 @@ lspconfig.gopls.setup({
 	root_dir = R("go.work", "go.mod", ".git"),
 })
 
--- Lua (StyLua formats)
+-- Lua (StyLua formats via Conform)
 lspconfig.lua_ls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
@@ -321,7 +307,7 @@ lspconfig.lua_ls.setup({
 	},
 })
 
--- Python: Pyright (types-only diagnostics; IDE features)
+-- Python: Pyright (types-only)
 lspconfig.pyright.setup({
 	capabilities = caps,
 	on_attach = on_attach,
@@ -329,12 +315,11 @@ lspconfig.pyright.setup({
 	settings = { python = { analysis = { typeCheckingMode = "basic" } } },
 })
 
--- Python: Ruff (lint + format; single source of style)
+-- Python: Ruff (lint + format)
 lspconfig.ruff.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		-- hoverProvider already disabled for Ruff in common on_attach
 		au("BufWritePre", {
 			group = ag("ruff_fmt_" .. bufnr),
 			buffer = bufnr,
@@ -413,54 +398,145 @@ lspconfig.eslint.setup({
 	},
 })
 
--- YAML LSP (keep features, disable diagnostics to avoid overlap with yamllint)
+-- YAML LSP (features on; diagnostics off; Conform formats)
 lspconfig.yamlls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
 		client.server_capabilities.documentFormattingProvider = false
 	end,
-	settings = {
-		yaml = {
-			validate = false, -- (optional) if you’re using yamllint via nvim-lint
-			format = { enable = false },
-			-- schemaStore = { enable = true, url = "https://www.schemastore.org/api/json/catalog.json" },
-		},
-	},
+	settings = { yaml = { validate = false, format = { enable = false } } },
 })
 
--- nvim-lint: run yamllint for YAML buffers
-local ok_lint, lint = pcall(require, "lint")
-if ok_lint then
-	lint.linters_by_ft = lint.linters_by_ft or {}
-	lint.linters_by_ft.yaml = { "yamllint" }
-
-	-- Lint on enter / save / leaving insert (lightweight)
-	vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-		group = vim.api.nvim_create_augroup("lint_yaml", { clear = true }),
-		pattern = { "*.yml", "*.yaml" },
-		callback = function()
-			lint.try_lint() -- will call yamllint for YAML only
-		end,
-	})
+-- ---------- Groovy LSP (completion/navigation; NO formatting; NO lint) ----------
+local function resolve_groovyls_cmd()
+	if vim.fn.executable("groovy-language-server") == 1 then
+		return { "groovy-language-server" }, "binary"
+	end
+	local mason_jar = table.concat({
+		vim.fn.stdpath("data"),
+		"mason",
+		"packages",
+		"groovy-language-server",
+		"groovy-language-server-all.jar",
+	}, "/")
+	if vim.uv.fs_stat(mason_jar) and vim.fn.executable("java") == 1 then
+		return { "java", "-jar", mason_jar }, "mason-jar"
+	end
+	local env_jar = vim.env.GROOVYLS_JAR
+	if env_jar and env_jar ~= "" and vim.uv.fs_stat(env_jar) and vim.fn.executable("java") == 1 then
+		return { "java", "-jar", env_jar }, "env-jar"
+	end
+	return nil, "default"
 end
 
-au("BufWritePre", {
-	group = ag("fmt_yaml"),
-	pattern = { "*.yml", "*.yaml" },
+local groovy_cmd, _ = resolve_groovyls_cmd()
+local groovy_cfg = {
+	capabilities = caps,
+	on_attach = on_attach,
+	filetypes = { "groovy", "gradle" },
+	single_file_support = true,
+	root_dir = function(fname)
+		return util.root_pattern("settings.gradle", "settings.gradle.kts", "build.gradle", "build.gradle.kts", ".git")(
+			fname
+		) or util.path.dirname(fname)
+	end,
+	autostart = true,
+}
+if groovy_cmd then
+	groovy_cfg.cmd = groovy_cmd
+end
+lspconfig.groovyls.setup(groovy_cfg)
+
+-- Autostart groovyls (safe loop)
+vim.api.nvim_create_autocmd("FileType", {
+	group = ag("groovyls_autostart"),
+	pattern = { "groovy", "gradle" },
 	callback = function(args)
-		require("conform").format({ bufnr = args.buf, async = false, lsp_fallback = false })
+		-- Explicitly disable Conform on these buffers (bulletproof)
+		vim.b[args.buf].conform_disable = true
+		vim.b[args.buf].disable_autoformat = true
+
+		local has = false
+		for _, c in ipairs(vim.lsp.get_clients({ bufnr = args.buf })) do
+			if c.name == "groovyls" then
+				has = true
+				break
+			end
+		end
+		if not has then
+			local ok = pcall(function()
+				require("lspconfig").groovyls.manager.try_add()
+			end)
+			if not ok then
+				pcall(vim.cmd, "LspStart groovyls")
+			end
+		end
 	end,
 })
 
--- Trim trailing whitespace
-au("BufWritePre", {
+vim.api.nvim_create_user_command("GroovyLsDoctor", function()
+	print("ft=" .. vim.bo.filetype)
+	print("groovy-language-server in PATH? " .. tostring(vim.fn.executable("groovy-language-server") == 1))
+	print("java in PATH? " .. tostring(vim.fn.executable("java") == 1))
+	print("GROOVYLS_JAR=" .. tostring(vim.env.GROOVYLS_JAR))
+end, {})
+
+-- ---------- nvim-lint: YAML only (safe) ----------
+do
+	local ok_lint, lint = pcall(require, "lint")
+	if ok_lint then
+		if type(lint.linters_by_ft) ~= "table" then
+			lint.linters_by_ft = {}
+		end
+		lint.linters_by_ft.yaml = { "yamllint" }
+
+		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+			group = vim.api.nvim_create_augroup("lint_yaml_only", { clear = true }),
+			pattern = { "*.yml", "*.yaml" },
+			callback = function()
+				pcall(lint.try_lint, "yamllint")
+			end,
+		})
+
+		vim.api.nvim_create_user_command("YamlLintNow", function()
+			pcall(lint.try_lint, "yamllint")
+		end, {})
+	end
+end
+
+-- YAML format on save (Conform handles it; guarded)
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = ag("fmt_yaml"),
+	pattern = { "*.yml", "*.yaml" },
+	callback = function(args)
+		pcall(function()
+			require("conform").format({ bufnr = args.buf, async = false, lsp_fallback = false })
+		end)
+	end,
+})
+
+-- Trim trailing whitespace (incl. Groovy/Gradle) — pure Lua, no :%s
+local function trim_trailing_ws(bufnr)
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local changed = false
+	for i, line in ipairs(lines) do
+		local new = line:gsub("%s+$", "")
+		if new ~= line then
+			lines[i] = new
+			changed = true
+		end
+	end
+	if changed then
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+	end
+end
+
+vim.api.nvim_create_autocmd("BufWritePre", {
 	group = ag("trim_trailing_ws"),
-	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx" },
-	callback = function()
-		local view = vim.fn.winsaveview()
-		vim.cmd([[:keeppatterns %s/\s\+$//e]])
-		vim.fn.winrestview(view)
+	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "*.groovy", "*.gradle", "Jenkinsfile" },
+	callback = function(args)
+		pcall(trim_trailing_ws, args.buf)
 	end,
 })
 
@@ -472,3 +548,11 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
+
+-- Filetype overrides
+vim.filetype.add({
+	pattern = {
+		["Jenkinsfile"] = "groovy",
+		["%.gradle$"] = "gradle",
+	},
+})

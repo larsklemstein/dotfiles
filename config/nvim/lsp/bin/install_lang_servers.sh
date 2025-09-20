@@ -7,6 +7,7 @@ servers_from_npm=(
     typescript
     typescript-language-server
     vscode-langservers-extracted
+
 )
 
 servers_from_brew=(
@@ -18,6 +19,7 @@ servers_from_brew=(
     terraform-lsp
     yamlfmt
     yaml-language-server
+    prettier
 )
 
 for server in "${servers_from_npm[@]}"; do
