@@ -267,7 +267,6 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" }
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 
--- 4) Servers (misc simple)
 for _, srv in ipairs({ "terraformls" }) do
 	if lspconfig[srv] then
 		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
@@ -291,7 +290,7 @@ lspconfig.gopls.setup({
 	root_dir = R("go.work", "go.mod", ".git"),
 })
 
--- Lua (StyLua formats via Conform)
+-- Lua
 lspconfig.lua_ls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
@@ -307,7 +306,7 @@ lspconfig.lua_ls.setup({
 	},
 })
 
--- Python: Pyright (types-only)
+-- Python: Pyright
 lspconfig.pyright.setup({
 	capabilities = caps,
 	on_attach = on_attach,
@@ -315,7 +314,7 @@ lspconfig.pyright.setup({
 	settings = { python = { analysis = { typeCheckingMode = "basic" } } },
 })
 
--- Python: Ruff (lint + format)
+-- Python: Ruff
 lspconfig.ruff.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
@@ -398,7 +397,7 @@ lspconfig.eslint.setup({
 	},
 })
 
--- YAML LSP (features on; diagnostics off; Conform formats)
+-- YAML
 lspconfig.yamlls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
@@ -408,81 +407,7 @@ lspconfig.yamlls.setup({
 	settings = { yaml = { validate = false, format = { enable = false } } },
 })
 
--- ---------- Groovy LSP (completion/navigation; NO formatting; NO lint) ----------
-local function resolve_groovyls_cmd()
-	if vim.fn.executable("groovy-language-server") == 1 then
-		return { "groovy-language-server" }, "binary"
-	end
-	local mason_jar = table.concat({
-		vim.fn.stdpath("data"),
-		"mason",
-		"packages",
-		"groovy-language-server",
-		"groovy-language-server-all.jar",
-	}, "/")
-	if vim.uv.fs_stat(mason_jar) and vim.fn.executable("java") == 1 then
-		return { "java", "-jar", mason_jar }, "mason-jar"
-	end
-	local env_jar = vim.env.GROOVYLS_JAR
-	if env_jar and env_jar ~= "" and vim.uv.fs_stat(env_jar) and vim.fn.executable("java") == 1 then
-		return { "java", "-jar", env_jar }, "env-jar"
-	end
-	return nil, "default"
-end
-
-local groovy_cmd, _ = resolve_groovyls_cmd()
-local groovy_cfg = {
-	capabilities = caps,
-	on_attach = on_attach,
-	filetypes = { "groovy", "gradle" },
-	single_file_support = true,
-	root_dir = function(fname)
-		return util.root_pattern("settings.gradle", "settings.gradle.kts", "build.gradle", "build.gradle.kts", ".git")(
-			fname
-		) or util.path.dirname(fname)
-	end,
-	autostart = true,
-}
-if groovy_cmd then
-	groovy_cfg.cmd = groovy_cmd
-end
-lspconfig.groovyls.setup(groovy_cfg)
-
--- Autostart groovyls (safe loop)
-vim.api.nvim_create_autocmd("FileType", {
-	group = ag("groovyls_autostart"),
-	pattern = { "groovy", "gradle" },
-	callback = function(args)
-		-- Explicitly disable Conform on these buffers (bulletproof)
-		vim.b[args.buf].conform_disable = true
-		vim.b[args.buf].disable_autoformat = true
-
-		local has = false
-		for _, c in ipairs(vim.lsp.get_clients({ bufnr = args.buf })) do
-			if c.name == "groovyls" then
-				has = true
-				break
-			end
-		end
-		if not has then
-			local ok = pcall(function()
-				require("lspconfig").groovyls.manager.try_add()
-			end)
-			if not ok then
-				pcall(vim.cmd, "LspStart groovyls")
-			end
-		end
-	end,
-})
-
-vim.api.nvim_create_user_command("GroovyLsDoctor", function()
-	print("ft=" .. vim.bo.filetype)
-	print("groovy-language-server in PATH? " .. tostring(vim.fn.executable("groovy-language-server") == 1))
-	print("java in PATH? " .. tostring(vim.fn.executable("java") == 1))
-	print("GROOVYLS_JAR=" .. tostring(vim.env.GROOVYLS_JAR))
-end, {})
-
--- ---------- nvim-lint: YAML only (safe) ----------
+-- ---------- nvim-lint: YAML only ----------
 do
 	local ok_lint, lint = pcall(require, "lint")
 	if ok_lint then
@@ -505,7 +430,7 @@ do
 	end
 end
 
--- YAML format on save (Conform handles it; guarded)
+-- YAML format on save (Conform handles it)
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = ag("fmt_yaml"),
 	pattern = { "*.yml", "*.yaml" },
@@ -516,7 +441,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	end,
 })
 
--- Trim trailing whitespace (incl. Groovy/Gradle) — pure Lua, no :%s
+-- Trim trailing whitespace
 local function trim_trailing_ws(bufnr)
 	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 	local changed = false
@@ -534,7 +459,7 @@ end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = ag("trim_trailing_ws"),
-	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "*.groovy", "*.gradle", "Jenkinsfile" },
+	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "Jenkinsfile" },
 	callback = function(args)
 		pcall(trim_trailing_ws, args.buf)
 	end,
@@ -548,11 +473,3 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
-
--- Filetype overrides
-vim.filetype.add({
-	pattern = {
-		["Jenkinsfile"] = "groovy",
-		["%.gradle$"] = "gradle",
-	},
-})

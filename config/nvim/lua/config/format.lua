@@ -11,7 +11,6 @@ conform.setup({
 		sh = { "shfmt" },
 		bash = { "shfmt" },
 		yaml = { "yamlfmt", "prettier" }, -- try yamlfmt first; fallback to prettier
-		-- IMPORTANT: No groovy/gradle entries here
 	},
 	formatters = {
 		shfmt = { prepend_args = { "-i", "4", "-ci", "-ln", "bash" } },

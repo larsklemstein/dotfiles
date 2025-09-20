@@ -12,7 +12,7 @@ req("config.keymaps")
 req("config.options")
 
 -- 2) plugins first
-req("config.plugins_load")
+req("config.plugins")
 
 -- 3) plugin configs (order only matters where deps exist)
 req("config.nvim_tree")
@@ -44,7 +44,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 -- 7) colorscheme (after plugins so highlights exist)
-req("config.set_colorscheme")
+req("config.colorscheme")
 
 -- 8) format Go on save (buffer-local, non-duplicating)
 vim.api.nvim_create_autocmd("BufWritePre", {
