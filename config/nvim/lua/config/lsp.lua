@@ -1,6 +1,6 @@
 -- ~/.config/nvim/lua/config/lsp.lua
 
--- 1) Let cmp own completion UI (no builtin popup/fuzzy/preview)
+-- 1) Completion UI: cmp owns it
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.shortmess:append("c")
 vim.cmd([[
@@ -9,7 +9,7 @@ vim.cmd([[
   set completeopt-=fuzzy
 ]])
 
--- Neovim 0.11 native LSP completion: force OFF (global + per buffer)
+-- Disable Neovim native LSP completion UI
 pcall(function()
 	local ok = vim.lsp and vim.lsp.completion and vim.lsp.completion.enable
 	if ok then
@@ -25,7 +25,7 @@ pcall(function()
 	end
 end)
 
--- Small helpers
+-- Helpers
 local au = vim.api.nvim_create_autocmd
 local ag = function(name)
 	return vim.api.nvim_create_augroup("lsp_" .. name, { clear = true })
@@ -42,10 +42,10 @@ local function buf_format_with(name)
 	})
 end
 
--- 2) Diagnostics (icons + highlights)
+-- 2) Diagnostics look
 vim.diagnostic.config({
 	virtual_lines = false,
-	virtual_text = true,
+	virtual_text = { source = "always" },
 	update_in_insert = false,
 	signs = {
 		text = {
@@ -55,8 +55,8 @@ vim.diagnostic.config({
 			[vim.diagnostic.severity.ERROR] = "✖",
 		},
 	},
+	float = { source = "always" },
 })
-
 for name, color in pairs({
 	DiagnosticSignError = "#ff5555",
 	DiagnosticSignWarn = "#ffb86c",
@@ -83,23 +83,113 @@ caps.textDocument.completion.completionItem =
 		resolveSupport = { properties = { "documentation", "detail", "additionalTextEdits" } },
 	})
 
--- Common on_attach (keymaps, tweaks per client)
+-- Hover window with border
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded", max_width = 100 })
+
+-- ======== HARD SEPARATION: Pyright diagnostics OFF by default ========
+vim.g.pyright_show_diagnostics = 0 -- 0 = OFF (only features), 1 = ON (show diags)
+
+vim.api.nvim_create_user_command("PyrightDiagOn", function()
+	vim.g.pyright_show_diagnostics = 1
+	vim.diagnostic.reset()
+end, {})
+vim.api.nvim_create_user_command("PyrightDiagOff", function()
+	vim.g.pyright_show_diagnostics = 0
+	vim.diagnostic.reset()
+end, {})
+
+local orig_publish = vim.lsp.handlers["textDocument/publishDiagnostics"]
+vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+	if result and result.diagnostics then
+		local client = vim.lsp.get_client_by_id(ctx.client_id)
+		-- Normalize Ruff source casing/variants
+		for _, d in ipairs(result.diagnostics) do
+			if d.source and d.source:lower():match("^ruff") then
+				d.source = "ruff"
+			end
+		end
+		-- If Pyright, drop diagnostics entirely unless explicitly enabled
+		if client and client.name == "pyright" and vim.g.pyright_show_diagnostics ~= 1 then
+			result.diagnostics = {}
+		end
+	end
+	return orig_publish(err, result, ctx, config)
+end
+-- =====================================================================
+
+-- Kill legacy "Ruff" client (capital R) if it attaches
+au("LspAttach", {
+	group = ag("kill_legacy_Ruff"),
+	callback = function(args)
+		if not args.data or not args.data.client_id then
+			return
+		end
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if client and client.name == "Ruff" then
+			vim.schedule(function()
+				client.stop()
+				vim.notify("Stopped legacy LSP client 'Ruff' to avoid duplicate diagnostics.", vim.log.levels.INFO)
+			end)
+		end
+	end,
+})
+
+-- Clear non-LSP plain "ruff" namespace on idle (no recursion)
+local function clear_plain_ruff_ns(bufnr)
+	vim.schedule(function()
+		for ns, info in pairs(vim.diagnostic.get_namespaces()) do
+			if info and info.name == "ruff" then
+				vim.diagnostic.reset(ns, bufnr)
+			end
+		end
+	end)
+end
+au({ "BufEnter", "LspAttach", "CursorHold", "CursorHoldI" }, {
+	group = ag("clear_dup_plain_ruff"),
+	nested = false,
+	callback = function(args)
+		local b = args.buf or vim.api.nvim_get_current_buf()
+		if vim.bo[b].filetype == "python" then
+			clear_plain_ruff_ns(b)
+		end
+	end,
+})
+
+-- Debug helper
+vim.api.nvim_create_user_command("LspDiagDump", function()
+	for _, d in ipairs(vim.diagnostic.get(0)) do
+		local s = ({ [1] = "ERROR", [2] = "WARN", [3] = "INFO", [4] = "HINT" })[d.severity or 0] or "?"
+		local l, c =
+			(d.range and d.range.start and (d.range.start.line + 1) or 0),
+			(d.range and d.range.start and (d.range.start.character + 1) or 0)
+		print(string.format("[%s] %s @ %d:%d — %s", d.source or "?", s, l, c, (d.message or ""):gsub("%s+", " ")))
+	end
+end, {})
+
+-- Common on_attach
 local function on_attach(client, bufnr)
 	map(bufnr, "n", "gd", vim.lsp.buf.definition)
 	map(bufnr, "n", "gr", vim.lsp.buf.references)
 	map(bufnr, "n", "gi", vim.lsp.buf.implementation)
-	map(bufnr, "n", "K", vim.lsp.buf.hover)
 	map(bufnr, "n", "<leader>rn", vim.lsp.buf.rename)
 	map(bufnr, { "n", "i" }, "<C-k>", vim.lsp.buf.signature_help)
+	map(bufnr, "n", "K", vim.lsp.buf.hover)
+	map(bufnr, "n", "gvd", function()
+		vim.cmd("vsplit")
+		vim.lsp.buf.definition()
+	end)
+	map(bufnr, "n", "gsd", function()
+		vim.cmd("split")
+		vim.lsp.buf.definition()
+	end)
 
-	-- Prefer Pyright hover over Ruff hover
 	if client.name == "ruff" then
 		client.server_capabilities.hoverProvider = false
 	end
 end
 
--- 4) Server setups (simple ones first)
-for _, srv in ipairs({ "groovyls", "rust_analyzer", "terraformls", "yamlls" }) do
+-- 4) Servers (misc simple)
+for _, srv in ipairs({ "groovyls", "terraformls", "yamlls" }) do
 	if lspconfig[srv] then
 		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
 	end
@@ -109,33 +199,10 @@ end
 lspconfig.bashls.setup({
 	capabilities = caps,
 	on_attach = on_attach,
-	-- cover both ft=sh and ft=bash
 	filetypes = { "sh", "bash" },
-	-- start in git root, file dir, or fall back to CWD (works for unsaved buffers)
 	root_dir = function(fname)
 		return util.find_git_ancestor(fname) or (fname and util.path.dirname(fname)) or vim.loop.cwd()
 	end,
-	-- optional: make diagnostics stronger if shellcheck is installed
-	settings = {
-		bashIde = {
-			-- globPattern = "**/*@(.sh|.bash)"  -- you can set this if desired
-		},
-	},
-})
-
-vim.filetype.add({
-	extension = { sh = "sh" },
-	filename = { [".bashrc"] = "bash" },
-	pattern = {
-		[".*"] = {
-			function(_, bufnr)
-				local first = (vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or "")
-				if first:match("^#!/.*bash") then
-					return "bash"
-				end
-			end,
-		},
-	},
 })
 
 -- Go
@@ -145,7 +212,7 @@ lspconfig.gopls.setup({
 	root_dir = R("go.work", "go.mod", ".git"),
 })
 
--- Lua (disable LSP formatting to avoid fighting StyLua)
+-- Lua (StyLua formats)
 lspconfig.lua_ls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
@@ -161,32 +228,20 @@ lspconfig.lua_ls.setup({
 	},
 })
 
--- Python: Pyright (types/hover/defs/diagnostics)
+-- Python: Pyright (IDE features only; diagnostics handled by Ruff)
 lspconfig.pyright.setup({
 	capabilities = caps,
 	on_attach = on_attach,
-	root_dir = R("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
-	settings = {
-		python = {
-			analysis = {
-				useLibraryCodeForTypes = true,
-				autoImportCompletions = true,
-				typeCheckingMode = "basic",
-				diagnosticMode = "workspace",
-				indexing = true,
-			},
-		},
-	},
+	root_dir = R("pyproject.toml", "uv.lock", "requirements.txt", ".git"),
+	settings = { python = { analysis = { typeCheckingMode = "basic" } } },
 })
 
--- Python: Ruff — format on save (LSP) + optional CLI fix
+-- Python: Ruff (lint + format)
 lspconfig.ruff.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		client.server_capabilities.hoverProvider = false -- prefer Pyright hover
-
-		-- LSP formatting (Ruff) on save
+		client.server_capabilities.hoverProvider = false
 		au("BufWritePre", {
 			group = ag("ruff_fmt_" .. bufnr),
 			buffer = bufnr,
@@ -196,79 +251,32 @@ lspconfig.ruff.setup({
 				end
 			end,
 		})
-
-		-- Optional: ruff CLI auto-fix right after write (toggle with :let g:ruff_cli_fix=1)
-		if vim.g.ruff_cli_fix == nil then
-			vim.g.ruff_cli_fix = 0
-		end
-		au("BufWritePost", {
-			group = ag("ruff_cli_" .. bufnr),
-			buffer = bufnr,
-			callback = function()
-				if vim.g.ruff_cli_fix ~= 1 or vim.bo[bufnr].filetype ~= "python" then
-					return
-				end
-				if vim.fn.executable("ruff") ~= 1 then
-					return
-				end
-				local file = vim.api.nvim_buf_get_name(bufnr)
-				if file == "" then
-					return
-				end
-				local before = vim.uv.fs_stat(file)
-				vim.system({ "ruff", "check", "--fix", "--exit-zero", file }, { text = true }, function()
-					local after = vim.uv.fs_stat(file)
-					if before and after and after.mtime.sec ~= before.mtime.sec then
-						vim.schedule(function()
-							local curpos = vim.api.nvim_win_get_cursor(0)
-							vim.cmd("checktime " .. bufnr)
-							pcall(vim.cmd, "e!")
-							pcall(vim.api.nvim_win_set_cursor, 0, curpos)
-						end)
-					end
-				end)
-			end,
-		})
 	end,
 })
 
--- TypeScript / JavaScript (tsserver -> ts_ls)
+-- TypeScript / JavaScript
 lspconfig.ts_ls.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		-- Always let ESLint own formatting
 		client.server_capabilities.documentFormattingProvider = false
 		client.server_capabilities.documentRangeFormattingProvider = false
 	end,
 	single_file_support = false,
 	root_dir = R("tsconfig.json", "jsconfig.json", "package.json", ".git"),
-	init_options = {
-		hostInfo = "neovim",
-		preferences = {
-			includeCompletionsForModuleExports = true,
-			includeCompletionsWithSnippetText = true,
-			includeAutomaticOptionalChainCompletions = true,
-			includeCompletionsWithObjectLiteralMethodSnippets = true,
-		},
-	},
 })
 
--- ESLint (diagnostics + code actions + formatting on save)
+-- ESLint
 lspconfig.eslint.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-
-		-- Ensure ts_ls formatting stays off (Neovim 0.12-safe API)
 		for _, c in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
 			if c.name == "ts_ls" then
 				c.server_capabilities.documentFormattingProvider = false
 				c.server_capabilities.documentRangeFormattingProvider = false
 			end
 		end
-
-		-- Format JS/TS with ESLint on save
 		au("BufWritePre", {
 			group = ag("eslint_fmt_" .. bufnr),
 			buffer = bufnr,
@@ -299,7 +307,6 @@ lspconfig.eslint.setup({
 			disableRuleComment = { enable = true, location = "separateLine" },
 			showDocumentation = { enable = true },
 		},
-		nodePath = nil,
 	},
 	filetypes = {
 		"javascript",
@@ -313,11 +320,10 @@ lspconfig.eslint.setup({
 	},
 })
 
--- 5) Lua formatting via StyLua (Option A with conform.nvim)
+-- StyLua formatting
 do
 	local ok, conform = pcall(require, "conform")
 	if ok then
-		-- Configure Stylua for Lua (merge-friendly if you configure conform elsewhere)
 		local existing = conform.formatters_by_ft or {}
 		conform.setup({
 			notify_on_error = true,
@@ -325,8 +331,6 @@ do
 				lua = { "stylua" },
 			}),
 		})
-
-		-- Format Lua on save (blocking, like your Ruff/ESLint setup)
 		au("BufWritePre", {
 			group = ag("fmt_lua_stylua"),
 			pattern = "*.lua",
@@ -337,7 +341,7 @@ do
 	end
 end
 
--- 6) Editor niceties: trim trailing whitespace on save (non-Lua)
+-- Trim trailing whitespace
 au("BufWritePre", {
 	group = ag("trim_trailing_ws"),
 	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx" },
@@ -348,10 +352,10 @@ au("BufWritePre", {
 	end,
 })
 
--- Use LSP for tag-style jumps: Ctrl-] to go to definition, Ctrl-t to jump back
+-- LSP-powered tag jumps
 vim.o.tagfunc = "v:lua.vim.lsp.tagfunc"
 
--- Open definition in a vertical split
+-- Extra keymap: vsplit definition
 vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()

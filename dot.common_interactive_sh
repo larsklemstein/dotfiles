@@ -197,7 +197,11 @@ export THIS_OS
 
 test $THIS_OS = linux && alias open=exo-open
 
-alias cdw='cd $HOME/work; ls -ltr'
+export WORK=$HOME/work
+export EDU=$HOME/edu
+
+alias cdw='cd $WORK; ls -ltr'
+alias cde='cd $EDU; ls -ltr'
 
 alias ls="lsd --group-directories-first"
 alias ll='ls -l'
