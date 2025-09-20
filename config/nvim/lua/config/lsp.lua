@@ -86,38 +86,92 @@ caps.textDocument.completion.completionItem =
 -- Hover window with border
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded", max_width = 100 })
 
--- ======== HARD SEPARATION: Pyright diagnostics OFF by default ========
-vim.g.pyright_show_diagnostics = 0 -- 0 = OFF (only features), 1 = ON (show diags)
-
-vim.api.nvim_create_user_command("PyrightDiagOn", function()
-	vim.g.pyright_show_diagnostics = 1
-	vim.diagnostic.reset()
-end, {})
-vim.api.nvim_create_user_command("PyrightDiagOff", function()
-	vim.g.pyright_show_diagnostics = 0
-	vim.diagnostic.reset()
-end, {})
-
+-- 3a) Diagnostics filter: Pyright types-only; Ruff normalize; dedup per publish
 local orig_publish = vim.lsp.handlers["textDocument/publishDiagnostics"]
+
+local function is_unnecessary_tag(d)
+	local Unnecessary = vim.lsp.protocol
+			and vim.lsp.protocol.DiagnosticTag
+			and vim.lsp.protocol.DiagnosticTag.Unnecessary
+		or 1
+	if not d.tags then
+		return false
+	end
+	for _, t in ipairs(d.tags) do
+		if t == Unnecessary then
+			return true
+		end
+	end
+	return false
+end
+
+local blocklist_codes = {
+	reportUnusedImport = true,
+	reportUnusedVariable = true,
+	reportUnusedFunction = true,
+	reportUnusedClass = true,
+	reportDuplicateImport = true,
+	reportUnusedExpression = true,
+}
+
+local function diag_key(d)
+	if not d then
+		return ""
+	end
+	local msg = (d.message or ""):gsub("%s+", " ")
+	local sev = d.severity or 0
+	if d.range and d.range.start and d.range["end"] then
+		local s, e = d.range.start, d.range["end"]
+		return string.format(
+			"%d:%d:%d:%d:%d:%s",
+			s.line,
+			s.character,
+			e.line or s.line,
+			e.character or s.character,
+			sev,
+			msg
+		)
+	end
+	return string.format("%d:%s", sev, msg)
+end
+
 vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
 	if result and result.diagnostics then
 		local client = vim.lsp.get_client_by_id(ctx.client_id)
-		-- Normalize Ruff source casing/variants
+		local filtered, seen = {}, {}
 		for _, d in ipairs(result.diagnostics) do
+			-- Normalize Ruff source variants/casing
 			if d.source and d.source:lower():match("^ruff") then
 				d.source = "ruff"
 			end
+
+			if client and client.name == "pyright" then
+				-- TYPES-ONLY RULE:
+				-- keep only diagnostics with a string code starting with "report",
+				-- excluding style/unused blocklist; drop syntax/parse/indentation (no code or not "report*")
+				local code = d.code
+				local code_str = (type(code) == "string") and code or ""
+				local is_report = code_str:match("^report")
+				local drop = not is_report or blocklist_codes[code_str] or is_unnecessary_tag(d)
+				if drop then
+					goto continue
+				end
+			end
+
+			-- Dedup within this batch
+			local key = diag_key(d)
+			if not seen[key] then
+				seen[key] = true
+				table.insert(filtered, d)
+			end
+			::continue::
 		end
-		-- If Pyright, drop diagnostics entirely unless explicitly enabled
-		if client and client.name == "pyright" and vim.g.pyright_show_diagnostics ~= 1 then
-			result.diagnostics = {}
-		end
+		result.diagnostics = filtered
 	end
 	return orig_publish(err, result, ctx, config)
 end
--- =====================================================================
 
--- Kill legacy "Ruff" client (capital R) if it attaches
+-- 3b) Kill legacy LSP client named "Ruff" (capital R)
 au("LspAttach", {
 	group = ag("kill_legacy_Ruff"),
 	callback = function(args)
@@ -134,7 +188,7 @@ au("LspAttach", {
 	end,
 })
 
--- Clear non-LSP plain "ruff" namespace on idle (no recursion)
+-- 3c) Clear non-LSP plain "ruff" namespace on idle (no recursion)
 local function clear_plain_ruff_ns(bufnr)
 	vim.schedule(function()
 		for ns, info in pairs(vim.diagnostic.get_namespaces()) do
@@ -228,7 +282,7 @@ lspconfig.lua_ls.setup({
 	},
 })
 
--- Python: Pyright (IDE features only; diagnostics handled by Ruff)
+-- Python: Pyright (types-only diagnostics; IDE features)
 lspconfig.pyright.setup({
 	capabilities = caps,
 	on_attach = on_attach,
@@ -236,7 +290,7 @@ lspconfig.pyright.setup({
 	settings = { python = { analysis = { typeCheckingMode = "basic" } } },
 })
 
--- Python: Ruff (lint + format)
+-- Python: Ruff (lint + format; single source of style)
 lspconfig.ruff.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
