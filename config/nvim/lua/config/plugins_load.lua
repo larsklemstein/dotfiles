@@ -1,42 +1,64 @@
-local Plug = vim.fn['plug#']
+local Plug = vim.fn["plug#"]
 
-vim.call('plug#begin')
+vim.call("plug#begin")
 
--- Core
-Plug 'neovim/nvim-lspconfig'
-Plug('nvim-treesitter/nvim-treesitter', {
-  ['do']  = ':TSUpdate',
-  ['for'] = { 'go','lua','python','typescript','tsx','json','yaml','bash' } -- lazy by ft
+-- Core LSP
+Plug("neovim/nvim-lspconfig")
+
+-- Treesitter (lazy by filetype)
+Plug("nvim-treesitter/nvim-treesitter", {
+	["do"] = ":TSUpdate",
+	["for"] = { "go", "lua", "python", "typescript", "tsx", "json", "yaml", "bash" },
 })
-Plug 'nvim-lua/plenary.nvim'
-Plug('nvim-telescope/telescope.nvim', { ['cmd'] = 'Telescope' })       -- lazy on :Telescope
-Plug('nvim-tree/nvim-tree.lua',       { ['on']  = 'NvimTreeToggle' })  -- lazy on :NvimTreeToggle
-Plug 'nvim-tree/nvim-web-devicons'    -- optional (icons)
 
-Plug 'stevearc/conform.nvim'
+-- Lua utility lib (required by several plugins)
+Plug("nvim-lua/plenary.nvim")
 
-Plug('lewis6991/gitsigns.nvim',       { ['event'] = 'BufRead' })       -- lazy on first buffer read
-Plug 'nvim-lualine/lualine.nvim'
-Plug 'tpope/vim-commentary'
-Plug('kdheepak/lazygit.nvim',         { ['cmd'] = 'LazyGit' })         -- lazy on :LazyGit
+-- Telescope (lazy on :Telescope)
+Plug("nvim-telescope/telescope.nvim", { ["on"] = "Telescope" })
+-- Optional: native FZF accel for Telescope (lazy on :Telescope)
+Plug("nvim-telescope/telescope-fzf-native.nvim", { ["do"] = "make", ["on"] = "Telescope" })
+
+-- File tree (lazy on :NvimTreeToggle) + icons
+Plug("nvim-tree/nvim-tree.lua", { ["on"] = "NvimTreeToggle" })
+Plug("nvim-tree/nvim-web-devicons") -- optional icons
+
+-- Formatting (e.g. StyLua via conform)
+Plug("stevearc/conform.nvim")
+
+-- Git signs (always-on; vim-plug can’t lazy by event)
+Plug("lewis6991/gitsigns.nvim")
+
+-- Statusline
+Plug("nvim-lualine/lualine.nvim")
+
+-- Comments
+Plug("tpope/vim-commentary")
+
+-- Linting (YAML only; configured below)
+Plug("mfussenegger/nvim-lint")
+
+-- LazyGit (lazy on :LazyGit)
+Plug("kdheepak/lazygit.nvim", { ["on"] = "LazyGit" })
 
 -- Completion + snippets
-Plug 'hrsh7th/nvim-cmp'
-Plug 'hrsh7th/cmp-nvim-lsp'
-Plug 'hrsh7th/cmp-buffer'
-Plug 'hrsh7th/cmp-path'
-Plug 'hrsh7th/cmp-cmdline'             -- optional (':' '/' '?')
-Plug 'L3MON4D3/LuaSnip'
-Plug 'saadparwaiz1/cmp_luasnip'
-Plug 'rafamadriz/friendly-snippets'
-Plug 'hrsh7th/cmp-nvim-lsp-signature-help'
+Plug("hrsh7th/nvim-cmp")
+Plug("hrsh7th/cmp-nvim-lsp")
+Plug("hrsh7th/cmp-path")
+Plug("hrsh7th/cmp-buffer") -- optional
+Plug("hrsh7th/cmp-cmdline") -- optional
+Plug("L3MON4D3/LuaSnip")
+Plug("saadparwaiz1/cmp_luasnip")
+Plug("rafamadriz/friendly-snippets")
+Plug("hrsh7th/cmp-nvim-lsp-signature-help") -- optional
 
-Plug 'folke/flash.nvim'
+-- Motions (optional)
+Plug("folke/flash.nvim")
 
--- Linting
-Plug('mfussenegger/nvim-lint',        { ['event'] = 'BufWritePost' })  -- lazy on save
+-- Linting via nvim-lint removed to prevent duplicate Ruff diagnostics with LSP
+-- Plug 'mfussenegger/nvim-lint'
 
 -- Theme
-Plug 'vague2k/vague.nvim'
+Plug("vague2k/vague.nvim")
 
-vim.call('plug#end')
+vim.call("plug#end")

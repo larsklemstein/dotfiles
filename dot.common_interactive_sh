@@ -199,9 +199,15 @@ test $THIS_OS = linux && alias open=exo-open
 
 export WORK=$HOME/work
 export EDU=$HOME/edu
+export DF=$HOME/.dotfiles
+export NCONF=$HOME/.dotfiles/config/nvim
+export NCONF_LUA=$NCONF/lua/config
 
 alias cdw='cd $WORK; ls -ltr'
 alias cde='cd $EDU; ls -ltr'
+alias cdnc='cd $NCONF; ls -ltr'
+alias cdncl='cd $NCONF_LUA; ls -ltr'
+alias cddf='cd $DF; ls -ltr'
 
 alias ls="lsd --group-directories-first"
 alias ll='ls -l'

@@ -47,6 +47,7 @@ vim.diagnostic.config({
 	virtual_lines = false,
 	virtual_text = { source = "always" },
 	update_in_insert = false,
+	severity_sort = true, -- nicer UX: show most important first
 	signs = {
 		text = {
 			[vim.diagnostic.severity.HINT] = "•",
@@ -89,16 +90,19 @@ vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { 
 -- 3a) Diagnostics filter: Pyright types-only; Ruff normalize; dedup per publish
 local orig_publish = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
+-- Cache diagnostic tag constant once
+local DIAG_TAG_UNNECESSARY = (
+	vim.lsp.protocol
+	and vim.lsp.protocol.DiagnosticTag
+	and vim.lsp.protocol.DiagnosticTag.Unnecessary
+) or 1
+
 local function is_unnecessary_tag(d)
-	local Unnecessary = vim.lsp.protocol
-			and vim.lsp.protocol.DiagnosticTag
-			and vim.lsp.protocol.DiagnosticTag.Unnecessary
-		or 1
-	if not d.tags then
+	if not d or not d.tags then
 		return false
 	end
 	for _, t in ipairs(d.tags) do
-		if t == Unnecessary then
+		if t == DIAG_TAG_UNNECESSARY then
 			return true
 		end
 	end
@@ -147,8 +151,8 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 
 			if client and client.name == "pyright" then
 				-- TYPES-ONLY RULE:
-				-- keep only diagnostics with a string code starting with "report",
-				-- excluding style/unused blocklist; drop syntax/parse/indentation (no code or not "report*")
+				-- Keep only codes like "reportSomething", excluding blocklisted "unused" etc.
+				-- Drop syntax/parse/indentation (no code or not "report*").
 				local code = d.code
 				local code_str = (type(code) == "string") and code or ""
 				local is_report = code_str:match("^report")
@@ -220,6 +224,36 @@ vim.api.nvim_create_user_command("LspDiagDump", function()
 	end
 end, {})
 
+-- Toggle inlay hints (Neovim 0.10+ API, with compatibility)
+vim.api.nvim_create_user_command("ToggleInlayHints", function()
+	local ih = vim.lsp.inlay_hint
+	if not ih or not ih.enable then
+		vim.notify("Inlay hints API not available in this Neovim.", vim.log.levels.WARN)
+		return
+	end
+	local bufnr = vim.api.nvim_get_current_buf()
+
+	-- Read current state (try both signatures)
+	local enabled = false
+	if ih.is_enabled then
+		local ok, val = pcall(ih.is_enabled, bufnr)
+		if not ok then
+			local ok2, val2 = pcall(ih.is_enabled, { bufnr = bufnr })
+			enabled = ok2 and val2 or false
+		else
+			enabled = val
+		end
+	end
+
+	-- Toggle (try both signatures)
+	local ok = pcall(ih.enable, bufnr, not enabled) -- 0.10 style
+	if not ok then
+		pcall(ih.enable, not enabled, { bufnr = bufnr })
+	end -- 0.11 style
+
+	vim.notify("Inlay hints " .. ((not enabled) and "enabled" or "disabled"), vim.log.levels.INFO)
+end, {})
+
 -- Common on_attach
 local function on_attach(client, bufnr)
 	map(bufnr, "n", "gd", vim.lsp.buf.definition)
@@ -242,8 +276,13 @@ local function on_attach(client, bufnr)
 	end
 end
 
+-- A couple of handy diagnostic keymaps (optional)
+vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
+vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
+vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+
 -- 4) Servers (misc simple)
-for _, srv in ipairs({ "groovyls", "terraformls", "yamlls" }) do
+for _, srv in ipairs({ "groovyls", "terraformls" }) do
 	if lspconfig[srv] then
 		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
 	end
@@ -295,7 +334,7 @@ lspconfig.ruff.setup({
 	capabilities = caps,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		client.server_capabilities.hoverProvider = false
+		-- hoverProvider already disabled for Ruff in common on_attach
 		au("BufWritePre", {
 			group = ag("ruff_fmt_" .. bufnr),
 			buffer = bufnr,
@@ -374,26 +413,45 @@ lspconfig.eslint.setup({
 	},
 })
 
--- StyLua formatting
-do
-	local ok, conform = pcall(require, "conform")
-	if ok then
-		local existing = conform.formatters_by_ft or {}
-		conform.setup({
-			notify_on_error = true,
-			formatters_by_ft = vim.tbl_deep_extend("force", existing, {
-				lua = { "stylua" },
-			}),
-		})
-		au("BufWritePre", {
-			group = ag("fmt_lua_stylua"),
-			pattern = "*.lua",
-			callback = function(args)
-				conform.format({ bufnr = args.buf, async = false, lsp_fallback = false })
-			end,
-		})
-	end
+-- YAML LSP (keep features, disable diagnostics to avoid overlap with yamllint)
+lspconfig.yamlls.setup({
+	capabilities = caps,
+	on_attach = function(client, bufnr)
+		on_attach(client, bufnr)
+		client.server_capabilities.documentFormattingProvider = false
+	end,
+	settings = {
+		yaml = {
+			validate = false, -- (optional) if you’re using yamllint via nvim-lint
+			format = { enable = false },
+			-- schemaStore = { enable = true, url = "https://www.schemastore.org/api/json/catalog.json" },
+		},
+	},
+})
+
+-- nvim-lint: run yamllint for YAML buffers
+local ok_lint, lint = pcall(require, "lint")
+if ok_lint then
+	lint.linters_by_ft = lint.linters_by_ft or {}
+	lint.linters_by_ft.yaml = { "yamllint" }
+
+	-- Lint on enter / save / leaving insert (lightweight)
+	vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+		group = vim.api.nvim_create_augroup("lint_yaml", { clear = true }),
+		pattern = { "*.yml", "*.yaml" },
+		callback = function()
+			lint.try_lint() -- will call yamllint for YAML only
+		end,
+	})
 end
+
+au("BufWritePre", {
+	group = ag("fmt_yaml"),
+	pattern = { "*.yml", "*.yaml" },
+	callback = function(args)
+		require("conform").format({ bufnr = args.buf, async = false, lsp_fallback = false })
+	end,
+})
 
 -- Trim trailing whitespace
 au("BufWritePre", {

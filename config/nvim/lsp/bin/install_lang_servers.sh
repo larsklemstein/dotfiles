@@ -16,6 +16,7 @@ servers_from_brew=(
     pyright
     rust-analyzer
     terraform-lsp
+    yamlfmt
     yaml-language-server
 )
 

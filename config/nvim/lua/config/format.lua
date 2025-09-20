@@ -10,6 +10,7 @@ conform.setup({
 	formatters_by_ft = {
 		lua = { "stylua" },
 		sh = { "shfmt" }, -- covers .sh and most bash scripts (ft=sh)
+		yaml = { "yamlfmt", "prettier" }, -- try yamlfmt, fall back to prettier
 	},
 	formatters = {
 		-- shfmt settings: 4 spaces, indent 'case', treat scripts as bash dialect
