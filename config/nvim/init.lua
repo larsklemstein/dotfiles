@@ -69,3 +69,9 @@ do
 		callback = set_flash_hl,
 	})
 end
+
+vim.filetype.add({
+	filename = {
+		["Jenkinsfile"] = "groovy",
+	},
+})

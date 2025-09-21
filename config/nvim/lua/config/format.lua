@@ -3,26 +3,31 @@ local ok, conform = pcall(require, "conform")
 if not ok then
 	return
 end
+--
+--
 
 conform.setup({
 	notify_on_error = false,
 
-	-- Map filetypes to formatters
 	formatters_by_ft = {
 		lua = { "stylua" },
 		sh = { "shfmt" },
 		bash = { "shfmt" },
-		yaml = { "yamlfmt", "prettier" }, -- try yamlfmt first, fallback to prettier
+		yaml = { "yamlfmt", "prettier" },
+		groovy = { "npm-groovy-lint" }, -- use this
 	},
 
-	-- Formatter definitions
 	formatters = {
 		shfmt = {
 			prepend_args = { "-i", "4", "-ci", "-ln", "bash" },
 		},
+		["npm-groovy-lint"] = {
+			command = "npm-groovy-lint",
+			args = { "--format", "$FILENAME" }, -- no stdin, must run on file
+			stdin = false,
+		},
 	},
 
-	-- Global format on save: only runs for supported filetypes above
 	format_on_save = {
 		lsp_fallback = false,
 		timeout_ms = 5000,

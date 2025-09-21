@@ -1,3 +1,5 @@
+-- ~/.config/nvim/lua/plugins.lua
+
 local Plug = vim.fn["plug#"]
 
 vim.call("plug#begin")
@@ -5,11 +7,9 @@ vim.call("plug#begin")
 -- Core LSP
 Plug("neovim/nvim-lspconfig")
 
--- Treesitter (lazy by filetype)
-Plug("nvim-treesitter/nvim-treesitter", {
-	["do"] = ":TSUpdate",
-	["for"] = { "go", "lua", "python", "typescript", "tsx", "json", "yaml", "bash" },
-})
+-- Treesitter
+Plug("nvim-treesitter/nvim-treesitter", { ["do"] = ":TSUpdate" })
+Plug("nvim-treesitter/nvim-treesitter-textobjects")
 
 -- Lua utility lib (required by several plugins)
 Plug("nvim-lua/plenary.nvim")
@@ -54,9 +54,6 @@ Plug("hrsh7th/cmp-nvim-lsp-signature-help") -- optional
 
 -- Motions (optional)
 Plug("folke/flash.nvim")
-
--- Linting via nvim-lint removed to prevent duplicate Ruff diagnostics with LSP
--- Plug 'mfussenegger/nvim-lint'
 
 -- Theme
 Plug("vague2k/vague.nvim")
