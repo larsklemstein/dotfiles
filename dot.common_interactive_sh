@@ -1,500 +1,309 @@
-# ----------------------------------------------------------------------------
+# ============================================================================
 # generic stuff
-# ----------------------------------------------------------------------------
+# ============================================================================
 
 alias vi=nvi
 
-msg() {
-    echo "$*" >&2
-}
+# tmpdir
+export TMPDIR="$HOME/tmp"
+[ -d "$TMPDIR" ] || mkdir -p -- "$TMPDIR"
 
-in_path() {
-    egrep -q '(^|:)'"$1"'(:|$)' <<< "$PATH"
-}
-
-
-# try to *not* pollute everything too much...
-is_worker_path() {
-    test $PWD = $HOME && return 1
-    test $PWD = $HOME/work && return 1
-    test $PWD = $HOME/edu && return 1
-
-    return 0
-}
-
-export_unique_PATH() {
-    local new_path=
-
-    for item in $(tr ':' '\n' <<< $PATH)
-    do
-        if [[ $new_path =~ (^|:)$item(:|$) ]]
-        then
-            continue
-        fi
-
-        if [ -z "$new_path" ]
-        then
-            new_path=$item
-        else
-            new_path=$new_path:$item
-        fi
-    done
-
-    export PATH="$new_path"
-}
-
-show_path() {
-    tr -s : '\n' <<< $PATH
-}
-
-edit_path() {
-    local tmpf=$(mktemp)
-
-    show_path >$tmpf
-
-    ${EDITOR:-vi} $tmpf
-
-    export PATH=$(tr '\n' : < $tmpf | egrep -v '^ *(#|$)')
-    /bin/rm -f $tmpf
-}
-
-locate_prog() {
-    local _prog="$1"
-    local _path=$(which $_prog)
-    local which_rc=$?
-
-    if [[ "$_path" =~ "not found" ]]
-    then
-        echo "Not found" >&2
-        return 1
-    elif [[ "$_path" =~ "^$_prog: aliased to" ]]
-    then
-        echo "Is an alias" >&2
-        return 1
-    fi
-
-    local _basepath=${_path%/*}
-    local p
-
-    show_path | while read p
-    do
-        if grep -q "^$_basepath" <<< "$p"
-        then
-            echo "==> $p"
-        else
-            echo "    $p"
-        fi
-    done
-}
-
-export TERM=xterm-256color
-
-# cd (to) path of
-cdpo() {
-    [ $# -ne 1 ] && { echo '???' >&2; return 1; }
-    local prog="$1"
-    local fullpath=$(which $prog 2>/dev/null)
-
-    if type $prog | grep -q 'is an alias'
-    then
-        echo "Is an alias" >&2
-        return 1
-    fi
-
-    if [ -n "$fullpath" ]
-    then
-        cd ${fullpath%/*}
-        return 0
-    else
-        echo "Not found" >&1
-        return 1
-    fi
-}
-
-alias C=clear
-
-CC() {
-    clear
-    for _ in $(seq $LINES); do echo; done
-}
-
-# ----------------------------------------------------------------------------
-# The holy $PATH
-# ----------------------------------------------------------------------------
-
-for _bin_dir in ~/bin ~/.local/bin ~/.rd/bin \
-    ~/app/bin ~/app/groovy-lsp ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
-    ~/.npm-global ~/app/lkltools ~/.rd/bin /opt/homebrew/opt/coreutils/bin
-do
-    if test -d $_bin_dir && ! in_path $_bin_dir 2>/dev/null
-    then
-        PATH=$_bin_dir:$PATH
-    fi
-done
-unset _bin_dir
-
-for _brew_dir in /opt/homebrew $HOME/.linuxbrew /home/linuxbrew/.linuxbrew
-do
-    _brew_prog=${_brew_dir}/bin/brew
-
-    if [ -x ${_brew_prog} ]
-    then
-        eval $(${_brew_prog} shellenv)
-
-        export HOMEBREW_NO_ENV_HINTS=y
-        export BREW_BIN="$_brew_dir/bin"
-
-        break
-    fi
-done
-unset _brew_dir _brew_prog
-
-
-
-# ----------------------------------------------------------------------------
-# go
-# ----------------------------------------------------------------------------
-
-alias gr='go run .'
-alias gb='go vet && staticcheck && go fmt && go build .'
-alias gbs='go vet && staticcheck && go fmt && go build -ldflags "-w -s" .'
-alias gf='go fmt'
-
-# ----------------------------------------------------------------------------
-# rust
-# ----------------------------------------------------------------------------
-if [ -f $HOME/.cargo/env ]
-then
-    . $HOME/.cargo/env
-
-    export RUST_BACKTRACE=1
-fi
-
-# ----------------------------------------------------------------------------
-# python
-# ----------------------------------------------------------------------------
-alias ur='uv run'
-
-alias vea='test -f .venv/bin/activate && source $_ || echo "No venv here!" >&2'
-alias ved='test -n "$VIRTUAL_ENV" && test -d "$VIRTUAL_ENV" && deactivate || echo "Not in a venv!" >&2'
-
-
-# ----------------------------------------------------------------------------
-# git wants a command named 'vimdiff'
-# ---------------------------------------------------------------------------
-# Misc
-# ---------------------------------------------------------------------------
-
-export TMPDIR=$HOME/tmp
-test -d $TMPDIR || mkdir -vp $TMPDIR
-
+# sane defaults
 ulimit -c 0 -n 4096
 umask 002
 
-THIS_OS=linux
-[ $(uname -s) = 'Darwin' ] && THIS_OS=mac
+# detect OS
+case "$(uname -s)" in
+    Darwin) THIS_OS=mac ;;
+    Linux)  THIS_OS=linux ;;
+    *)      THIS_OS=unknown ;;
+esac
 export THIS_OS
 
-test $THIS_OS = linux && alias open=exo-open
+[ "$THIS_OS" = linux ] && alias open=exo-open
 
-export WORK=$HOME/work
-export EDU=$HOME/edu
-export DF=$HOME/.dotfiles
-export NCONF=$HOME/.dotfiles/config/nvim
-export NCONF_LUA=$NCONF/lua/config
+# paths
+export WORK="$HOME/work"
+export EDU="$HOME/edu"
+export DF="$HOME/.dotfiles"
+export NCONF="$DF/config/nvim"
+export NCONF_LUA="$NCONF/lua/config"
 
-alias cdw='cd $WORK; ls -ltr'
-alias cde='cd $EDU; ls -ltr'
-alias cdnc='cd $NCONF; ls -ltr'
-alias cdncl='cd $NCONF_LUA; ls -ltr'
-alias cddf='cd $DF; ls -ltr'
+# --- jump aliases
+alias cdw='cd "$WORK" && ls -ltr'
+alias cde='cd "$EDU" && ls -ltr'
+alias cdnc='cd "$NCONF" && ls -ltr'
+alias cdncl='cd "$NCONF_LUA" && ls -ltr'
+alias cddf='cd "$DF" && ls -ltr'
 
+# --- ls aliases (lsd)
 alias ls="lsd --group-directories-first"
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
 alias llt='ll --tree -I __pycache__'
 alias llg='ll --git'
-alias lltg='ll --git --tree -I __pycache__'
-alias llgt='ll --git --tree -I __pycache__'
+alias lltg='llg --tree -I __pycache__'
 
+# --- grep aliases
 alias grep='grep --color=auto'
 alias egrep='grep -E'
 alias fgrep='grep -F'
 
+# misc tools
 alias dua="$BREW_BIN/dua -t4 interactive"
-
 alias nrg='rg --color=never'
-
-alias webp2jpg='for w in *.webp; do convert $w ${w%.webp}jpg && /bin/rm $w; done'
+alias webp2jpg='for w in *.webp; do convert "$w" "${w%.webp}.jpg" && rm "$w"; done'
 
 # set tabby tab name title
 alias tn="printf '\033]2;%s\007'"
 
+# pager/editor
 export PAGER=less
 export LESS='-RC'
-
+export MANPAGER=less
 export EDITOR=nvim
 export VISUAL=$EDITOR
 
+# vi mode
 set -o vi
 
+# diff
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
 
 alias pstree='pstree -g3'
+alias C=clear
 
+CC() { clear; for _ in $(seq "$LINES"); do echo; done; }
 
-# ---------------------------------------------------------------------------
+msg() { echo "$*" >&2; }
+
+# ============================================================================
+# helpers
+# ============================================================================
+
+in_path() { printf '%s\n' "$PATH" | grep -q "(^|:)$1(:|$)"; }
+
+is_worker_path() {
+    case "$PWD" in
+        "$HOME"|"$WORK"|"$EDU") return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+show_path() { tr -s : '\n' <<<"$PATH"; }
+
+edit_path() {
+    local tmpf; tmpf=$(mktemp)
+    show_path >"$tmpf"
+    "${EDITOR:-vi}" "$tmpf"
+    export PATH=$(tr '\n' : <"$tmpf" | grep -vE '^ *(#|$)')
+    rm -f "$tmpf"
+}
+
+locate_prog() {
+    local prog="$1"
+    if alias "$prog" >/dev/null 2>&1; then
+        echo "Is an alias" >&2; return 1
+    fi
+    local fullpath; fullpath=$(command -v "$prog" 2>/dev/null) || {
+        echo "Not found" >&2; return 1; }
+    local basepath=${fullpath%/*}
+    show_path | while read -r p; do
+        [ "$p" = "$basepath" ] && echo "==> $p" || echo "    $p"
+    done
+}
+
+cdpo() {
+    [ $# -eq 1 ] || { echo '???' >&2; return 1; }
+    local prog="$1" fullpath
+    if alias "$prog" >/dev/null 2>&1; then
+        echo "Is an alias" >&2; return 1
+    fi
+    fullpath=$(command -v "$prog" 2>/dev/null) || {
+        echo "Not found" >&2; return 1; }
+    cd "${fullpath%/*}" || return 1
+}
+
+# ============================================================================
+# PATH handling
+# ============================================================================
+
+path_prepend() {
+    case ":$PATH:" in *":$1:"*) ;; *) PATH="$1:$PATH";; esac
+}
+
+for d in ~/bin ~/.local/bin ~/.rd/bin \
+    ~/app/bin ~/app/groovy-lsp ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
+    ~/.npm-global ~/app/lkltools /opt/homebrew/opt/coreutils/bin
+do
+    [ -d "$d" ] && path_prepend "$d"
+done
+
+# homebrew detection
+for d in /opt/homebrew "$HOME/.linuxbrew" /home/linuxbrew/.linuxbrew; do
+    if [ -x "$d/bin/brew" ]; then
+        eval "$("$d/bin/brew" shellenv)"
+        export HOMEBREW_NO_ENV_HINTS=y
+        export BREW_BIN="$d/bin"
+        break
+    fi
+done
+
+# ============================================================================
+# go
+# ============================================================================
+alias gr='go run .'
+alias gb='go vet && staticcheck && go fmt && go build .'
+alias gbs='go vet && staticcheck && go fmt && go build -ldflags "-w -s" .'
+alias gf='go fmt'
+
+# ============================================================================
+# rust
+# ============================================================================
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env" && export RUST_BACKTRACE=1
+
+# ============================================================================
+# python
+# ============================================================================
+alias ur='uv run'
+alias vea='[ -f .venv/bin/activate ] && . .venv/bin/activate || echo "No venv here!" >&2'
+alias ved='[ -n "$VIRTUAL_ENV" ] && deactivate || echo "Not in a venv!" >&2'
+
+# ============================================================================
 # ssh
-# ---------------------------------------------------------------------------
-alias s='eval $(ssh-agent)'
-
-# we want a ssh-agent always:
-ps x | grep -q  '[s]sh-agent$' || s
-
+# ============================================================================
+alias s='eval $(ssh-agent -a "$HOME/.ssh/agent.sock")'
 alias sa='ssh-add'
+alias kill_ssh_agents='pkill ssh-agent'
 
-alias kill_ssh_agents='for p in $(ps x |awk -v p=ssh-agent "\$NF == p {print \$1;}"); do kill $p ; done'
+# auto-start ssh-agent (single socket)
+[ -S "$HOME/.ssh/agent.sock" ] || s
 
-
-# ---------------------------------------------------------------------------
+# ============================================================================
 # fzf
-# ---------------------------------------------------------------------------
-# take fzf from $PATH now...
-if [ -n "$ZSH_NAME" ]
-then
+# ============================================================================
+if [ -n "$ZSH_NAME" ]; then
     eval "$(fzf --zsh)"
 else
     eval "$(fzf --bash)"
 fi
 
 export FZF_DEFAULT_OPTS='--extended --layout=default --color=dark --style=full:rounded --height=50% --tmux 90%'
-
 export FZF_DEFAULT_COMMAND='fd --no-hidden -E __pycache__ -E node_modules'
-
 export FZF_CTRL_T_COMMAND='fd --strip-cwd-prefix'
-
 export FZF_CTRL_T_OPTS="--bind='ctrl-p:execute:bat --style=numbers {}' --bind='ctrl-e:execute:nvim {}' --preview='test -f {} && bat --color=always --theme=gruvbox-dark --style=plain --line-range=:50 {} --paging=never || eza --tree -I __pycache__ -I node_modules -L=8 --color=always {}'"
 
-# alias ffzf='fzf --preview="test -e {} && bat --style=numbers --color=always {}"'
+fze() { local f; f=$(fzf) && [ -n "$f" ] && "$EDITOR" "$f"; }
+fcd() { local d; d=$(fd -t d | fzf) && [ -n "$d" ] && cd "$d"; }
 
-fze() {
-    local choosen=$(ffzf)
-
-    [ -n "$choosen" ] && $EDITOR $choosen
-}
-
-fcd() {
-    local choosen=$(fd -t directory| fzf)
-
-    [ -n "$choosen" ] && cd $choosen
-}
-
-# ---------------------------------------------------------------------------
+# ============================================================================
 # mise
-# ---------------------------------------------------------------------------
+# ============================================================================
 case $SHELL in
-    */bash)
-        eval "$(mise activate bash)" ;;
-    */zsh)
-        eval "$(mise activate zsh)"
-        ;;
-    *)
-        echo "Don't know how to init mise for shell $SHELL" >&2
+    */bash) eval "$(mise activate bash)" ;;
+    */zsh)  eval "$(mise activate zsh)" ;;
+    *) echo "Don't know how to init mise for shell $SHELL" >&2 ;;
 esac
 
-
 mst() {
-    if ! is_worker_path
-    then
-        echo "Do not run here!"
-        return 1
+    if ! is_worker_path; then
+        echo "Do not run here!"; return 1
     fi
-
-    local choice=$(mise list | awk '{print($1 " " $2)}' | fzf)
-    choice=${choice/ /@}
-    choice=${choice/\/}
-
-    [ -n "$choice" ] && mise use $choice
+    local choice; choice=$(mise list | awk '{print $1 " " $2}' | fzf) || return 1
+    choice=${choice/ /@}; choice=${choice/\/}
+    [ -n "$choice" ] && mise use "$choice"
 }
 
-# ---------------------------------------------------------------------------
+# ============================================================================
 # aws
-# ---------------------------------------------------------------------------
+# ============================================================================
 export AWS_CMD=aws
-
-# better decide by your own and by call
-export AWS_PAGER=""
+unset AWS_PAGER
 
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
-    [ $# -eq 4 -o $# -eq 2 ] || \
-        { echo "usage: aws_gt profile region mfa token_code"; return 1; }
-
-    typeset profile="$1"
-    typeset region="$2"
-    typeset mfa="$3"
-    typeset token_code="$4"
-
-    typeset rc
-    typeset json_out
-    typeset export_commands
-
-    typeset aws_gt_cmd="$AWS_CMD sts get-session-token --profile $profile"
-
-    if [ -n "$mfa" ]
-    then
-        json_out="$($aws_gt_cmd --serial-number $mfa --token-code $token_code 2>&1)"
-    else
-        json_out="$($aws_gt_cmd 2>&1)"
-    fi
-
-    typeset rc=$?
-
-    [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$json_out"; return 1; }
-
-    export_commands=$(aws_credentials_export <<< "$json_out")
-
-    if [ -z "$export_commands" ]
-    then
-        echo "ups: unable to convert json to export def:"
-        echo "$json_out"; return
-        return 1
-    fi
-
-    export_commands+=";export AWS_PROFILE=$profile"
-    export_commands+="; export AWS_DEFAULT_REGION=$region"
-
-    eval $export_commands
-
+    [ $# -eq 4 ] || [ $# -eq 2 ] || { echo "usage: aws_gt profile region [mfa token_code]"; return 1; }
+    local profile=$1 region=$2 mfa=$3 token=$4
+    local out rc export_cmd
+    local cmd="$AWS_CMD sts get-session-token --profile $profile"
+    [ -n "$mfa" ] && out=$($cmd --serial-number "$mfa" --token-code "$token") || out=$($cmd)
+    rc=$?
+    [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$out"; return 1; }
+    export_cmd=$(aws_credentials_export <<<"$out") || return 1
+    eval "$export_cmd; export AWS_PROFILE=$profile; export AWS_DEFAULT_REGION=$region"
     echo "--> now connected to AWS account \"$profile\" (region \"$region\")"
 }
-# EOF aws_gt()
-
-
-export PAGER=less
-export LESS='-RC'
 
 alias bat="$BREW_BIN/bat --color=auto --theme=Nord"
 alias pbat='bat -p'
 alias nbat='bat -n'
 
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # git
-# ----------------------------------------------------------------------------
-# git wants a command named 'vimdiff'
-alias vimdiff='nvim -d'
-alias nvimdiff=vimdiff
-
+# ============================================================================
 alias gl='git log --reverse'
-
-# show current git branch (not all branches as with 'git branch')
 alias gbr='git rev-parse --abbrev-ref HEAD'
-
-# push local branch to origin
 alias gpbr='git push --set-upstream origin $(gbr)'
-
-# show remote origin url
-alias gor="git remote -v | awk '/^origin/ && NR==1 { print(\$2)}'"
+alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
 
 mk_gitignore() {
-/bin/cat >.gitignore <<EOF
+    cat >.gitignore <<EOF
 .DS_Store
-
 __pycache__
 *.pyc
-
 npm_modules
-
 *.o
-
 .env
 EOF
 }
 
 ginit() {
-    local dir="${1:-}"
-
-    if [ -n "$dir" ]
-    then
-        test -d "$dir" && { msg "dir \"$dir\" already exists"; return 1; }
-        mkdir -p "$dir"
-        cd "$dir"
-    fi
-
-    if [ ! -f README.md ]
-    then
-        echo -e "# Description\n\nBla..." >README.md
-    fi
-
+    local dir=${1:-}
+    [ -n "$dir" ] && { [ -d "$dir" ] && { msg "dir exists"; return 1; } || mkdir -p "$dir" && cd "$dir"; }
+    [ ! -f README.md ] && echo -e "# Description\n\nBla..." >README.md
     mk_gitignore
-
-    git init || return 1
-
-    git add -A . || return 1
-
-    git commit -m "iniial version"
+    git init && git add -A . && git commit -m "initial version"
 }
-
 
 mkbranch() {
-    [ $# -eq 1 -o $# -eq 2 ] \
-        || { msg "usage: mkbranch branch [origin]"; return 1; }
-
-    local branch="$1"
-    local remote="${2:-origin}"
-
-    git checkout -b "$branch" || return 1
-    git push $remote $branch
+    [ $# -ge 1 ] || { msg "usage: mkbranch branch [origin]"; return 1; }
+    git checkout -b "$1" && git push "${2:-origin}" "$1"
 }
-
 chbranch() {
-    local choosen=$(git branch -a | grep -v '^ *\*' \
-    | sed -e s'/^  *//' -e 's%remotes/origin/%%' | fzf)
-
-    [ -n "$choosen" ] && {
-        git checkout "$choosen" || return 1
-        echo "Switched to branch $choosen"
-    }
+    local br; br=$(git branch -a | grep -v '^\*' | sed -e 's/^  *//' -e 's%remotes/origin/%%' | fzf) || return 1
+    git checkout "$br" && echo "Switched to $br"
 }
-
 alias mbr=mkbranch
 alias cbr=chbranch
+export GIT_PAGER=cat
 
-export GIT_PAGER=/bin/cat
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # tmux
-# ----------------------------------------------------------------------------
+# ============================================================================
 alias tns='tmux rename-session'
-alias tnsd='tmux rename-session $(basename $PWD)'
+alias tnsd='tmux rename-session $(basename "$PWD")'
 alias tnw='tmux rename-window'
 alias tnwp='tmux rename-window ${PWD##*/}'
 alias tp=tnwp
-alias tcs="tmux display-message -p '#S'" # tmux current session
-alias tclean='(for s in $(tua); do tmux kill-session -t $s; done)';
+alias tcs="tmux display-message -p '#S'"
+alias tclean='for s in $(tmux ls -F "#S"); do tmux kill-session -t "$s"; done'
 alias tswap='tmux swap-pane -U'
-alias clean_tmux_sessions='for session in $(tmux ls | egrep "^[0-9]+:" | grep -v " (attached)" |cut -d: -f1); do tmux kill-session -t $session; done'
+alias clean_tmux_sessions='tmux ls -F "#S #{session_attached}" | awk "$2==0{print $1}" | xargs -r -n1 tmux kill-session -t'
 
-# this should really, really be (almost) at end...
-export_unique_PATH
-
-if test -z "$MADE_NEOFETCH_CALL" && \
-    test -n "$SSH_CONNECTION" && which neofetch >/dev/null
-then
+# ============================================================================
+# eye candy + extras
+# ============================================================================
+if [ -n "$SSH_CONNECTION" ] && [ -z "$MADE_NEOFETCH_CALL" ] && command -v neofetch >/dev/null; then
     neofetch
     export MADE_NEOFETCH_CALL=y
 fi
 
-test -f $HOME/.config/broot/launcher/bash/br && source $_
+[ -f "$HOME/.config/broot/launcher/bash/br" ] && . "$HOME/.config/broot/launcher/bash/br"
 
-
-# ----------------------------------------------------------------------------
-# source optionally local/private settings (which hopefully does not mess up
-# $PATH too much...
-# ----------------------------------------------------------------------------
-
-test -s $HOME/.common_interactive_local_sh && . $HOME/.common_interactive_local_sh
+# ============================================================================
+# private local settings
+# ============================================================================
+[ -s "$HOME/.common_interactive_local_sh" ] && . "$HOME/.common_interactive_local_sh"
