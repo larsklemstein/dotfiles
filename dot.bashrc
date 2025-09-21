@@ -28,17 +28,11 @@ shopt -u progcomp
 # match all files and zero or more directories and subdirectories.
 # shopt -s globstar
 
-if [ -n "$DISPLAY" ]
-then
+if [ -n "$DISPLAY" ]; then
     export TERM=xterm-256color
 else
     export TERM=vt100
 fi
-
-# set a fancy prompt (non-color, unless we know we "want" color)
-case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes;;
-esac
 
 my_session_type() {
     local login_shell interactive
@@ -53,7 +47,6 @@ my_session_type() {
 alias mst=my_session_type
 
 export PS1='${PWD##*/} $ '
-
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #         this should be the last lines

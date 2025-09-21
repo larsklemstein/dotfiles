@@ -407,25 +407,28 @@ lspconfig.yamlls.setup({
 	settings = { yaml = { validate = false, format = { enable = false } } },
 })
 
--- ---------- nvim-lint: YAML only ----------
+-- -- ---------- nvim-lint: YAML + Bash ----------
 do
 	local ok_lint, lint = pcall(require, "lint")
 	if ok_lint then
 		if type(lint.linters_by_ft) ~= "table" then
 			lint.linters_by_ft = {}
 		end
+
 		lint.linters_by_ft.yaml = { "yamllint" }
+		lint.linters_by_ft.sh = { "shellcheck" }
+		lint.linters_by_ft.bash = { "shellcheck" }
 
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-			group = vim.api.nvim_create_augroup("lint_yaml_only", { clear = true }),
-			pattern = { "*.yml", "*.yaml" },
+			group = vim.api.nvim_create_augroup("lint_yaml_sh_bash", { clear = true }),
+			pattern = { "*.yml", "*.yaml", "*.sh", "*.bash" },
 			callback = function()
-				pcall(lint.try_lint, "yamllint")
+				pcall(lint.try_lint)
 			end,
 		})
 
-		vim.api.nvim_create_user_command("YamlLintNow", function()
-			pcall(lint.try_lint, "yamllint")
+		vim.api.nvim_create_user_command("LintNow", function()
+			pcall(lint.try_lint)
 		end, {})
 	end
 end
