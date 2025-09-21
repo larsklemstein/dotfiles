@@ -1,55 +1,41 @@
-[[ $- == *i* ]] || return
+# Exit if not interactive
+[[ $- != *i* ]] && return
 
-test -f $HOME/.bash_colors && . $_
 
-# unset variables should alert us
+# Colors
 
-# history related stuff
-export HISTCONTROL=ignoredups
-export HISTSIZE=20000
-export HISTFILESIZE=20000
+# History settings
+HISTCONTROL=ignoredups
+HISTSIZE=20000
+HISTFILESIZE=20000
+HISTTIMEFORMAT='[%m-%d %H:%M] '
+HISTIGNORE="clear:history:ls:ll:la:pwd"
+PROMPT_COMMAND='history -a'
+shopt -s histappend
+
+set -o vi
 
 alias h=history
 
-export HISTTIMEFORMAT='[%m-%d %H:%M] '
-export HISTIGNORE="clear:history:ls:ll:la:pwd"
+# Shell options
+shopt -s checkwinsize    # auto-update LINES/COLUMNS
+shopt -u progcomp        # disable programmable completion
+# shopt -s globstar      # enable ** recursive globbing if wanted
 
-export PROMPT_COMMAND='history -a'
-shopt -s histappend
+# Terminal type
+export TERM=${DISPLAY:+xterm-256color}
+export TERM=${TERM:-vt100}
 
-# check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+# Prompt
+PS1='${PWD##*/} $ '
 
-# disable programmable completion, will although stop adding a $ before pathes
-shopt -u progcomp
-
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-# shopt -s globstar
-
-if [ -n "$DISPLAY" ]; then
-    export TERM=xterm-256color
-else
-    export TERM=vt100
-fi
-
+# Helpers
 my_session_type() {
-    local login_shell interactive
-
-    shopt -q login_shell && login_shell='yes' || login_shell='no'
-    [[ $- == *i* ]] && interactive='yes' || interactive='no'
-
-    echo "logn shell....: $login_shell"
-    echo "interactive...: $interactive"
+    echo "login shell....: $([[ $- == *l* ]] && echo yes || echo no)"
+    echo "interactive....: $([[ $- == *i* ]] && echo yes || echo no)"
 }
-
 alias mst=my_session_type
 
-export PS1='${PWD##*/} $ '
+[[ -f "$HOME/.bash_colors" ]] && . "$HOME/.bash_colors"
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#         this should be the last lines
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-test -s $HOME/.common_interactive_sh && . $HOME/.common_interactive_sh
+[[ -s "$HOME/.common_interactive_sh" ]] && . "$HOME/.common_interactive_sh"

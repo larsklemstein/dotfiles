@@ -307,3 +307,5 @@ fi
 # private local settings
 # ============================================================================
 [ -s "$HOME/.common_interactive_local_sh" ] && . "$HOME/.common_interactive_local_sh"
+
+echo DONE

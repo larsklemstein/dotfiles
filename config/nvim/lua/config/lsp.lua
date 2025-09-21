@@ -407,7 +407,7 @@ lspconfig.yamlls.setup({
 	settings = { yaml = { validate = false, format = { enable = false } } },
 })
 
--- -- ---------- nvim-lint: YAML + Bash ----------
+-- ---------- nvim-lint: YAML + Bash ----------
 do
 	local ok_lint, lint = pcall(require, "lint")
 	if ok_lint then
@@ -415,10 +415,35 @@ do
 			lint.linters_by_ft = {}
 		end
 
+		-- Normal linters
 		lint.linters_by_ft.yaml = { "yamllint" }
-		lint.linters_by_ft.sh = { "shellcheck" }
-		lint.linters_by_ft.bash = { "shellcheck" }
+		lint.linters_by_ft.sh = { "shellcheck", "shfmt_d" }
+		lint.linters_by_ft.bash = { "shellcheck", "shfmt_d" }
 
+		-- Custom linter: shfmt -d
+		lint.linters.shfmt_d = {
+			cmd = "shfmt",
+			stdin = true,
+			args = { "-d", "-i", "4", "-ci", "-ln", "bash" },
+			stream = "stdout",
+			ignore_exitcode = true,
+			parser = function(output, bufnr)
+				local diags = {}
+				-- shfmt -d outputs unified diffs; we’ll show one generic diagnostic if non-empty
+				if output ~= "" then
+					table.insert(diags, {
+						lnum = 0,
+						col = 0,
+						message = "File is not shfmt-formatted",
+						severity = vim.diagnostic.severity.WARN,
+						source = "shfmt",
+					})
+				end
+				return diags
+			end,
+		}
+
+		-- Run lint on enter, save, insert leave
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
 			group = vim.api.nvim_create_augroup("lint_yaml_sh_bash", { clear = true }),
 			pattern = { "*.yml", "*.yaml", "*.sh", "*.bash" },
@@ -427,6 +452,7 @@ do
 			end,
 		})
 
+		-- Manual run: :LintNow
 		vim.api.nvim_create_user_command("LintNow", function()
 			pcall(lint.try_lint)
 		end, {})
