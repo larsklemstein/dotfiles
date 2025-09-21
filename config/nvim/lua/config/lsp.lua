@@ -87,7 +87,7 @@ caps.textDocument.completion.completionItem =
 -- Hover window with border
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded", max_width = 100 })
 
--- 3a) Diagnostics filter: Pyright types-only; Ruff normalize; dedup per publish
+-- 3a) Diagnostics filter: Pyright, Ruff normalize, dedup, suppress noisy groovyls
 local orig_publish = vim.lsp.handlers["textDocument/publishDiagnostics"]
 
 local DIAG_TAG_UNNECESSARY = (
@@ -146,6 +146,15 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 			if d.source and d.source:lower():match("^ruff") then
 				d.source = "ruff"
 			end
+
+			-- Drop only false-positive groovyls "unable to resolve class" for Groovy stdlib
+			if client and client.name == "groovyls" then
+				local msg = d.message or ""
+				if msg:match("unable to resolve class groovy%.transform%.") then
+					goto continue
+				end
+			end
+
 			if client and client.name == "pyright" then
 				local code = d.code
 				local code_str = (type(code) == "string") and code or ""
@@ -155,6 +164,7 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 					goto continue
 				end
 			end
+
 			local key = diag_key(d)
 			if not seen[key] then
 				seen[key] = true
@@ -166,80 +176,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = function(err, result, ctx,
 	end
 	return orig_publish(err, result, ctx, config)
 end
-
--- 3b) Kill legacy LSP client named "Ruff" (capital R)
-au("LspAttach", {
-	group = ag("kill_legacy_Ruff"),
-	callback = function(args)
-		if not args.data or not args.data.client_id then
-			return
-		end
-		local client = vim.lsp.get_client_by_id(args.data.client_id)
-		if client and client.name == "Ruff" then
-			vim.schedule(function()
-				client.stop()
-				vim.notify("Stopped legacy LSP client 'Ruff' to avoid duplicate diagnostics.", vim.log.levels.INFO)
-			end)
-		end
-	end,
-})
-
--- 3c) Clear non-LSP plain "ruff" namespace on idle (no recursion)
-local function clear_plain_ruff_ns(bufnr)
-	vim.schedule(function()
-		for ns, info in pairs(vim.diagnostic.get_namespaces()) do
-			if info and info.name == "ruff" then
-				vim.diagnostic.reset(ns, bufnr)
-			end
-		end
-	end)
-end
-au({ "BufEnter", "LspAttach", "CursorHold", "CursorHoldI" }, {
-	group = ag("clear_dup_plain_ruff"),
-	nested = false,
-	callback = function(args)
-		local b = args.buf or vim.api.nvim_get_current_buf()
-		if vim.bo[b].filetype == "python" then
-			clear_plain_ruff_ns(b)
-		end
-	end,
-})
-
--- Debug helper
-vim.api.nvim_create_user_command("LspDiagDump", function()
-	for _, d in ipairs(vim.diagnostic.get(0)) do
-		local s = ({ [1] = "ERROR", [2] = "WARN", [3] = "INFO", [4] = "HINT" })[d.severity or 0] or "?"
-		local l, c =
-			(d.range and d.range.start and (d.range.start.line + 1) or 0),
-			(d.range and d.range.start and (d.range.start.character + 1) or 0)
-		print(string.format("[%s] %s @ %d:%d — %s", d.source or "?", s, l, c, (d.message or ""):gsub("%s+", " ")))
-	end
-end, {})
-
--- Toggle inlay hints
-vim.api.nvim_create_user_command("ToggleInlayHints", function()
-	local ih = vim.lsp.inlay_hint
-	if not ih or not ih.enable then
-		vim.notify("Inlay hints API not available in this Neovim.", vim.log.levels.WARN)
-		return
-	end
-	local bufnr = vim.api.nvim_get_current_buf()
-	local enabled = false
-	if ih.is_enabled then
-		local ok, val = pcall(ih.is_enabled, bufnr)
-		if not ok then
-			local ok2, val2 = pcall(ih.is_enabled, { bufnr = bufnr })
-			enabled = ok2 and val2 or false
-		else
-			enabled = val
-		end
-	end
-	local ok = pcall(ih.enable, bufnr, not enabled)
-	if not ok then
-		pcall(ih.enable, not enabled, { bufnr = bufnr })
-	end
-	vim.notify("Inlay hints " .. ((not enabled) and "enabled" or "disabled"), vim.log.levels.INFO)
-end, {})
 
 -- Common on_attach
 local function on_attach(client, bufnr)
@@ -267,6 +203,9 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" }
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 
+-- ---- LSP Servers ----
+
+-- Terraform
 for _, srv in ipairs({ "terraformls" }) do
 	if lspconfig[srv] then
 		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
@@ -407,6 +346,15 @@ lspconfig.yamlls.setup({
 	settings = { yaml = { validate = false, format = { enable = false } } },
 })
 
+-- Groovy
+lspconfig.groovyls.setup({
+	capabilities = caps,
+	on_attach = on_attach,
+	cmd = { vim.fn.expand("~/app/groovy-lsp/groovyls.sh") },
+	filetypes = { "groovy" },
+	root_dir = util.root_pattern("settings.gradle", "build.gradle", "mise.toml", ".git"),
+})
+
 -- ---------- nvim-lint: YAML + Bash ----------
 do
 	local ok_lint, lint = pcall(require, "lint")
@@ -415,7 +363,6 @@ do
 			lint.linters_by_ft = {}
 		end
 
-		-- Normal linters
 		lint.linters_by_ft.yaml = { "yamllint" }
 		lint.linters_by_ft.sh = { "shellcheck", "shfmt_d" }
 		lint.linters_by_ft.bash = { "shellcheck", "shfmt_d" }
@@ -429,7 +376,6 @@ do
 			ignore_exitcode = true,
 			parser = function(output, bufnr)
 				local diags = {}
-				-- shfmt -d outputs unified diffs; we’ll show one generic diagnostic if non-empty
 				if output ~= "" then
 					table.insert(diags, {
 						lnum = 0,
@@ -443,7 +389,6 @@ do
 			end,
 		}
 
-		-- Run lint on enter, save, insert leave
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
 			group = vim.api.nvim_create_augroup("lint_yaml_sh_bash", { clear = true }),
 			pattern = { "*.yml", "*.yaml", "*.sh", "*.bash" },
@@ -452,7 +397,6 @@ do
 			end,
 		})
 
-		-- Manual run: :LintNow
 		vim.api.nvim_create_user_command("LintNow", function()
 			pcall(lint.try_lint)
 		end, {})
