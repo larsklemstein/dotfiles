@@ -15,7 +15,8 @@ Plug("nvim-treesitter/nvim-treesitter-textobjects")
 Plug("nvim-lua/plenary.nvim")
 
 -- Telescope (lazy on :Telescope)
-Plug("nvim-telescope/telescope.nvim", { ["on"] = "Telescope" })
+Plug("nvim-telescope/telescope.nvim")
+
 -- Optional: native FZF accel for Telescope (lazy on :Telescope)
 Plug("nvim-telescope/telescope-fzf-native.nvim", { ["do"] = "make", ["on"] = "Telescope" })
 

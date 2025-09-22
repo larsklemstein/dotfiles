@@ -7,33 +7,27 @@ local function req(mod)
 end
 
 -- 1) base config
-req("config.globals")
-req("config.keymaps")
-req("config.options")
+require("config.globals")
+require("config.keymaps")
+require("config.options")
 
 -- 2) plugins first
-req("config.plugins")
+require("config.plugins")
 
 -- 3) plugin configs (order only matters where deps exist)
-req("config.nvim_tree")
-req("config.telescope")
-req("config.blamer")
+require("config.nvim_tree")
+require("config.telescope_cfg")
+require("config.blamer")
 -- req("config.copilot")
-req("config.lualine")
-req("config.treesitter")
-req("config.cmp")
-req("config.message_line")
-req("config.indent")
-req("config.format")
+require("config.lualine")
+require("config.treesitter")
+require("config.cmp")
+require("config.message_line")
+require("config.indent")
+require("config.format")
 
 -- 4) LSP last (often references treesitter/cmp caps)
-req("config.lsp")
-
--- 5) flash (“f on steroids”)
-local flash_cfg = req("config.flash")
-if flash_cfg and flash_cfg.setup then
-	flash_cfg.setup()
-end
+require("config.lsp")
 
 -- 6) load lint config after startup (avoids blocking UI)
 vim.api.nvim_create_autocmd("VimEnter", {
@@ -54,21 +48,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 		pcall(vim.lsp.buf.format, { async = false })
 	end,
 })
-
--- 9) Flash highlights (single source of truth, reapply on colorscheme)
-do
-	local function set_flash_hl()
-		-- label = bright red (only labels)
-		vim.api.nvim_set_hl(0, "FlashLabel", { fg = "#ff0000", bold = true, nocombine = true })
-		-- match = subtle (don’t recolor the actual character)
-		vim.api.nvim_set_hl(0, "FlashMatch", { underline = true, nocombine = true })
-	end
-	set_flash_hl()
-	vim.api.nvim_create_autocmd("ColorScheme", {
-		group = vim.api.nvim_create_augroup("flash_hl", { clear = true }),
-		callback = set_flash_hl,
-	})
-end
 
 vim.filetype.add({
 	filename = {

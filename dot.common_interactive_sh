@@ -23,6 +23,13 @@ export THIS_OS
 [ "$THIS_OS" = linux ] && alias open=exo-open
 
 # paths
+
+export EZA_CONFIG_DIR="$HOME/.config/eza"
+
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_DATA_HOME="$HOME/.local/share"
+
 export WORK="$HOME/work"
 export EDU="$HOME/edu"
 export DF="$HOME/.dotfiles"
@@ -36,8 +43,8 @@ alias cdnc='cd "$NCONF" && ls -ltr'
 alias cdncl='cd "$NCONF_LUA" && ls -ltr'
 alias cddf='cd "$DF" && ls -ltr'
 
-# --- ls aliases (lsd)
-alias ls="lsd --group-directories-first"
+# --- ls aliases (eza)
+alias ls="eza"
 alias ll='ls -l'
 alias la='ls -a'
 alias lla='ls -la'
