@@ -7,7 +7,7 @@ servers_from_npm=(
     typescript
     typescript-language-server
     vscode-langservers-extracted
-
+    @ansible/ansible-language-serve
 )
 
 servers_from_brew=(
