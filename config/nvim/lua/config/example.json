@@ -1,10 +1,5 @@
 {
   "name": "demo  ",
   "version": "one.two.three",
-  "dependencies": { "lodash": "latest" },
-
-  "xxx": {
-    "a": 10,
-    "b": 20
-  }
+  "dependencies": { "lodash": "latest" }
 }

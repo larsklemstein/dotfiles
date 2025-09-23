@@ -32,7 +32,7 @@ local function ts_setup()
 			},
 		},
 
-		-- >>> NEW: textobjects <<<
+		-- >>> NEW: textobjects (extended) <<<
 		textobjects = {
 			select = {
 				enable = true,
@@ -44,6 +44,10 @@ local function ts_setup()
 					["ic"] = "@class.inner",
 					["aa"] = "@parameter.outer",
 					["ia"] = "@parameter.inner",
+
+					-- added for blocks (JSON objects, loops, ifs, etc.)
+					["aB"] = "@block.outer",
+					["iB"] = "@block.inner",
 				},
 			},
 			move = {
