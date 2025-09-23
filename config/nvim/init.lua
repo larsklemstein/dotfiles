@@ -6,6 +6,16 @@ local function req(mod)
 	return ok and m or nil
 end
 
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	pattern = { "*.yml", "*.yaml" },
+	callback = function(args)
+		local f = args.file
+		if f:match("playbook") or f:match("roles/.*/tasks/") or f:match("roles/.*/handlers/") then
+			vim.bo.filetype = "yaml.ansible"
+		end
+	end,
+})
+
 -- 1) base config
 require("config.globals")
 require("config.keymaps")
@@ -13,6 +23,7 @@ require("config.options")
 
 -- 2) plugins first
 require("config.plugins")
+require("config.filetypes")
 
 -- 3) plugin configs (order only matters where deps exist)
 require("config.nvim_tree")

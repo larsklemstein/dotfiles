@@ -215,28 +215,16 @@ for _, srv in ipairs({ "terraformls" }) do
 	end
 end
 
--- Ansible-
+-- Ansible
 lspconfig.ansiblels.setup({
 	capabilities = caps,
 	on_attach = on_attach,
 	settings = {
 		ansible = {
 			ansible = { path = "ansible" },
-			ansibleLint = {
-				enabled = false,
-				path = "ansible-lint",
-			},
+			ansibleLint = { enabled = true, path = "ansible-lint" },
 			executionEnvironment = { enabled = false },
 			python = { interpreterPath = "python3" },
-
-			-- 👇 disable the new-style validation linting
-			validation = {
-				enabled = true,
-				lint = {
-					enabled = false, -- 👈 turn off ansible-lint completely
-					path = "ansible-lint",
-				},
-			},
 		},
 	},
 })
@@ -367,8 +355,20 @@ lspconfig.eslint.setup({
 
 lspconfig.yamlls.setup({
 	capabilities = caps,
-	on_attach = on_attach,
-	filetypes = { "yaml" }, -- 👈 only plain YAML
+	on_attach = function(client, bufnr)
+		on_attach(client, bufnr)
+		client.server_capabilities.documentFormattingProvider = false
+	end,
+	filetypes = { "yaml" }, -- 👈 so it doesn’t attach to ansible files
+	settings = {
+		yaml = {
+			validate = true,
+			format = { enable = false },
+			schemas = {
+				kubernetes = "/*.k8s.yaml",
+			},
+		},
+	},
 })
 
 -- Groovy
@@ -513,3 +513,17 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
+
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	pattern = {
+		"playbooks/*.yml",
+		"playbooks/*.yaml",
+		"roles/*/tasks/*.yml",
+		"roles/*/tasks/*.yaml",
+		"roles/*/handlers/*.yml",
+		"roles/*/handlers/*.yaml",
+	},
+	callback = function()
+		vim.bo.filetype = "ansible"
+	end,
+})

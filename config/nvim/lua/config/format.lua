@@ -36,6 +36,52 @@ conform.setup({
 	},
 })
 
+-- Normalize YAML booleans (yes/no/on/off/True/False) to true/false
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = vim.api.nvim_create_augroup("yaml_bool_normalize", { clear = true }),
+	pattern = { "*.yaml", "*.yml" },
+	callback = function(args)
+		local buf = args.buf
+		local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		local changed = false
+
+		local function normalize_value(val)
+			local lower = val:lower()
+			if lower == "yes" or lower == "on" or lower == "true" then
+				return "true"
+			elseif lower == "no" or lower == "off" or lower == "false" then
+				return "false"
+			end
+			return val
+		end
+
+		for i, line in ipairs(lines) do
+			local new = line
+
+			-- skip quoted strings ("yes", 'no')
+			if not line:match(":%s*['\"]") and not line:match("^%s*%-%s*['\"]") then
+				-- key: value
+				new = new:gsub("(:%s*)([%a]+)(%s*#?.*)$", function(prefix, val, suffix)
+					return prefix .. normalize_value(val) .. suffix
+				end)
+				-- list item
+				new = new:gsub("^(%s*%-%s*)([%a]+)(%s*#?.*)$", function(prefix, val, suffix)
+					return prefix .. normalize_value(val) .. suffix
+				end)
+			end
+
+			if new ~= line then
+				lines[i] = new
+				changed = true
+			end
+		end
+
+		if changed then
+			vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+		end
+	end,
+})
+
 -- Manual :Format command
 vim.api.nvim_create_user_command("Format", function(args)
 	local range
