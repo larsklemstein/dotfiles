@@ -203,6 +203,9 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" }
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 
+-- code action
+vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP Code Action" })
+
 -- ---- LSP Servers ----
 
 -- Terraform
@@ -355,6 +358,39 @@ lspconfig.groovyls.setup({
 	root_dir = util.root_pattern("settings.gradle", "build.gradle", "mise.toml", ".git"),
 })
 
+-- JSON
+lspconfig.jsonls.setup({
+	capabilities = caps,
+	on_attach = function(client, bufnr)
+		on_attach(client, bufnr)
+		-- Disable formatting if you want Conform/Prettier/etc. to handle it
+		client.server_capabilities.documentFormattingProvider = false
+		client.server_capabilities.documentRangeFormattingProvider = false
+	end,
+	settings = {
+		json = {
+			validate = { enable = true },
+			schemas = require("schemastore").json.schemas(),
+			schemaDownload = { enable = true },
+		},
+	},
+})
+
+-- JSON format on save (Conform handles it)
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = ag("fmt_json"),
+	pattern = { "*.json" },
+	callback = function(args)
+		pcall(function()
+			require("conform").format({
+				bufnr = args.buf,
+				async = false,
+				lsp_fallback = false,
+			})
+		end)
+	end,
+})
+
 -- ---------- nvim-lint: YAML + Bash ----------
 do
 	local ok_lint, lint = pcall(require, "lint")
@@ -430,9 +466,18 @@ local function trim_trailing_ws(bufnr)
 	end
 end
 
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+-- 	group = ag("trim_trailing_ws"),
+-- 	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "Jenkinsfile" },
+-- 	callback = function(args)
+-- 		pcall(trim_trailing_ws, args.buf)
+-- 	end,
+-- })
+
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = ag("trim_trailing_ws"),
-	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "Jenkinsfile" },
+	-- added *.json
+	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "Jenkinsfile" },
 	callback = function(args)
 		pcall(trim_trailing_ws, args.buf)
 	end,

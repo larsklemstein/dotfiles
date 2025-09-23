@@ -15,6 +15,8 @@ conform.setup({
 		bash = { "shfmt" },
 		yaml = { "yamlfmt", "prettier" },
 		groovy = { "npm-groovy-lint" }, -- use this
+		json = { "prettier" },
+		jsonc = { "prettier" }, -- JSON with comments
 	},
 
 	formatters = {

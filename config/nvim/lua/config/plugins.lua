@@ -53,8 +53,9 @@ Plug("saadparwaiz1/cmp_luasnip")
 Plug("rafamadriz/friendly-snippets")
 Plug("hrsh7th/cmp-nvim-lsp-signature-help") -- optional
 
+Plug("b0o/SchemaStore.nvim")
 -- Motions (optional)
-Plug("folke/flash.nvim")
+-- Plug("folke/flash.nvim")
 
 -- Theme
 Plug("vague2k/vague.nvim")
