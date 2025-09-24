@@ -8,8 +8,7 @@ servers_from_npm=(
     typescript-language-server
     vscode-langservers-extracted
     @ansible/ansible-language-serve
-    terraform-ls
-    tflint
+    markdownlint-cli
 )
 
 servers_from_brew=(
@@ -22,6 +21,9 @@ servers_from_brew=(
     yamlfmt
     yaml-language-server
     prettier
+    terraform-ls
+    tflint
+    marksman
 )
 
 for server in "${servers_from_npm[@]}"; do

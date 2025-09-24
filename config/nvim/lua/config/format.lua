@@ -20,6 +20,7 @@ conform.setup({
 		terraform = { "terraform_fmt" },
 		tfvars = { "terraform_fmt" }, -- handle variable files too
 		tf = { "terraform_fmt" },
+		markdown = { "prettier" },
 	},
 
 	formatters = {

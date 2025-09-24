@@ -517,3 +517,8 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
+
+lspconfig.marksman.setup({
+	capabilities = caps,
+	on_attach = on_attach,
+})
