@@ -17,6 +17,9 @@ conform.setup({
 		groovy = { "npm-groovy-lint" }, -- use this
 		json = { "prettier" },
 		jsonc = { "prettier" }, -- JSON with comments
+		terraform = { "terraform_fmt" },
+		tfvars = { "terraform_fmt" }, -- handle variable files too
+		tf = { "terraform_fmt" },
 	},
 
 	formatters = {

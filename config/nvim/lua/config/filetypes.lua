@@ -527,3 +527,17 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 		vim.bo.filetype = "ansible"
 	end,
 })
+
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	pattern = { "*.tf", "*.tfvars", "*.terraformrc", "terraform.rc" },
+	callback = function()
+		vim.bo.filetype = "terraform"
+	end,
+})
+
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+	pattern = { "*.tfvars" },
+	callback = function()
+		vim.bo.filetype = "tfvars"
+	end,
+})

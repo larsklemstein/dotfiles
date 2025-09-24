@@ -33,6 +33,7 @@ end
 local map = function(buf, mode, lhs, rhs)
 	vim.keymap.set(mode, lhs, rhs, { buffer = buf, silent = true })
 end
+
 local function buf_format_with(name)
 	vim.lsp.buf.format({
 		async = false,
@@ -208,13 +209,6 @@ vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP Code Ac
 
 -- ---- LSP Servers ----
 
--- Terraform
-for _, srv in ipairs({ "terraformls" }) do
-	if lspconfig[srv] then
-		lspconfig[srv].setup({ capabilities = caps, on_attach = on_attach })
-	end
-end
-
 -- Ansible-
 lspconfig.ansiblels.setup({
 	capabilities = caps,
@@ -239,6 +233,14 @@ lspconfig.ansiblels.setup({
 			},
 		},
 	},
+})
+
+-- Terraform LSP
+lspconfig.terraformls.setup({
+	capabilities = caps,
+	on_attach = on_attach,
+	filetypes = { "terraform" }, -- 👈 only *.tf, not tfvars
+	root_dir = util.root_pattern(".terraform", ".git", "*.tf"),
 })
 
 -- Bash
@@ -424,6 +426,8 @@ do
 		lint.linters_by_ft.yaml = { "yamllint" }
 		lint.linters_by_ft.sh = { "shellcheck", "shfmt_d" }
 		lint.linters_by_ft.bash = { "shellcheck", "shfmt_d" }
+		lint.linters_by_ft.terraform = { "tflint" }
+		lint.linters_by_ft.tf = { "tflint" }
 
 		-- Custom linter: shfmt -d
 		lint.linters.shfmt_d = {
