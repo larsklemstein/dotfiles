@@ -42,6 +42,8 @@ Plug("mfussenegger/nvim-lint")
 -- LazyGit (lazy on :LazyGit)
 Plug("kdheepak/lazygit.nvim", { ["on"] = "LazyGit" })
 
+Plug("dhruvasagar/vim-table-mode")
+
 -- Completion + snippets
 Plug("hrsh7th/nvim-cmp")
 Plug("hrsh7th/cmp-nvim-lsp")
