@@ -8,6 +8,8 @@ servers_from_npm=(
     typescript-language-server
     vscode-langservers-extracted
     @ansible/ansible-language-serve
+    terraform-ls
+    tflint
 )
 
 servers_from_brew=(
