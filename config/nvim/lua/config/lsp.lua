@@ -199,14 +199,6 @@ local function on_attach(client, bufnr)
 	end
 end
 
--- Handy diagnostic keymaps
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
-vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Line diagnostics" })
-
--- code action
-vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP Code Action" })
-
 -- ---- LSP Servers ----
 
 -- Ansible-
@@ -492,14 +484,6 @@ local function trim_trailing_ws(bufnr)
 	end
 end
 
--- vim.api.nvim_create_autocmd("BufWritePre", {
--- 	group = ag("trim_trailing_ws"),
--- 	pattern = { "*.py", "*.js", "*.jsx", "*.ts", "*.tsx", "Jenkinsfile" },
--- 	callback = function(args)
--- 		pcall(trim_trailing_ws, args.buf)
--- 	end,
--- })
-
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = ag("trim_trailing_ws"),
 	-- added *.json
@@ -511,12 +495,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 -- LSP-powered tag jumps
 vim.o.tagfunc = "v:lua.vim.lsp.tagfunc"
-
--- Extra keymap: vsplit definition
-vim.keymap.set("n", "<leader>vd", function()
-	vim.cmd("vsplit")
-	vim.lsp.buf.definition()
-end, { desc = "LSP definition in vsplit" })
 
 lspconfig.marksman.setup({
 	capabilities = caps,
