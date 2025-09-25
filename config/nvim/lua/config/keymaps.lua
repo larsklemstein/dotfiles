@@ -32,3 +32,7 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.cmd("vsplit")
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
+
+-- vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tt', ':NvimTreeFindFileToggle<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>tf', ':NvimTreeFindFile<CR>', { noremap = true, silent = true })
