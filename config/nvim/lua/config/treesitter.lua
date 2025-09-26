@@ -5,75 +5,75 @@ local langs = { "go", "lua", "python", "typescript", "tsx", "json", "yaml", "bas
 -- One-time setup, guarded so it runs only after the plugin is available
 local configured = false
 local function ts_setup()
-	if configured then
-		return
-	end
-	local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
-	if not ok_configs then
-		return
-	end
+    if configured then
+        return
+    end
+    local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
+    if not ok_configs then
+        return
+    end
 
-	pcall(function()
-		require("nvim-treesitter.install").prefer_git = true
-	end)
+    pcall(function()
+        require("nvim-treesitter.install").prefer_git = true
+    end)
 
-	configs.setup({
-		ensure_installed = langs,
-		auto_install = true,
-		highlight = { enable = true, additional_vim_regex_highlighting = false },
-		indent = { enable = true, disable = { "go" } }, -- TS indent OFF for Go
-		incremental_selection = {
-			enable = true,
-			keymaps = {
-				init_selection = "gnn",
-				node_incremental = "grn",
-				scope_incremental = "grc",
-				node_decremental = "grm",
-			},
-		},
+    configs.setup({
+        ensure_installed = langs,
+        auto_install = true,
+        highlight = { enable = true, additional_vim_regex_highlighting = false },
+        indent = { enable = true, disable = { "go" } }, -- TS indent OFF for Go
+        incremental_selection = {
+            enable = true,
+            keymaps = {
+                init_selection = "gnn",
+                node_incremental = "grn",
+                scope_incremental = "grc",
+                node_decremental = "grm",
+            },
+        },
 
-		-- >>> NEW: textobjects (extended) <<<
-		textobjects = {
-			select = {
-				enable = true,
-				lookahead = true,
-				keymaps = {
-					["af"] = "@function.outer",
-					["if"] = "@function.inner",
-					["ac"] = "@class.outer",
-					["ic"] = "@class.inner",
-					["aa"] = "@parameter.outer",
-					["ia"] = "@parameter.inner",
+        -- >>> NEW: textobjects (extended) <<<
+        textobjects = {
+            select = {
+                enable = true,
+                lookahead = true,
+                keymaps = {
+                    ["af"] = "@function.outer",
+                    ["if"] = "@function.inner",
+                    ["ac"] = "@class.outer",
+                    ["ic"] = "@class.inner",
+                    ["aa"] = "@parameter.outer",
+                    ["ia"] = "@parameter.inner",
 
-					-- added for blocks (JSON objects, loops, ifs, etc.)
-					["aB"] = "@block.outer",
-					["iB"] = "@block.inner",
-				},
-			},
-			move = {
-				enable = true,
-				set_jumps = true,
-				goto_next_start = {
-					["]m"] = "@function.outer",
-					["]]"] = "@class.outer",
-				},
-				goto_next_end = {
-					["]M"] = "@function.outer",
-					["]["] = "@class.outer",
-				},
-				goto_previous_start = {
-					["[m"] = "@function.outer",
-					["[["] = "@class.outer",
-				},
-				goto_previous_end = {
-					["[M"] = "@function.outer",
-					["[]"] = "@class.outer",
-				},
-			},
-		},
-	})
+                    -- added for blocks (JSON objects, loops, ifs, etc.)
+                    --  ["aB"] = "@block.outer",
+                    -- ["iB"] = "@block.inner",
+                },
+            },
+            move = {
+                enable = true,
+                set_jumps = true,
+                goto_next_start = {
+                    ["]m"] = "@function.outer",
+                    ["]]"] = "@class.outer",
+                },
+                goto_next_end = {
+                    ["]M"] = "@function.outer",
+                    ["]["] = "@class.outer",
+                },
+                goto_previous_start = {
+                    ["[m"] = "@function.outer",
+                    ["[["] = "@class.outer",
+                },
+                goto_previous_end = {
+                    ["[M"] = "@function.outer",
+                    ["[]"] = "@class.outer",
+                },
+            },
+        },
+    })
 
-	configured = true
+    configured = true
 end
 
 -- Try once when UI is ready (in case plugin already loaded)
@@ -84,18 +84,18 @@ vim.api.nvim_create_autocmd("FileType", { pattern = langs, callback = ts_setup }
 
 -- --- Go-specific indentation: use ONLY smartindent (no TS indent, no cindent) ---
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = "go",
-	callback = function()
-		-- ensure only one indent engine is active
-		vim.opt_local.indentexpr = "" -- no TS indent function
-		vim.opt_local.cindent = false -- disable cindent (prevents double indent)
-		vim.opt_local.smartindent = true
-		vim.opt_local.autoindent = true
+    pattern = "go",
+    callback = function()
+        -- ensure only one indent engine is active
+        vim.opt_local.indentexpr = "" -- no TS indent function
+        vim.opt_local.cindent = false -- disable cindent (prevents double indent)
+        vim.opt_local.smartindent = true
+        vim.opt_local.autoindent = true
 
-		-- gofmt/goimports settings
-		vim.opt_local.expandtab = false
-		vim.opt_local.tabstop = 8
-		vim.opt_local.shiftwidth = 0
-		vim.opt_local.softtabstop = 0
-	end,
+        -- gofmt/goimports settings
+        vim.opt_local.expandtab = false
+        vim.opt_local.tabstop = 8
+        vim.opt_local.shiftwidth = 0
+        vim.opt_local.softtabstop = 0
+    end,
 })

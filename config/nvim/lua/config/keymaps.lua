@@ -1,6 +1,3 @@
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 vim.keymap.set("n", "<C-L>", ":nohls<CR><C-L>")
@@ -33,6 +30,6 @@ vim.keymap.set("n", "<leader>vd", function()
 	vim.lsp.buf.definition()
 end, { desc = "LSP definition in vsplit" })
 
--- vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>tt', ':NvimTreeFindFileToggle<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>tf', ':NvimTreeFindFile<CR>', { noremap = true, silent = true })
+-- your file tree keymaps
+-- optional: if you still want tablemode, map it to something else
+vim.keymap.set("n", "<leader>mt", "<cmd>TableModeToggle<CR>", { noremap = true, silent = true })
