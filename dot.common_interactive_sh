@@ -84,9 +84,6 @@ export MANPAGER=less
 export EDITOR=nvim
 export VISUAL=$EDITOR
 
-# vi mode
-set -o vi
-
 # diff
 alias vimdiff='nvim -d'
 alias nvimdiff=vimdiff
