@@ -244,7 +244,7 @@ zm() {
 | dv / dc                 | Show / clear directory history               |
 | zm                      | Show this cheat-sheet                        |
 +-------------------------+----------------------------------------------+
-| Built-ins / Misc                                                      |
+| Built-ins / Misc                                                       |
 | Ctrl-L                  | Clear screen                                 |
 +-------------------------+----------------------------------------------+
 EOF
