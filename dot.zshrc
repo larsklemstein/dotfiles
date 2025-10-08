@@ -105,25 +105,23 @@ bindkey -M viins '^R' fzf-history-widget       # fuzzy history search
 bindkey -M viins '^F' fzf-file-widget          # fuzzy pick file → insert path
 
 # =====================================================================
-#  Directory history – last 12 visited (excludes current)
+#  Directory history – last 12 visited (excluding current)
 # =====================================================================
 DIRSTACKSIZE=12
-typeset -ga dirstack     # we manage this (MRU of previous dirs only)
+typeset -ga dirstack     # MRU of previously visited directories
 
-# helper: pretty/physical handling + MRU update
+# helper: add path to history (dedupe by physical path, pretty-print /tmp)
 __hist_add_path() {
   local in="$1"
   [[ -z $in ]] && return
 
   local cur_phys="${PWD:P}"             # physical current dir
-  local new_phys="${in:P}"              # physical path for comparison
+  local new_phys="${in:P}"              # physical path of entry
   [[ $new_phys == "$cur_phys" ]] && return  # never add current dir
 
-  # Pretty string to store (cosmetic: /private/tmp → /tmp)
   local pretty="$in"
   [[ $new_phys == /private/tmp ]] && pretty="/tmp"
 
-  # Build new MRU: new first, then old entries whose *physical* path differs
   local -a newstack=("$pretty")
   local d
   for d in "${dirstack[@]}"; do
@@ -135,18 +133,29 @@ __hist_add_path() {
   dirstack=("${newstack[@]}")
 }
 
-# Update on every successful directory change: push the dir we *came from*
 autoload -Uz add-zsh-hook
 __track_dirs_chpwd() {
   [[ -n $OLDPWD ]] && __hist_add_path "$OLDPWD"
 }
 add-zsh-hook chpwd __track_dirs_chpwd
 
-# helpers
-alias dv='dirs -v'      # shows: 0=current, 1..=history we maintain
+alias dv='dirs -v'      # show stack (0=current, rest=history)
 alias dc='dirstack=()'  # clear history
 
-# g <N> → jump to entry N (same numbering as 'dirs -v')
+alias g0='g 0'
+alias g1='g 1'
+alias g2='g 2'
+alias g3='g 3'
+alias g4='g 4'
+alias g5='g 5'
+alias g6='g 6'
+alias g7='g 7'
+alias g8='g 8'
+alias g9='g 9'
+alias g10='g 10'
+alias g11='g 11'
+
+# g <N> → jump to history entry N
 g() {
   emulate -L zsh
   if [[ -z $1 || $1 != <-> ]]; then
@@ -163,7 +172,7 @@ g() {
 }
 
 # =====================================================================
-#  Widgets – live-scanning version
+#  Widgets – live-scanning
 # =====================================================================
 
 # Ctrl-K → fuzzy-switch directory (cd)
@@ -176,11 +185,10 @@ fzf_switch_dir() {
 zle -N fzf_switch_dir
 bindkey -M viins '^K' fzf_switch_dir
 
-# Ctrl-O → fuzzy-operate: insert directory path + also add to history (without cd)
+# Ctrl-O → fuzzy-operate: insert dir path + add to history (no cd)
 fzf_insert_dir() {
   local sel
   sel=$(fd --type d --hidden --exclude .git . | fzf --height=100% --layout=default) || return
-  # cosmetic: show /tmp instead of /private/tmp
   [[ ${sel:P} == /private/tmp ]] && sel="/tmp"
   LBUFFER+="$sel"
   zle redisplay
@@ -189,11 +197,20 @@ fzf_insert_dir() {
 zle -N fzf_insert_dir
 bindkey -M viins '^O' fzf_insert_dir
 
-# Ctrl-G → pick directory from history (includes current on first line) → cd
+# Ctrl-G → fuzzy-choose from history → cd  (manual ~ expansion)
 fzf_cd_stack() {
-  local dir
+  local dir target
   dir=$(dirs -p | fzf --height=100% --layout=default) || return
-  [[ -n $dir ]] && cd "$dir"
+  [[ -z $dir ]] && return
+
+  # Manually expand leading ~ to $HOME (avoid ${~var} side-effects)
+  if [[ $dir == "~" || $dir == "~/"* ]]; then
+    target="${dir/#\~/$HOME}"
+  else
+    target="$dir"
+  fi
+
+  builtin cd -- "$target"
   zle reset-prompt
 }
 zle -N fzf_cd_stack
@@ -221,13 +238,13 @@ zm() {
 | Ctrl-R                  | Fuzzy search history                         |
 | Ctrl-F                  | Fuzzy pick file → insert path                |
 | Ctrl-K                  | Fuzzy pick directory → SWITCH (cd)           |
-| Ctrl-O                  | Fuzzy pick directory → OPERATE (insert)      |
-| Ctrl-G                  | Choose directory from history → cd           |
-| g <N>                   | Jump to history entry N                      |
+| Ctrl-O                  | Fuzzy pick directory → OPERATE (insert path) |
+| Ctrl-G                  | Fuzzy choose directory from history → cd     |
+| g <N>                   | Jump to directory-history entry N            |
 | dv / dc                 | Show / clear directory history               |
 | zm                      | Show this cheat-sheet                        |
 +-------------------------+----------------------------------------------+
-| Built-ins / Misc                                                       |
+| Built-ins / Misc                                                      |
 | Ctrl-L                  | Clear screen                                 |
 +-------------------------+----------------------------------------------+
 EOF
