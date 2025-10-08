@@ -2,6 +2,7 @@
 #  Common shell settings
 # =====================================================================
 source "$HOME/.common_interactive_sh"
+setopt no_chase_links
 
 # =====================================================================
 #  Detect Homebrew prefix
@@ -15,17 +16,11 @@ fi
 # =====================================================================
 #  zinit plugin manager
 # =====================================================================
-if [[ -n "$BREW_PREFIX" && -f "$BREW_PREFIX/opt/zinit/zinit.zsh" ]]; then
+if [[ -n $BREW_PREFIX && -f "$BREW_PREFIX/opt/zinit/zinit.zsh" ]]; then
   source "$BREW_PREFIX/opt/zinit/zinit.zsh"
-
-  zinit ice wait lucid
-  zinit light zsh-users/zsh-completions
-
-  zinit ice wait lucid
-  zinit light Aloxaf/fzf-tab
-
-  zinit ice wait lucid
-  zinit light zsh-users/zsh-autosuggestions
+  zinit ice wait lucid; zinit light zsh-users/zsh-completions
+  zinit ice wait lucid; zinit light Aloxaf/fzf-tab
+  zinit ice wait lucid; zinit light zsh-users/zsh-autosuggestions
 fi
 
 # =====================================================================
@@ -38,7 +33,6 @@ alias tmux='tmux new-session -s "$(basename "$PWD")-$(date +%H%M%S)" -c "$PWD"'
 # =====================================================================
 autoload -Uz compinit
 compinit
-
 zmodload zsh/complist
 zstyle ':completion:*' completer _complete _ignored _approximate _correct
 zstyle ':completion:*:descriptions' format '%B%d%b'
@@ -49,25 +43,31 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 # =====================================================================
 #  History
 # =====================================================================
-HISTFILE=$HOME/.zsh_history
+HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory inc_append_history extended_history hist_reduce_blanks hist_verify hist_ignore_dups
 
 # =====================================================================
-#  Vi-mode editing
+#  Vi-mode
 # =====================================================================
 bindkey -v
 export KEYTIMEOUT=1
 bindkey -M menuselect '^N' down-line-or-history
 bindkey -M menuselect '^P' up-line-or-history
-
 setopt extendedglob
 setopt globstarshort
 
 # =====================================================================
-#  Prompt with live vi-mode tag + git branch
+#  Prompt: env-desc fallback to user@host
 # =====================================================================
+if [[ -f $HOME/.env_desc ]]; then
+  ENV_DESC=$(<"$HOME/.env_desc")
+else
+  ENV_DESC="%n@%m"
+fi
+
+# ---------- vcs_info + branch-shortening ----------
 setopt prompt_subst
 autoload -Uz vcs_info
 zstyle ':vcs_info:*' enable git
@@ -75,14 +75,32 @@ zstyle ':vcs_info:git*:*' check-for-changes false
 zstyle ':vcs_info:git:*' formats '[%b]'
 zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
-precmd() { vcs_info }
+precmd_short() {
+  vcs_info
+  if [[ -n $vcs_info_msg_0_ ]]; then
+    local limit=15
+    local b="${vcs_info_msg_0_:1:${#vcs_info_msg_0_}-2}"
+    if (( ${#b} > limit )); then
+      b="${b:0:$((limit-1))}>"
+      vcs_info_msg_0_="[$b]"
+    fi
+  fi
+}
 
-PROMPT_BASE='%F{cyan}%n@%m%f %F{white}%2~%f%F{magenta}${vcs_info_msg_0_:+ $vcs_info_msg_0_}%f %# '
+precmd_long() { vcs_info }
 
+PROMPT_SHORT_BASE="%F{cyan}${ENV_DESC}%f %F{white}%2~%f%F{magenta}\${vcs_info_msg_0_:+ \$vcs_info_msg_0_}%f %# "
+PROMPT_LONG_BASE="%F{cyan}%n@%m%f %F{white}%2~%f%F{magenta}\${vcs_info_msg_0_:+ \$vcs_info_msg_0_}%f %# "
+
+precmd() { precmd_short }
+PROMPT_BASE="$PROMPT_SHORT_BASE"
+PROMPT="%F{green}[I]%f $PROMPT_BASE"
+
+# live [I]/[N] indicator
 function zle-keymap-select {
   case $KEYMAP in
     vicmd) PROMPT="%F{yellow}[N]%f $PROMPT_BASE" ;;
-    *)     PROMPT="%F{green}[I]%f $PROMPT_BASE" ;;
+    *)     PROMPT="%F{green}[I]%f $PROMPT_BASE"  ;;
   esac
   zle reset-prompt
 }
@@ -90,138 +108,144 @@ zle -N zle-keymap-select
 function zle-line-init { zle -K viins }
 zle -N zle-line-init
 
-PROMPT="%F{green}[I]%f $PROMPT_BASE"
+# switchers
+prs() {
+  precmd() { precmd_short }
+  PROMPT_BASE="$PROMPT_SHORT_BASE"
+  PROMPT="%F{green}[I]%f $PROMPT_BASE"
+}
+prl() {
+  precmd() { precmd_long }
+  PROMPT_BASE="$PROMPT_LONG_BASE"
+  PROMPT="%F{green}[I]%f $PROMPT_BASE"
+}
 
 # =====================================================================
-#  fzf defaults
+#  FZF & BAT configuration
 # =====================================================================
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export FZF_HEIGHT="70%"
+export FZF_DEFAULT_OPTS="--layout=default --color=dark --border --height=${FZF_HEIGHT}"
+
+# unified bat preview
+export BAT_THEME="gruvbox-dark"
+BAT_PREVIEW_CMD="bat --style=numbers --color=always --theme=${BAT_THEME} --line-range=:500 {}"
 
 # =====================================================================
 #  Key bindings
 # =====================================================================
-bindkey -M viins '^A' autosuggest-accept       # accept grey autosuggestion
-bindkey -M viins '^R' fzf-history-widget       # fuzzy history search
-bindkey -M viins '^F' fzf-file-widget          # fuzzy pick file → insert path
+bindkey -M viins '^A' autosuggest-accept
+bindkey -M viins '^R' fzf-history-widget
+bindkey -M viins '^F' fzf-file-widget
 
 # =====================================================================
-#  Directory history – last 12 visited (excluding current)
+#  Directory stack
 # =====================================================================
+setopt auto_pushd
+setopt pushd_ignore_dups
 DIRSTACKSIZE=12
-typeset -ga dirstack     # MRU of previously visited directories
+alias dv='dirs -v'
+alias dc='dirs -c'
 
-# helper: add path to history (dedupe by physical path, pretty-print /tmp)
-__hist_add_path() {
-  local in="$1"
-  [[ -z $in ]] && return
-
-  local cur_phys="${PWD:P}"             # physical current dir
-  local new_phys="${in:P}"              # physical path of entry
-  [[ $new_phys == "$cur_phys" ]] && return  # never add current dir
-
-  local pretty="$in"
-  [[ $new_phys == /private/tmp ]] && pretty="/tmp"
-
-  local -a newstack=("$pretty")
-  local d
-  for d in "${dirstack[@]}"; do
-    [[ "${d:P}" == "$new_phys" || "${d:P}" == "$cur_phys" ]] && continue
-    newstack+=("$d")
-    (( ${#newstack[@]} >= DIRSTACKSIZE )) && break
-  done
-
-  dirstack=("${newstack[@]}")
-}
-
-autoload -Uz add-zsh-hook
-__track_dirs_chpwd() {
-  [[ -n $OLDPWD ]] && __hist_add_path "$OLDPWD"
-}
-add-zsh-hook chpwd __track_dirs_chpwd
-
-alias dv='dirs -v'      # show stack (0=current, rest=history)
-alias dc='dirstack=()'  # clear history
-
-alias g0='g 0'
-alias g1='g 1'
-alias g2='g 2'
-alias g3='g 3'
-alias g4='g 4'
-alias g5='g 5'
-alias g6='g 6'
-alias g7='g 7'
-alias g8='g 8'
-alias g9='g 9'
-alias g10='g 10'
-alias g11='g 11'
-
-# g <N> → jump to history entry N
 g() {
   emulate -L zsh
   if [[ -z $1 || $1 != <-> ]]; then
     echo "Usage: g <number>"
-    dv
-    return 1
+    dirs -v; return 1
   fi
-  local n=$1
-  if ! eval "cd ~${n}" 2>/dev/null; then
-    echo "g: no directory at index $n"
-    dv
-    return 1
-  fi
+  eval "cd ~${1}" 2>/dev/null || { echo "g: no directory at index $1"; dirs -v; return 1; }
 }
 
+
 # =====================================================================
-#  Widgets – live-scanning
+#  Widgets
 # =====================================================================
 
-# Ctrl-K → fuzzy-switch directory (cd)
+# Ctrl-K → fuzzy-SWITCH directory
 fzf_switch_dir() {
   local sel
-  sel=$(fd --type d --hidden --exclude .git . | fzf --height=100% --layout=default) || return
+  sel=$(fd --type d --hidden --exclude .git . | fzf) || return
   builtin cd "$sel"
   zle reset-prompt
 }
 zle -N fzf_switch_dir
 bindkey -M viins '^K' fzf_switch_dir
 
-# Ctrl-O → fuzzy-operate: insert dir path + add to history (no cd)
+# Ctrl-O → fuzzy-OPERATE: insert directory path + add to push-stack (absolute paths only)
 fzf_insert_dir() {
-  local sel
-  sel=$(fd --type d --hidden --exclude .git . | fzf --height=100% --layout=default) || return
-  [[ ${sel:P} == /private/tmp ]] && sel="/tmp"
-  LBUFFER+="$sel"
+  local sel abs
+  sel=$(fd --type d --hidden --exclude .git . | fzf --height=${FZF_HEIGHT} --layout=default)
+  if [[ -z $sel ]]; then
+    zle reset-prompt
+    return
+  fi
+
+  # absoluter Pfad
+  abs=$(realpath "$sel")
+
+  # Pfad in die aktuelle Eingabezeile einfügen
+  LBUFFER+="$abs"
   zle redisplay
-  __hist_add_path "$sel"
+
+  # absoluten Pfad in den Stack pushen
+  local -a newstack
+  newstack=("$abs" "${dirstack[@]}")
+  typeset -U newstack
+  (( ${#newstack[@]} > DIRSTACKSIZE )) && newstack=("${newstack[@]:0:$DIRSTACKSIZE}")
+  dirstack=("${newstack[@]}")
 }
+
 zle -N fzf_insert_dir
 bindkey -M viins '^O' fzf_insert_dir
 
-# Ctrl-G → fuzzy-choose from history → cd  (manual ~ expansion)
-fzf_cd_stack() {
-  local dir target
-  dir=$(dirs -p | fzf --height=100% --layout=default) || return
-  [[ -z $dir ]] && return
 
-  # Manually expand leading ~ to $HOME (avoid ${~var} side-effects)
+# Ctrl-G → pick directory from stack → cd (robust)
+fzf_cd_stack() {
+  emulate -L zsh
+  local dir target
+  dir=$(dirs -p | fzf --height=${FZF_HEIGHT} --layout=default)
+  if [[ -z $dir ]]; then
+    zle reset-prompt         # auch bei Abbruch Prompt neu zeichnen
+    return
+  fi
   if [[ $dir == "~" || $dir == "~/"* ]]; then
     target="${dir/#\~/$HOME}"
   else
     target="$dir"
   fi
-
   builtin cd -- "$target"
   zle reset-prompt
 }
 zle -N fzf_cd_stack
 bindkey -M viins '^G' fzf_cd_stack
 
+# Ctrl-E → fuzzy-edit file with nvim + bat preview
+fzf_edit() {
+  local file
+  file=$(
+    fd . --type f --hidden --exclude .git \
+    | fzf --preview "${BAT_PREVIEW_CMD}" \
+          --preview-window=right:60%
+  )
+  if [[ -z $file ]]; then
+    zle reset-prompt          # auch bei Abbruch Prompt neu zeichnen
+    return
+  fi
+
+  local dir="${file%/*}"
+  [[ -z $dir ]] && dir="."
+  pushd -q "$dir" && popd -q
+  nvim "$file"
+  zle reset-prompt            # Prompt nach Editor-Schließen neu zeichnen
+}
+zle -N fzf_edit
+bindkey -M viins '^E' fzf_edit
+
 # =====================================================================
 #  Clear screen (Blink/iPad friendly)
 # =====================================================================
-blink_clear() { command clear; echo; }
+function blink_clear() { command clear; echo; }
 alias clear='blink_clear'
-clear_and_echo() { blink_clear; zle reset-prompt }
+function clear_and_echo() { blink_clear; zle reset-prompt }
 zle -N clear_and_echo
 bindkey -M viins '^L' clear_and_echo
 bindkey -M vicmd '^L' clear_and_echo
@@ -230,18 +254,20 @@ bindkey -M vicmd '^L' clear_and_echo
 #  zm → cheat-sheet
 # =====================================================================
 zm() {
-/bin/cat <<'EOF'
+  /bin/cat <<'EOF'
 +-------------------------+----------------------------------------------+
 | KEY / COMMAND           | ACTION                                       |
 +-------------------------+----------------------------------------------+
 | Ctrl-A                  | Accept grey autosuggestion                   |
 | Ctrl-R                  | Fuzzy search history                         |
 | Ctrl-F                  | Fuzzy pick file → insert path                |
+| Ctrl-E                  | Fuzzy pick file → open in nvim (bat preview) |
 | Ctrl-K                  | Fuzzy pick directory → SWITCH (cd)           |
 | Ctrl-O                  | Fuzzy pick directory → OPERATE (insert path) |
-| Ctrl-G                  | Fuzzy choose directory from history → cd     |
-| g <N>                   | Jump to directory-history entry N            |
-| dv / dc                 | Show / clear directory history               |
+| Ctrl-G                  | Pick directory from push-stack → cd          |
+| g <N>                   | Jump to directory-stack entry N              |
+| prs / prl               | Switch SHORT ↔ LONG prompt                   |
+| dv / dc                 | Show / clear directory-stack                 |
 | zm                      | Show this cheat-sheet                        |
 +-------------------------+----------------------------------------------+
 | Built-ins / Misc                                                       |
