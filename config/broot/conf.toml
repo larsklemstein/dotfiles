@@ -1,0 +1,12 @@
+# ========== Basic UI ==========
+show_selection_mark = true
+
+[[verbs]]
+key = "ctrl-k"
+execution = ":cd"
+apply_to = "directory"
+
+[[verbs]]
+key = "ctrl-o"
+execution = ":edit"
+apply_to = "file"

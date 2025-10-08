@@ -39,3 +39,5 @@ alias mst=my_session_type
 [[ -f "$HOME/.bash_colors" ]] && . "$HOME/.bash_colors"
 
 [[ -s "$HOME/.common_interactive_sh" ]] && . "$HOME/.common_interactive_sh"
+
+source /Users/larsklemstein/.config/broot/launcher/bash/br
