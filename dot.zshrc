@@ -77,8 +77,9 @@ zstyle ':vcs_info:git*:*' check-for-changes false
 zstyle ':vcs_info:git:*' formats '[%b]'
 zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
+# Git-Branch ggf. kürzen (max 20 Zeichen inkl. >)
 shorten_branch() {
-  local raw="$1" max=15
+  local raw="$1" max=20
   local b="${raw#[[]}"
   b="${b%[]]}"
   (( ${#b} > max )) && print "${b[1,$((max-1))]}>" || print "$b"
@@ -94,19 +95,45 @@ precmd() {
 PROMPT_SHORT_BASE='%F{cyan}'"$ENV_DESC"'%f %F{white}%2~%f%F{magenta}${BRANCH_NAME}%f %# '
 PROMPT_LONG_BASE='%F{cyan}%n@%m%f %F{white}%2~%f%F{magenta}${vcs_info_msg_0_}%f %# '
 
+# -------------------------------------------------
+# Globaler Prompt-Mode: "short" (Default) / "long"
+# -------------------------------------------------
+PR_MODE="short"
+
 zle-keymap-select() {
-  [[ $KEYMAP = vicmd ]] \
-      && PROMPT="%F{yellow}[N]%f $PROMPT_SHORT_BASE" \
-      || PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
+  if [[ $PR_MODE == "long" ]]; then
+    # langer Prompt immer mit user@host
+    [[ $KEYMAP = vicmd ]] \
+        && PROMPT="%F{yellow}[N]%f $PROMPT_LONG_BASE" \
+        || PROMPT="%F{green}[I]%f $PROMPT_LONG_BASE"
+  else
+    # kurzer Prompt mit ENV_DESC + ggf. gekürztem Branch
+    [[ $KEYMAP = vicmd ]] \
+        && PROMPT="%F{yellow}[N]%f $PROMPT_SHORT_BASE" \
+        || PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
+  fi
   zle reset-prompt
 }
 zle -N zle-keymap-select
 zle-line-init() { zle -K viins }
 zle -N zle-line-init
 
+# Start-Prompt
 PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
-prl() { PROMPT="%F{green}[I]%f $PROMPT_LONG_BASE"; }
-prs() { PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"; }
+
+prl() {
+  PR_MODE="long"
+  if zle >/dev/null 2>&1; then
+    zle-keymap-select
+  fi
+}
+
+prs() {
+  PR_MODE="short"
+  if zle >/dev/null 2>&1; then
+    zle-keymap-select
+  fi
+}
 
 # =====================================================================
 #  fzf Defaults
@@ -185,21 +212,15 @@ bindkey -M viins '^E' fzf_edit
 g() {
   emulate -L zsh
   if [[ -z $1 || $1 != <-> ]]; then
-    echo "Usage: g <number>"
-    dirs -v
-    return 1
+    echo "Usage: g <number>"; dirs -v; return 1
   fi
-
   local target
   target=$(eval echo "~$1")
   if [[ -d $target ]]; then
-    # Doppel-Einträge vorher entfernen
-    dirstack=(${(@)dirstack:#$target})
+    dirstack=(${(@)dirstack:#$target})   # ggf. Duplikat entfernen
     builtin cd "$target"
   else
-    echo "g: no directory at index $1"
-    dirs -v
-    return 1
+    echo "g: no directory at index $1"; dirs -v; return 1
   fi
 }
 
@@ -218,7 +239,6 @@ chpwd() {
 autoload -Uz add-zsh-hook
 add-zsh-hook chpwd chpwd
 
-# dynamische Aliase g0..g19 → jump & list
 for i in {0..19}; do
   eval "alias g$i='g $i; lltr'"
 done
@@ -234,7 +254,7 @@ bindkey -M viins '^L' clear_and_echo
 bindkey -M vicmd '^L' clear_and_echo
 
 # =====================================================================
-#  zm-Cheatsheet
+#  zm-Cheat-Sheet
 # =====================================================================
 zm() {
   /bin/cat <<'EOF'
@@ -243,17 +263,17 @@ zm() {
 +-------------------------+----------------------------------------------+
 | Ctrl-A                  | Accept grey autosuggestion                   |
 | Ctrl-R                  | Fuzzy search history                         |
-| Ctrl-F                  | Fuzzy pick file → insert path                |
-| Ctrl-K                  | Fuzzy pick dir → SWITCH (cd)                 |
-| Ctrl-O                  | Fuzzy pick dir → OPERATE (insert path)       |
-| Ctrl-G                  | Choose dir from push-stack → cd              |
-| Ctrl-E                  | Fuzzy-edit file with preview                 |
-| g <N>                   | Jump to push-stack entry N                   |
-| g0..g19                 | Jump & list (lltr)                           |
-| zm                      | Show this cheat-sheet                        |
+| Ctrl-F                  | Fuzzy pick file → insert path                 |
+| Ctrl-K                  | Fuzzy pick dir  → SWITCH (cd)                 |
+| Ctrl-O                  | Fuzzy pick dir  → OPERATE (insert path)       |
+| Ctrl-G                  | Choose dir from push-stack → cd               |
+| Ctrl-E                  | Fuzzy-edit file with preview                  |
+| g <N>                   | Jump to push-stack entry N                    |
+| g0..g19                 | Jump & list (lltr)                            |
+| zm                      | Show this cheat-sheet                         |
 +-------------------------+----------------------------------------------+
 | Built-ins / Misc                                                       |
-| Ctrl-L                  | Clear screen                                 |
+| Ctrl-L                  | Clear screen                                  |
 +-------------------------+----------------------------------------------+
 EOF
 }
