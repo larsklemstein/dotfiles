@@ -299,14 +299,6 @@ export GIT_PAGER=cat
 # ============================================================================
 # tmux
 # ============================================================================
-alias tns='tmux rename-session'
-alias tnsd='tmux rename-session $(basename "$PWD")'
-alias tnw='tmux rename-window'
-alias tnwp='tmux rename-window ${PWD##*/}'
-alias tp=tnwp
-alias tcs="tmux display-message -p '#S'"
-alias tclean='for s in $(tmux ls -F "#S"); do tmux kill-session -t "$s"; done'
-alias tswap='tmux swap-pane -U'
 alias clean_tmux_sessions='tmux ls -F "#S #{session_attached}" | awk "$2==0{print $1}" | xargs -r -n1 tmux kill-session -t'
 
 # ============================================================================
