@@ -158,7 +158,6 @@ fzf_switch_dir() {
 zle -N fzf_switch_dir
 bindkey -M viins '^K' fzf_switch_dir
 
-# Ctrl-O → fuzzy-insert dir-path + add-to-stack
 fzf_insert_dir() {
   local sel abs
   sel=$(fd --type d --hidden --exclude .git . |
@@ -167,7 +166,11 @@ fzf_insert_dir() {
     LBUFFER+="$sel"
     zle redisplay
     abs=$(cd "$sel" 2>/dev/null && pwd -P)
-    [[ -n $abs ]] && dirstack=("$abs" "${(@)dirstack}")
+    if [[ -n $abs ]]; then
+      # remove existing occurrence, then push to top
+      dirstack=(${(@)dirstack:#$abs})
+      dirstack=("$abs" "${(@)dirstack}")
+    fi
   fi
   zle reset-prompt
 }
@@ -188,14 +191,22 @@ fzf_cd_stack() {
 zle -N fzf_cd_stack
 bindkey -M viins '^G' fzf_cd_stack
 
-# Ctrl-E → fuzzy-edit file (mit bat-Preview)
 fzf_edit() {
-  local file
+  local file dir abs
   file=$(fd . --type f --hidden --exclude .git |
-        fzf --height="$FZF_WIN_HEIGHT" \
-            --preview "bat --theme=$BAT_THEME --style=numbers --color=always {}" \
-            --preview-window=right:60%)
-  [[ -n $file ]] && nvim "$file"
+         fzf --height="$FZF_WIN_HEIGHT" \
+             --preview "bat --theme=$BAT_THEME --style=numbers --color=always {}" \
+             --preview-window=right:60%)
+  if [[ -n $file ]]; then
+    dir="${file:h}"
+    abs=$(cd "$dir" 2>/dev/null && pwd -P)
+    if [[ -n $abs ]]; then
+      # remove duplicates, then push on top
+      dirstack=(${(@)dirstack:#$abs})
+      dirstack=("$abs" "${(@)dirstack}")
+    fi
+    nvim "$file"
+  fi
   zle reset-prompt
 }
 zle -N fzf_edit
