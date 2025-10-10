@@ -51,10 +51,10 @@ export ca=' --color=always '
 
 # --- ls aliases (eza)
 export EZA_TREE_LEVEL=5
-alias l="$(which eza) --git --icons=auto --group-directories-first -X --level="${EZA_TREE_LEVEL:-8}" --color=always"
-alias ll='l -l'
-alias la='l -a'
-alias lla='l -la'
+alias ls="eza --git --icons=auto --group-directories-first -X --level=${EZA_TREE_LEVEL:-8} --color=always"
+alias ll='ls -l'
+alias la='ls -a'
+alias lla='ls -la'
 alias llt='ll --sort age'
 alias lltr='llt --reverse'
 

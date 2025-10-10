@@ -140,7 +140,7 @@ export BAT_THEME="gruvbox-dark"
 # =====================================================================
 #  Key-Bindings
 # =====================================================================
-bindkey -M viins '^A' autosuggest-accept
+bindkey -M viins '^@' autosuggest-accept
 bindkey -M viins '^R' fzf-history-widget
 bindkey -M viins '^F' fzf-file-widget
 
@@ -256,19 +256,19 @@ zm() {
 +-------------------------+----------------------------------------------+
 | KEY / COMMAND           | ACTION                                       |
 +-------------------------+----------------------------------------------+
-| Ctrl-A                  | Accept grey autosuggestion                   |
+| Ctrl-<space>            | Accept grey autosuggestion                   |
 | Ctrl-R                  | Fuzzy search history                         |
-| Ctrl-F                  | Fuzzy pick file → insert path                 |
-| Ctrl-K                  | Fuzzy pick dir  → SWITCH (cd)                 |
-| Ctrl-O                  | Fuzzy pick dir  → OPERATE (insert path)       |
-| Ctrl-G                  | Choose dir from push-stack → cd               |
-| Ctrl-E                  | Fuzzy-edit file with preview                  |
-| g <N>                   | Jump to push-stack entry N                    |
-| g0..g19                 | Jump & list (lltr)                            |
-| zm                      | Show this cheat-sheet                         |
+| Ctrl-F                  | Fuzzy pick file → insert path                |
+| Ctrl-K                  | Fuzzy pick dir  → SWITCH (cd)                |
+| Ctrl-O                  | Fuzzy pick dir  → OPERATE (insert path)      |
+| Ctrl-G                  | Choose dir from push-stack → cd              |
+| Ctrl-E                  | Fuzzy-edit file with preview                 |
+| g <N>                   | Jump to push-stack entry N                   |
+| g0..g19                 | Jump & list (lltr)                           |
+| zm                      | Show this cheat-sheet                        |
 +-------------------------+----------------------------------------------+
 | Built-ins / Misc                                                       |
-| Ctrl-L                  | Clear screen                                  |
+| Ctrl-L                  | Clear screen                                 |
 +-------------------------+----------------------------------------------+
 EOF
 }
