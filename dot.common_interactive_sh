@@ -47,26 +47,16 @@ alias cdnc='cd "$NCONF" && lltr'
 alias cdncl='cd "$NCONF_LUA" && lltr'
 alias cddf='cd "$DF" && lltr'
 
+export ca=' --color=always '
+
 # --- ls aliases (eza)
-alias ls="eza"
-alias lsd="eza --only-dirs"
-alias lsf="eza --only-files"
-alias ll='ls -l'
-alias llf='eza -l --only-files'
-alias lld='eza -l --only-dirs'
-alias la='ls -a'
-alias laf='eza -a --only-files'
-alias lad='eza -a --only-dirs'
-alias lla='ls -la'
-alias llaf='eza -la --only-files'
-alias llad='eza -la --only-dirs'
-alias lltr='eza -l --sort age'
-alias lltr='eza -l --sort age --only-files'
-alias lltd='eza -l --sort age --only-dirs'
-alias llt='ll --tree -I __pycache__'
-alias lltd='ll --tree -I __pycache__ --only-dirs'
-alias llg='ll --git'
-alias lltg='llg --tree -I __pycache__'
+export EZA_TREE_LEVEL=5
+alias l="$(which eza) --git --icons=auto --group-directories-first -X --level="${EZA_TREE_LEVEL:-8}" --color=always"
+alias ll='l -l'
+alias la='l -a'
+alias lla='l -la'
+alias llt='ll --sort age'
+alias lltr='llt --reverse'
 
 # --- grep aliases
 alias grep='grep --color=auto'
