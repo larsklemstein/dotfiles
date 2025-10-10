@@ -36,6 +36,10 @@ export DF="$HOME/.dotfiles"
 export NCONF="$DF/config/nvim"
 export NCONF_LUA="$NCONF/lua/config"
 
+alias s='source'
+
+alias eci='nvim $DF/dot.common_interactive_sh'
+
 # --- jump aliases
 alias cdw='cd "$WORK" && lltr'
 alias cde='cd "$EDU" && lltr'
@@ -190,12 +194,33 @@ alias ved='[ -n "$VIRTUAL_ENV" ] && deactivate || echo "Not in a venv!" >&2'
 # ============================================================================
 # ssh
 # ============================================================================
-alias s='eval $(ssh-agent -a "$HOME/.ssh/agent.sock")'
-alias sa='ssh-add'
-alias kill_ssh_agents='pkill ssh-agent'
 
-# auto-start ssh-agent (single socket)
-[ -S "$HOME/.ssh/agent.sock" ] || s
+# ===========================================================
+#  Persistent ssh-agent (single socket, multi-login safe)
+# ===========================================================
+export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+export SSH_AGENT_PID_FILE="$HOME/.ssh/agent.pid"
+
+start_agent() {
+  echo "Starting new ssh-agent..."
+  rm -f "$SSH_AUTH_SOCK"
+  eval "$(ssh-agent -a "$SSH_AUTH_SOCK")" >/dev/null
+  echo $SSH_AGENT_PID >"$SSH_AGENT_PID_FILE"
+}
+
+# Check if agent PID file exists and is alive
+if [[ -f "$SSH_AGENT_PID_FILE" ]]; then
+  pid=$(<"$SSH_AGENT_PID_FILE")
+  if ! ps -p "$pid" >/dev/null 2>&1; then
+    # stale PID, restart agent
+    start_agent
+  fi
+else
+  # No PID file yet, start agent
+  start_agent
+fi
+
+
 
 # ============================================================================
 # fzf
