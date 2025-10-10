@@ -40,6 +40,32 @@ alias s='source'
 
 alias eci='nvim $DF/dot.common_interactive_sh'
 
+# short cuts for dirs and files
+sc() {
+  local sc_rc=$HOME/.places
+
+  if [ ! -f "$sc_rc" ]
+  then
+    echo "No $sc_rc found!" >&2
+    return 1
+  fi
+
+  local choosen
+  choosen=$(fzf < $sc_rc)
+
+  choosen=$(eval echo "$choosen")
+
+  if [ -f $choosen ]
+  then
+    nvim "$choosen"
+  elif [ -d "$choosen" ]
+  then
+    cd "$choosen"
+  else
+    echo "Do not know to to with \"$choosen\" (exists neither as file nor dir)" >&2
+  fi
+}
+
 # --- jump aliases
 alias cdw='cd "$WORK" && lltr'
 alias cde='cd "$EDU" && lltr'
