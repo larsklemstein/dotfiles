@@ -2,7 +2,7 @@
 #  Common shell settings
 # =====================================================================
 source "$HOME/.common_interactive_sh"
-setopt no_chase_links               # behalte /tmp statt /private/tmp
+setopt no_chase_links               # keep /tmp instead of /private/tmp on macOS
 
 # =====================================================================
 #  Detect Homebrew prefix
@@ -57,7 +57,7 @@ setopt extendedglob
 setopt globstarshort
 
 # =====================================================================
-#  Prompt mit ENV_DESC + Branch-Kürzung
+#  Prompt with ENV_DESC + branch shortening
 # =====================================================================
 if [[ -f $HOME/.env_desc ]]; then
   ENV_DESC=$(<"$HOME/.env_desc")
@@ -72,7 +72,6 @@ zstyle ':vcs_info:git*:*' check-for-changes false
 zstyle ':vcs_info:git:*' formats '[%b]'
 zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
-# Git-Branch ggf. kürzen (max 20 Zeichen inkl. >)
 shorten_branch() {
   local raw="$1" max=20
   local b="${raw#[[]}"
@@ -90,19 +89,14 @@ precmd() {
 PROMPT_SHORT_BASE='%F{cyan}'"$ENV_DESC"'%f %F{white}%2~%f%F{magenta}${BRANCH_NAME}%f %# '
 PROMPT_LONG_BASE='%F{cyan}%n@%m%f %F{white}%2~%f%F{magenta}${vcs_info_msg_0_}%f %# '
 
-# -------------------------------------------------
-# Globaler Prompt-Mode: "short" (Default) / "long"
-# -------------------------------------------------
 PR_MODE="short"
 
 zle-keymap-select() {
   if [[ $PR_MODE == "long" ]]; then
-    # langer Prompt immer mit user@host
     [[ $KEYMAP = vicmd ]] \
         && PROMPT="%F{yellow}[N]%f $PROMPT_LONG_BASE" \
         || PROMPT="%F{green}[I]%f $PROMPT_LONG_BASE"
   else
-    # kurzer Prompt mit ENV_DESC + ggf. gekürztem Branch
     [[ $KEYMAP = vicmd ]] \
         && PROMPT="%F{yellow}[N]%f $PROMPT_SHORT_BASE" \
         || PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
@@ -112,23 +106,10 @@ zle-keymap-select() {
 zle -N zle-keymap-select
 zle-line-init() { zle -K viins }
 zle -N zle-line-init
-
-# Start-Prompt
 PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
 
-prl() {
-  PR_MODE="long"
-  if zle >/dev/null 2>&1; then
-    zle-keymap-select
-  fi
-}
-
-prs() {
-  PR_MODE="short"
-  if zle >/dev/null 2>&1; then
-    zle-keymap-select
-  fi
-}
+prl() { PR_MODE="long";  zle-keymap-select 2>/dev/null || true; }
+prs() { PR_MODE="short"; zle-keymap-select 2>/dev/null || true; }
 
 # =====================================================================
 #  fzf Defaults
@@ -138,53 +119,111 @@ export FZF_WIN_HEIGHT="80%"
 export BAT_THEME="gruvbox-dark"
 
 # =====================================================================
+#  Directory Stack Utilities (canonical, deduped, safe)
+# =====================================================================
+
+normalize_abs() {
+  local p="$1"
+  [[ -z "$p" ]] && return 1
+  p="${~p}"
+  local abs="${p:A}"
+  abs="${abs%/}"
+  print -r -- "$abs"
+}
+
+dedupe_stack_with_new() {
+  local abs="$1" phys="${1:P}" e out=()
+  for e in $dirstack; do
+    [[ "$e" == "$abs" || "${e:P}" == "$phys" ]] && continue
+    [[ "${e%/}" == "/" || "${e%/}" == "${HOME%/}" ]] && continue
+    out+=("$e")
+  done
+  dirstack=("$abs" "${out[@]}")
+}
+
+push_dir_unique() {
+  local abs home_norm
+  abs="$(normalize_abs "$1")" || return
+  home_norm="${HOME%/}"
+  [[ "$abs" == "/" || "$abs" == "$home_norm" ]] && return
+  dedupe_stack_with_new "$abs"
+}
+
+chpwd() {
+  emulate -L zsh
+  push_dir_unique "$PWD"
+
+  local home_norm="${HOME%/}" e out=()
+  for e in $dirstack; do
+    [[ "${e%/}" == "/" || "${e%/}" == "$home_norm" ]] && continue
+    out+=("$e")
+  done
+  dirstack=("${out[@]}")
+
+  (( ${#dirstack[@]} > DIRSTACKSIZE )) &&
+    dirstack=("${(@)dirstack[1,DIRSTACKSIZE]}")
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd chpwd
+
+# =====================================================================
 #  Key-Bindings
 # =====================================================================
 bindkey -M viins '^@' autosuggest-accept
 bindkey -M viins '^R' fzf-history-widget
-bindkey -M viins '^F' fzf-file-widget
+# ^F, ^E, ^K, ^O defined below
 
 # =====================================================================
 #  Widgets
 # =====================================================================
-# Ctrl-K → fuzzy-switch dir (cd)
 fzf_switch_dir() {
-  local sel
+  local sel abs
   sel=$(fd --type d --hidden --exclude .git . |
         fzf --height="$FZF_WIN_HEIGHT" --layout=default)
-  [[ -n $sel ]] && builtin cd "$sel"
+  if [[ -n $sel ]]; then
+    abs="$(normalize_abs "$sel")"
+    [[ -n $abs ]] && builtin cd "$abs"
+  fi
   zle reset-prompt
 }
 zle -N fzf_switch_dir
 bindkey -M viins '^K' fzf_switch_dir
 
 fzf_insert_dir() {
-  local sel abs
+  local sel
   sel=$(fd --type d --hidden --exclude .git . |
         fzf --height="$FZF_WIN_HEIGHT" --layout=default)
   if [[ -n $sel ]]; then
     LBUFFER+="$sel"
     zle redisplay
-    abs=$(cd "$sel" 2>/dev/null && pwd -P)
-    if [[ -n $abs ]]; then
-      # remove existing occurrence, then push to top
-      dirstack=(${(@)dirstack:#$abs})
-      dirstack=("$abs" "${(@)dirstack}")
-    fi
+    push_dir_unique "$sel"
   fi
   zle reset-prompt
 }
 zle -N fzf_insert_dir
 bindkey -M viins '^O' fzf_insert_dir
 
-# Ctrl-G → choose dir from stack → cd
 fzf_cd_stack() {
-  local choice dir
-  choice=$(dirs -v | fzf --height="$FZF_WIN_HEIGHT" --layout=default)
+  local filtered=() choice dir home_norm="${HOME%/}" d_norm
+  for d in $dirstack; do
+    d_norm="${d%/}"
+    [[ "$d_norm" == "/" || "$d_norm" == "$home_norm" ]] && continue
+    filtered+=("$d")
+  done
+  (( ${#filtered[@]} == 0 )) && { zle reset-prompt; return }
+
+  choice=$(
+    printf '%s\n' "${filtered[@]}" |
+      awk -v home="$home_norm" '{
+        shown=$0; sub("^" home, "~", shown);
+        printf "%s\n", shown
+      }' |
+      fzf --height="$FZF_WIN_HEIGHT" --layout=default
+  )
+
   if [[ -n $choice ]]; then
-    dir=$(echo "$choice" | awk '{print $2}')
-    dir=$(eval echo "$dir")
-    [[ -n $dir ]] && builtin cd "$dir"
+    dir="${~choice}"
+    [[ -d $dir ]] && builtin cd "$dir"
   fi
   zle reset-prompt
 }
@@ -192,19 +231,14 @@ zle -N fzf_cd_stack
 bindkey -M viins '^G' fzf_cd_stack
 
 fzf_edit() {
-  local file dir abs
+  local file dir
   file=$(fd . --type f --hidden --exclude .git |
          fzf --height="$FZF_WIN_HEIGHT" \
              --preview "bat --theme=$BAT_THEME --style=numbers --color=always {}" \
              --preview-window=right:60%)
   if [[ -n $file ]]; then
     dir="${file:h}"
-    abs=$(cd "$dir" 2>/dev/null && pwd -P)
-    if [[ -n $abs ]]; then
-      # remove duplicates, then push on top
-      dirstack=(${(@)dirstack:#$abs})
-      dirstack=("$abs" "${(@)dirstack}")
-    fi
+    push_dir_unique "$dir"
     nvim "$file"
   fi
   zle reset-prompt
@@ -212,42 +246,65 @@ fzf_edit() {
 zle -N fzf_edit
 bindkey -M viins '^E' fzf_edit
 
+fzf_file_insert_and_push() {
+  local file dir
+  file=$(fd . --hidden --exclude .git |
+         fzf --height="$FZF_WIN_HEIGHT" --layout=default)
+  if [[ -n $file ]]; then
+    LBUFFER+="$file"
+    zle redisplay
+    dir="${file:h}"
+    push_dir_unique "$dir"
+  fi
+  zle reset-prompt
+}
+zle -N fzf_file_insert_and_push
+bindkey -M viins '^F' fzf_file_insert_and_push
+
 # =====================================================================
-#  Dir-Stack mit g-Fix gegen Doppel-Einträge
+#  Dir-Stack Display + g<N> navigation
 # =====================================================================
 g() {
   emulate -L zsh
   if [[ -z $1 || $1 != <-> ]]; then
-    echo "Usage: g <number>"; dirs -v; return 1
+    echo "Usage: g <number>"; dv; return 1
   fi
   local target
   target=$(eval echo "~$1")
   if [[ -d $target ]]; then
-    dirstack=(${(@)dirstack:#$target})   # ggf. Duplikat entfernen
     builtin cd "$target"
   else
-    echo "g: no directory at index $1"; dirs -v; return 1
+    echo "g: no directory at index $1"; dv; return 1
   fi
 }
 
-alias dv='dirs -v'
+unalias dv 2>/dev/null
+dv() {
+  local i=0
+  for dir in $dirstack; do
+    local shown="${dir/#$HOME/~}"
+    printf '%2d  %s\n' $i "$shown"
+    ((i++))
+  done
+}
 alias dc='dirs -c'
 
-setopt auto_pushd
+# Disable auto_pushd (only chpwd manages stack)
+unsetopt auto_pushd
 setopt pushd_ignore_dups
 DIRSTACKSIZE=20
-
-chpwd() {
-  typeset -U dirstack
-  (( ${#dirstack[@]} > DIRSTACKSIZE )) &&
-      dirstack=("${(@)dirstack[1,DIRSTACKSIZE]}")
-}
-autoload -Uz add-zsh-hook
-add-zsh-hook chpwd chpwd
 
 for i in {0..19}; do
   eval "alias g$i='g $i; lltr'"
 done
+
+cdg_zsh() {
+  cdg
+  zle reset-prompt
+}
+
+zle -N cdg_zsh
+bindkey -M viins '^P' cdg_zsh
 
 # =====================================================================
 #  Clear-Screen
@@ -256,6 +313,7 @@ blink_clear() { command clear; echo; }
 alias clear='blink_clear'
 clear_and_echo() { blink_clear; zle reset-prompt }
 zle -N clear_and_echo
+
 bindkey -M viins '^L' clear_and_echo
 bindkey -M vicmd '^L' clear_and_echo
 
@@ -269,16 +327,17 @@ zm() {
 +-------------------------+----------------------------------------------+
 | Ctrl-<space>            | Accept grey autosuggestion                   |
 | Ctrl-R                  | Fuzzy search history                         |
-| Ctrl-F                  | Fuzzy pick file → insert path                |
-| Ctrl-K                  | Fuzzy pick dir  → SWITCH (cd)                |
-| Ctrl-O                  | Fuzzy pick dir  → OPERATE (insert path)      |
-| Ctrl-G                  | Choose dir from push-stack → cd              |
+| Ctrl-F                  | Fuzzy pick file → insert path + add dir      |
+| Ctrl-K                  | Fuzzy pick dir → SWITCH (cd)                 |
+| Ctrl-O                  | Fuzzy pick dir → OPERATE (insert path)       |
+| Ctrl-G                  | Choose dir from stack → cd                   |
 | Ctrl-E                  | Fuzzy-edit file with preview                 |
 | g <N>                   | Jump to push-stack entry N                   |
-| g0..g19                 | Jump & list (lltr)                           |
+| dv                      | List stack (home shortened)                  |
+| dc                      | Clear directory stack                        |
 | zm                      | Show this cheat-sheet                        |
 +-------------------------+----------------------------------------------+
-| Built-ins / Misc                                                       |
+| Misc / Built-ins                                                       |
 | Ctrl-L                  | Clear screen                                 |
 +-------------------------+----------------------------------------------+
 EOF

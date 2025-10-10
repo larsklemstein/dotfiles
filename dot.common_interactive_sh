@@ -41,7 +41,7 @@ alias s='source'
 alias eci='nvim $DF/dot.common_interactive_sh'
 
 # short cuts for dirs and files
-sc() {
+cdd() {
   local sc_rc=$HOME/.places
 
   if [ ! -f "$sc_rc" ]
@@ -52,6 +52,8 @@ sc() {
 
   local choosen
   choosen=$(fzf < $sc_rc)
+
+  [ -z "$coosen"] && return
 
   choosen=$(eval echo "$choosen")
 
@@ -151,15 +153,17 @@ locate_prog() {
     done
 }
 
-cdpo() {
-    [ $# -eq 1 ] || { echo '???' >&2; return 1; }
-    local prog="$1" fullpath
-    if alias "$prog" >/dev/null 2>&1; then
-        echo "Is an alias" >&2; return 1
+cdg() {
+    local choosen="$($HOME/app/lkltools/cdp.sh -c900 call $@)"
+    [ -z $choosen ] && return 0
+
+    if [ ! -d "$choosen" ]
+    then
+        echo "Dir $choosen does not exist!?" >&2
+        return 1
     fi
-    fullpath=$(command -v "$prog" 2>/dev/null) || {
-        echo "Not found" >&2; return 1; }
-    cd "${fullpath%/*}" || return 1
+
+    cd $choosen
 }
 
 # ============================================================================
