@@ -53,18 +53,18 @@ cdd() {
   local choosen
   choosen=$(fzf < $sc_rc)
 
-  [ -z "$coosen"] && return
+  [ -z "$choosen" ] && return
 
-  choosen=$(eval echo "$choosen")
+  choosen="$(eval echo $choosen)"
 
-  if [ -f $choosen ]
+  if [ -f "$choosen" ]
   then
     nvim "$choosen"
   elif [ -d "$choosen" ]
   then
     cd "$choosen"
   else
-    echo "Do not know to to with \"$choosen\" (exists neither as file nor dir)" >&2
+    echo "Do not know what to to with \"$choosen\" (exists neither as file nor dir)" >&2
   fi
 }
 
@@ -154,7 +154,8 @@ locate_prog() {
 }
 
 cdg() {
-    local choosen="$($HOME/app/lkltools/cdp.sh -c900 call $@)"
+    local choosen="$($HOME/app/lkltools/cdp.sh -n -c3600 call $@)"
+
     [ -z $choosen ] && return 0
 
     if [ ! -d "$choosen" ]
