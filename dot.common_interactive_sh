@@ -257,8 +257,40 @@ export FZF_DEFAULT_COMMAND='fd --no-hidden -E __pycache__ -E node_modules'
 export FZF_CTRL_T_COMMAND='fd --strip-cwd-prefix'
 export FZF_CTRL_T_OPTS="--bind='ctrl-p:execute:bat --style=numbers {}' --bind='ctrl-e:execute:nvim {}' --preview='test -f {} && bat --color=always --theme=gruvbox-dark --style=plain --line-range=:50 {} --paging=never || eza --tree -I __pycache__ -I node_modules -L=8 --color=always {}'"
 
-fze() { local f; f=$(fzf) && [ -n "$f" ] && "$EDITOR" "$f"; }
-fcd() { local d; d=$(fd -t d | fzf) && [ -n "$d" ] && cd "$d"; }
+e() {
+  # Define options: short (-a, -b) and long (--alpha, --beta)
+  local opts
+  opts=$(getopt -o a,b: -l ,beta: -- "$@") || return 1
+  eval set -- "$opts"
+
+  local alpha=false
+  local beta_value=""
+
+  while true; do
+    case "$1" in
+      -a|--alpha)
+        alpha=true
+        shift
+        ;;
+      -b|--beta)
+        beta_value="$2"
+        shift 2
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        echo "Invalid option: $1" >&2
+        return 1
+        ;;
+    esac
+  done
+
+  echo "alpha=$alpha"
+  echo "beta_value=$beta_value"
+  echo "remaining args: $*"
+}
 
 # ============================================================================
 # mise
