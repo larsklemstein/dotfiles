@@ -47,27 +47,25 @@ SAVEHIST=10000
 setopt appendhistory inc_append_history extended_history hist_reduce_blanks hist_verify hist_ignore_dups
 
 # =====================================================================
-#  Vi-Mode + prompt setup
+#  Vi-mode setup + prompt
 # =====================================================================
 bindkey -v
 export KEYTIMEOUT=1
 bindkey -M menuselect '^N' down-line-or-history
 bindkey -M menuselect '^P' up-line-or-history
-setopt extendedglob
-setopt globstarshort
+setopt extendedglob globstarshort prompt_subst
+
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:git*:*' check-for-changes false
+zstyle ':vcs_info:git:*' formats '[%b]'
+zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
 if [[ -f $HOME/.env_desc ]]; then
   ENV_DESC=$(<"$HOME/.env_desc")
 else
   ENV_DESC="%n@%m"
 fi
-
-setopt prompt_subst
-autoload -Uz vcs_info
-zstyle ':vcs_info:*' enable git
-zstyle ':vcs_info:git*:*' check-for-changes false
-zstyle ':vcs_info:git:*' formats '[%b]'
-zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
 shorten_branch() {
   local raw="$1" max=20
@@ -84,6 +82,20 @@ precmd() {
 }
 
 PROMPT_SHORT_BASE='%F{cyan}'"$ENV_DESC"'%f %F{white}%2~%f%F{magenta}${BRANCH_NAME}%f %# '
+
+zle-keymap-select() {
+  if [[ $KEYMAP == vicmd ]]; then
+    PROMPT="%F{yellow}[N]%f $PROMPT_SHORT_BASE"
+  else
+    PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
+  fi
+  zle reset-prompt
+}
+zle -N zle-keymap-select
+
+zle-line-init() { zle -K viins; zle reset-prompt }
+zle -N zle-line-init
+
 PROMPT="%F{green}[I]%f $PROMPT_SHORT_BASE"
 
 # =====================================================================
@@ -94,7 +106,7 @@ export FZF_WIN_HEIGHT="80%"
 export BAT_THEME="gruvbox-dark"
 
 # =====================================================================
-#  Directory stack management
+#  Directory-stack management
 # =====================================================================
 normalize_abs() {
   local p="$1"
@@ -142,21 +154,13 @@ setopt pushd_ignore_dups
 DIRSTACKSIZE=20
 
 # =====================================================================
-#  Autosuggestion control bindings
+#  Autosuggestion + history
 # =====================================================================
-
-# Ctrl-J → accept autosuggestion only (no execute)
 for map in viins vicmd main menuselect; do
   bindkey -M $map '^J' autosuggest-accept
-done
-
-# Enter → normal execution (accept-line)
-for map in viins vicmd main menuselect; do
   bindkey -M $map '^M' accept-line
+  bindkey -M $map '^R' fzf-history-widget
 done
-
-# History search
-bindkey -M viins '^R' fzf-history-widget
 
 # =====================================================================
 #  fzf widgets
@@ -186,63 +190,72 @@ fzf_insert_dir() {
 zle -N fzf_insert_dir
 bindkey -M viins '^O' fzf_insert_dir
 
-fzf_cd_stack() {
-  local filtered=() choice dir home_norm="${HOME%/}" d_norm
+# --- Robust directory-stack chooser (Ctrl-E) ---
+__fzf_pick_dir_with_fd() {
+  local sel abs
+  sel=$(fd --type d --hidden --exclude .git . | fzf --height="${FZF_WIN_HEIGHT:-80%}")
+  [[ -n $sel ]] || return 1
+  abs="${${~sel}:A}"
+  abs="${abs%/}"
+  [[ -d $abs ]] && builtin cd -- "$abs"
+}
+
+__cd_from_stack_pick() {
+  emulate -L zsh
+  setopt pipe_fail
+  local home_norm="${HOME%/}" filtered=() shown=() choice idx dir d d_norm
+
+  # Build filtered stack (drop / and $HOME, non-existent)
   for d in $dirstack; do
     d_norm="${d%/}"
     [[ "$d_norm" == "/" || "$d_norm" == "$home_norm" ]] && continue
+    [[ -d "$d" ]] || continue
     filtered+=("$d")
+    shown+=("${d/#$HOME/~}")
   done
-  (( ${#filtered[@]} == 0 )) && { zle reset-prompt; return }
 
-  choice=$(
-    printf '%s\n' "${filtered[@]}" |
-      awk -v home="$home_norm" '{shown=$0; sub("^" home, "~", shown); print shown}' |
-      fzf --height="$FZF_WIN_HEIGHT"
-  )
-
-  if [[ -n $choice ]]; then
-    dir="${choice/#\~/$HOME}"
-    dir="${dir:A}"
-    [[ -d $dir ]] && builtin cd "$dir"
+  # If stack empty, fall back to fzf dir picker
+  if (( ${#filtered[@]} == 0 )); then
+    __fzf_pick_dir_with_fd
+    return
   fi
-  zle reset-prompt
+
+  if (( $+commands[fzf] )); then
+    choice=$(
+      for ((i=1; i<=${#filtered[@]}; i++)); do
+        printf '%d\t%s\n' $i "$shown[$i]"
+      done | fzf --height="${FZF_WIN_HEIGHT:-80%}" --with-nth=2
+    )
+    [[ -z "$choice" ]] && return 1
+    idx="${choice%%$'\t'*}"
+    [[ "$idx" == <-> ]] || return 1
+    dir="${filtered[$idx]}"
+  else
+    echo "Directory stack:" >&2
+    for ((i=1; i<=${#filtered[@]}; i++)); do
+      printf '%2d  %s\n' $i "$shown[$i]" >&2
+    done
+    printf "Select (1-%d): " ${#filtered[@]} >&2
+    read -r idx || return 1
+    [[ "$idx" == <-> && idx -ge 1 && idx -le ${#filtered[@]} ]] || return 1
+    dir="${filtered[$idx]}"
+  fi
+
+  dir="${dir/#\~/$HOME}"
+  dir="${dir:A}"
+  [[ -d "$dir" ]] && builtin cd -- "$dir"
 }
+
+fzf_cd_stack() { __cd_from_stack_pick; zle reset-prompt }
 zle -N fzf_cd_stack
-bindkey -M viins '^G' fzf_cd_stack
 
-fzf_edit() {
-  local file dir
-  file=$(fd . --type f --hidden --exclude .git |
-         fzf --height="$FZF_WIN_HEIGHT" \
-             --preview "bat --theme=$BAT_THEME --style=numbers --color=always {}" \
-             --preview-window=right:60%)
-  if [[ -n $file ]]; then
-    dir="${file:h}"
-    push_dir_unique "$dir"
-    nvim "$file"
-  fi
-  zle reset-prompt
-}
-zle -N fzf_edit
-bindkey -M viins '^E' fzf_edit
-
-fzf_file_insert_and_push() {
-  local file dir
-  file=$(fd . --hidden --exclude .git | fzf --height="$FZF_WIN_HEIGHT")
-  if [[ -n $file ]]; then
-    LBUFFER+="$file"
-    zle redisplay
-    dir="${file:h}"
-    push_dir_unique "$dir"
-  fi
-  zle reset-prompt
-}
-zle -N fzf_file_insert_and_push
-bindkey -M viins '^F' fzf_file_insert_and_push
+# Bind Ctrl-E → directory-stack chooser
+for map in viins vicmd main menuselect; do
+  bindkey -M $map '^E' fzf_cd_stack
+done
 
 # =====================================================================
-#  Dir stack display helpers
+#  Dir-stack helpers
 # =====================================================================
 g() {
   emulate -L zsh
@@ -276,7 +289,7 @@ bindkey -M viins '^L' clear_and_echo
 bindkey -M vicmd '^L' clear_and_echo
 
 # =====================================================================
-#  Cheat sheet
+#  Cheat-sheet
 # =====================================================================
 zm() {
   /bin/cat <<'EOF'
@@ -289,8 +302,8 @@ zm() {
 | Ctrl-F                  | Fuzzy pick file → insert path + add dir      |
 | Ctrl-K                  | Fuzzy pick dir → SWITCH (cd)                 |
 | Ctrl-O                  | Fuzzy pick dir → OPERATE (insert path)       |
-| Ctrl-G                  | Choose dir from stack → cd                   |
-| Ctrl-E                  | Fuzzy-edit file with preview                 |
+| Ctrl-E                  | Choose dir from stack → cd (fallback: fd/fzf)|
+| cdg                     | Command: choose dir from stack → cd          |
 | g <N>                   | Jump to stack entry N                        |
 | dv                      | List stack (home shortened)                  |
 | dc                      | Clear directory stack                        |
