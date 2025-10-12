@@ -191,7 +191,7 @@ fzf_cd_stack() {
     dirs -v | awk '{printf "%s\t%s\n",$1,$2}' |
     command fzf --height="${FZF_WIN_HEIGHT:-80%}" --ansi --no-sort \
       --with-nth=2 --prompt='stack › '
-  ) || return
+  ) || { zle reset-prompt; return; }
   [[ -z $choice ]] && return
   dir="${choice#*	}"         # strip index
   dir="${dir/#\~/$HOME}"      # expand tilde
