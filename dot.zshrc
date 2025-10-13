@@ -21,25 +21,21 @@
 #
 #  Keybinding summary:
 #  -------------------
-#   Ctrl-J   → Accept autosuggestion (insert only, don’t execute)
+#   Ctrl-J   → Accept autosuggestion (insert only)
 #   Enter    → Execute current command line
-#   Ctrl-R   → Fuzzy search command history (fzf-history-widget)
-#   Ctrl-F   → Fuzzy pick file → insert path + push dir
-#   Ctrl-K   → Fuzzy pick directory → switch (cd)
-#   Ctrl-O   → Fuzzy pick directory → insert path only
-#   Ctrl-E   → Choose directory from Zsh dir-stack → cd
-#   Ctrl-L   → Clear screen and reset prompt
+#   Ctrl-R   → Fuzzy search command history
+#   Ctrl-F   → Files only:
+#                – if line empty → open in $EDITOR
+#                – otherwise → insert file path
+#   Ctrl-P   → Directories only:
+#                – if line empty → cd into dir
+#                – otherwise → insert dir path
+#   Ctrl-G   → Fuzzy choose directory from stack → cd
+#   Ctrl-L   → Clear screen
 #
 #   dv       → List directory stack
 #   dc       → Clear directory stack
-#   g <N>    → Jump to stack entry N
 #   zm       → Show this built-in cheat sheet
-#
-#  Directory stack:
-#  ----------------
-#   • Uses pure Zsh pushd/popd mechanics (no custom hooks)
-#   • Ensures natural ordering and maximum portability
-#   • Ctrl-E shows stack in fzf chooser for instant navigation
 #
 #  Prompt:
 #  -------
@@ -48,7 +44,7 @@
 #
 #  Design tags:
 #  ------------
-#     lkl_zsh_v1.2.0_balanced
+#     lkl_zsh_v1.3.2_contextual_ctrlg
 #     verified with validate_zsh_env.zsh
 #
 # =====================================================================
@@ -150,79 +146,87 @@ DIRSTACKSIZE=20
 
 # -------------------------- fzf widgets ------------------------------
 
-# Ctrl-K → directories only → cd
-fzf_switch_dir() {
-  local dir
-  dir=$(fd --type d --hidden --exclude .git --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
-        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ')
-  [[ -n $dir ]] && builtin cd -- "$dir"
-  zle reset-prompt
+# Helper: detect empty or whitespace-only command line
+is_empty_buffer() {
+  [[ -z "${BUFFER//[[:space:]]/}" ]]
 }
-zle -N fzf_switch_dir
 
-# Ctrl-O → directories only → insert path
-fzf_insert_dir() {
-  local dir
-  dir=$(fd --type d --hidden --exclude .git --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
-        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='insert-dir › ')
-  [[ -n $dir ]] && LBUFFER+="$dir"
-  zle redisplay
-  zle reset-prompt
-}
-zle -N fzf_insert_dir
-
-# Ctrl-F → files only → insert path + preview
-fzf_file_insert_and_push() {
+# Ctrl-F → files only → insert or edit depending on context
+fzf_file_action() {
   local file
   file=$(fd --type f --hidden --exclude .git --max-results "$FZF_MAX_FILES" . 2>/dev/null \
         | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='files › ' \
             --preview 'bat --theme=gruvbox-dark --style=numbers --color=always {}' \
-            --preview-window=right:60%:wrap)
-  [[ -n $file ]] && LBUFFER+="$file"
-  zle redisplay
-  zle reset-prompt
-}
-zle -N fzf_file_insert_and_push
+            --preview-window=right:60%:wrap) || { zle reset-prompt; return; }
 
-# Ctrl-E → reliable dir-stack chooser → cd
+  [[ -z $file ]] && { zle reset-prompt; return; }
+
+  pushd $(dirname "$file")
+
+  if is_empty_buffer; then
+    ${EDITOR:-vi} "$file"
+    zle reset-prompt
+  else
+    LBUFFER+="$file"
+    zle redisplay
+  fi
+}
+zle -N fzf_file_action
+
+# Ctrl-P → directories only → cd or insert depending on context
+fzf_dir_action() {
+  local dir
+  dir=$(fd --type d --hidden --exclude .git --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
+        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ') || { zle reset-prompt; return; }
+
+  [[ -z $dir ]] && { zle reset-prompt; return; }
+
+  pushd "$dir"
+
+  if is_empty_buffer; then
+    builtin cd -- "$dir"
+    zle reset-prompt
+  else
+    LBUFFER+="$dir"
+    zle redisplay
+  fi
+}
+zle -N fzf_dir_action
+
+# Ctrl-G → choose directory from stack and cd
 fzf_cd_stack() {
-  local choice idx dir
+  local choice dir
   choice=$(
     dirs -v | awk '{printf "%s\t%s\n",$1,$2}' |
     command fzf --height="${FZF_WIN_HEIGHT:-80%}" --ansi --no-sort \
       --with-nth=2 --prompt='stack › '
   ) || { zle reset-prompt; return; }
-  [[ -z $choice ]] && return
+  [[ -z $choice ]] && { zle reset-prompt; return; }
+
   dir="${choice#*	}"         # strip index
   dir="${dir/#\~/$HOME}"      # expand tilde
-  dir="${dir:A}"              # normalize to absolute
+  dir="${dir:A}"              # normalize absolute
   [[ -d $dir ]] && builtin cd -- "$dir"
   zle reset-prompt
 }
 zle -N fzf_cd_stack
 
-# --------------------------- Clear screen ----------------------------
-blink_clear() { command clear; echo; }
-alias clear='blink_clear'
-clear_and_echo() { blink_clear; zle reset-prompt; }
-zle -N clear_and_echo
-
-# ------------------------- Dir stack helpers -------------------------
+# ----------------------- Dir stack commands --------------------------
 dv() { dirs -v; }
-alias dc='dirs -c'
-for i in {0..19}; do eval "alias g$i='cd ~$i'"; done
+dc() { dirs -c; }
+
+alias C='clear'
 
 # ----------------------------- Bindings ------------------------------
 for m in viins vicmd main menuselect; do
   bindkey -M $m '^J' autosuggest-accept
   bindkey -M $m '^M' accept-line
   bindkey -M $m '^R' fzf-history-widget
-  bindkey -M $m '^F' fzf_file_insert_and_push
-  bindkey -M $m '^K' fzf_switch_dir
-  bindkey -M $m '^O' fzf_insert_dir
+  bindkey -M $m '^F' fzf_file_action
+  bindkey -M $m '^A' fzf_dir_action
   bindkey -M $m '^E' fzf_cd_stack
-  bindkey -M $m '^L' clear_and_echo
 done
+
 
 # ---------------------------- Cheat sheet ----------------------------
 zm() {
@@ -230,15 +234,16 @@ zm() {
 +-------------------------+----------------------------------------------+
 | KEY / COMMAND           | ACTION                                       |
 +-------------------------+----------------------------------------------+
-| Ctrl-J                  | Accept autosuggestion (no execute)           |
-| Enter                   | Execute (accept if present)                  |
+| Ctrl-J                  | Accept autosuggestion                        |
+| Enter                   | Execute current command line                 |
 | Ctrl-R                  | Fuzzy search history                         |
-| Ctrl-F                  | Files only  → insert path (bat preview)      |
-| Ctrl-K                  | Directories → cd                             |
-| Ctrl-O                  | Directories → insert path                    |
-| Ctrl-E                  | Dir-stack chooser → cd                       |
-| dv                      | Show directory stack (dirs -v)               |
+| Ctrl-F                  | Files: edit (empty line) / insert (non-empty)|
+| Ctrl-A                  | Dirs:  cd (empty line) / insert (non-empty)  |
+| Ctrl-E                  | Choose directory from stack → cd             |
+| C                       | Clear screen                                 |
+| dv                      | Show directory stack                         |
 | dc                      | Clear stack                                  |
 +-------------------------+----------------------------------------------+
 EOF
 }
+
