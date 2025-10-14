@@ -137,8 +137,8 @@ PROMPT="%F{green}[I]%f $PROMPT_BASE"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export FZF_WIN_HEIGHT="80%"
 export BAT_THEME="gruvbox-dark"
-: "${FZF_MAX_DIRS:=30000}"
-: "${FZF_MAX_FILES:=200000}"
+: "${FZF_MAX_DIRS:=20000}"
+: "${FZF_MAX_FILES:=100000}"
 
 # ----------------------- Directory stack -----------------------------
 setopt auto_pushd pushd_ignore_dups pushd_silent
@@ -156,12 +156,12 @@ fzf_file_action() {
   local file
   file=$(fd --type f --max-results "$FZF_MAX_FILES" . 2>/dev/null \
         | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='files › ' \
-            --preview 'bat --paging=never --theme=vague --style=numbers --line-range :250 --wrap=never --squeeze-limit=2  --terminal-width=10 --color=always {} | cat' \
+            --preview 'file --mime {}|grep -qi binary && echo -n "=====> " && file -b {} || bat --paging=never --theme=DarkNeon --style=numbers --line-range :250 --wrap=never --squeeze-limit=2  --terminal-width=10 --color=always {} | cat' \
             --preview-window=right:60%:wrap) || { zle reset-prompt; return; }
 
   [[ -z $file ]] && { zle reset-prompt; return; }
 
-  pushd $(dirname "$file")
+  dirstack=($(dirname "$file") $dirstack)
 
   if is_empty_buffer; then
     ${EDITOR:-vi} "$file"
@@ -177,12 +177,13 @@ zle -N fzf_file_action
 fzf_dir_action() {
   local dir
   dir=$(fd --type d --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
-        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ') \
+        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ' \
+	--preview 'tree -C -d --noreport {}') \
         || { zle reset-prompt; return; }
 
   [[ -z $dir ]] && { zle reset-prompt; return; }
 
-  pushd "$dir"
+  dirstack=("$dir" $dirstack)
 
   if is_empty_buffer; then
     builtin cd -- "$dir"
@@ -213,7 +214,7 @@ fzf_cd_stack() {
 zle -N fzf_cd_stack
 
 # ----------------------- Dir stack commands --------------------------
-dv() { dirs -v; }
+d() { dirs -v; }
 dc() { dirs -c; }
 
 alias C='clear'
@@ -242,9 +243,8 @@ zm() {
 | Ctrl-A                  | Dirs:  cd (empty line) / insert (non-empty)  |
 | Ctrl-E                  | Choose directory from stack → cd             |
 | C                       | Clear screen                                 |
-| dv                      | Show directory stack                         |
+| d                       | Show directory stack                         |
 | dc                      | Clear stack                                  |
 +-------------------------+----------------------------------------------+
 EOF
 }
-
