@@ -154,9 +154,9 @@ is_empty_buffer() {
 # Ctrl-F → files only → insert or edit depending on context
 fzf_file_action() {
   local file
-  file=$(fd --type f --hidden --exclude .git --max-results "$FZF_MAX_FILES" . 2>/dev/null \
+  file=$(fd --type f --max-results "$FZF_MAX_FILES" . 2>/dev/null \
         | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='files › ' \
-            --preview 'bat --theme=gruvbox-dark --style=numbers --color=always {}' \
+            --preview 'bat --paging=never --theme=vague --style=numbers --line-range :250 --wrap=never --squeeze-limit=2  --terminal-width=10 --color=always {} | cat' \
             --preview-window=right:60%:wrap) || { zle reset-prompt; return; }
 
   [[ -z $file ]] && { zle reset-prompt; return; }
@@ -176,8 +176,9 @@ zle -N fzf_file_action
 # Ctrl-P → directories only → cd or insert depending on context
 fzf_dir_action() {
   local dir
-  dir=$(fd --type d --hidden --exclude .git --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
-        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ') || { zle reset-prompt; return; }
+  dir=$(fd --type d --max-results "$FZF_MAX_DIRS" . 2>/dev/null \
+        | command fzf --height="$FZF_WIN_HEIGHT" --ansi --prompt='dirs › ') \
+        || { zle reset-prompt; return; }
 
   [[ -z $dir ]] && { zle reset-prompt; return; }
 

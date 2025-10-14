@@ -331,7 +331,7 @@ aws_gt() {
     echo "--> now connected to AWS account \"$profile\" (region \"$region\")"
 }
 
-alias bat="$BREW_BIN/bat --color=auto --theme=Nord"
+alias bat="$HOME/.cargo/bin/bat --color=auto --theme=vague"
 alias pbat='bat -p'
 alias nbat='bat -n'
 
