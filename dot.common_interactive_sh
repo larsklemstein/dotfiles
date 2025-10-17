@@ -439,6 +439,9 @@ alias glr='git log --reverse'
 alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
 alias gpl='git pull'
 alias gst='git status'
+alias gcm='git commit -m'
+alias gta='git add'
+alias gtA='git add -A .'
 
 # git push (set upstream origin if required)
 gpu() {
