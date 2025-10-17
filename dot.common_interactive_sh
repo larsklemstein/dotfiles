@@ -442,6 +442,16 @@ alias gst='git status'
 alias gcm='git commit -m'
 alias gta='git add'
 alias gtA='git add -A .'
+alias gca='git add -A . && git commit -m'
+
+gpa() {
+    local message
+    message="$*"
+
+    git add -A .
+    git commit -m "$message"
+    git push
+}
 
 # git push (set upstream origin if required)
 gpu() {
