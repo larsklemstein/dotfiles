@@ -245,7 +245,7 @@ locate_prog() {
     done
 }
 
-cdg() {
+cdp() {
     local choosen="$($HOME/app/lkltools/cdp.sh -n -c3600 call $@)"
 
     [ -z $choosen ] && return 0
@@ -440,9 +440,7 @@ alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
 alias gpl='git pull'
 alias gst='git status'
 alias gcm='git commit -m'
-alias gta='git add'
-alias gtA='git add -A .'
-alias gca='git add -A . && git commit -m'
+alias gta='git add -A . && git commit -m'
 
 gpa() {
     local message
@@ -512,4 +510,7 @@ fi
 # ============================================================================
 # private local settings
 # ============================================================================
-[ -s "$HOME/.common_interactive_local_sh" ] && . "$HOME/.common_interactive_local_sh"
+
+[ -s "$HOME/.env" ] && source "$HOME/.env"
+
+[ -s "$HOME/.common_interactive_local_sh" ] && source "$HOME/.common_interactive_local_sh"
