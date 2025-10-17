@@ -159,11 +159,54 @@ hintmsg() {
   echo
 }
 
-# --- Examples -----------------------------------------------------------
-# errmsg "Failed to connect to database"
-# warnmsg "Low disk space on /dev/sda1"
-# infomsg "Backup completed successfully"
+# --- OK message (green) -------------------------------------------------
+okmsg() {
+  local GREEN="\033[32m"
+  local GREEN_BG="\033[42m"
+  local WHITE="\033[97m"
+  local RESET="\033[0m"
 
+  local LEFT_CORNER=""
+  local RIGHT_CORNER=""
+
+  printf "%b\n" \
+    "${GREEN}${LEFT_CORNER}${GREEN_BG}${WHITE} OK ${RESET}${GREEN}${RIGHT_CORNER}${RESET} $*"
+}
+
+arrowmsg() {
+  # Usage:
+  #   arrowmsg "Message text"
+  #   arrowmsg red "Message text"
+  #
+  # Supported colors: green (default), red, orange, yellow, blue, cyan, magenta, white, grey
+
+  local COLOR_NAME="green"
+  local RESET="\033[0m"
+  local POINTER="➜"
+
+  # If first argument matches a color name, treat it as color
+  case "$1" in
+    red|orange|yellow|green|blue|cyan|magenta|white|grey)
+      COLOR_NAME="$1"
+      shift
+      ;;
+  esac
+
+  # Define truecolor mappings
+  case "$COLOR_NAME" in
+    red)     COLOR="\033[38;2;255;70;70m" ;;
+    orange)  COLOR="\033[38;2;255;140;0m" ;;
+    yellow)  COLOR="\033[38;2;255;215;0m" ;;
+    green)   COLOR="\033[38;2;50;205;50m" ;;
+    blue)    COLOR="\033[38;2;80;160;255m" ;;
+    cyan)    COLOR="\033[38;2;0;200;200m" ;;
+    magenta) COLOR="\033[38;2;255;100;255m" ;;
+    white)   COLOR="\033[97m" ;;
+    grey)    COLOR="\033[38;2;180;180;180m" ;;
+  esac
+
+  printf "%b\n" "${COLOR}${POINTER} $*${RESET}"
+}
 
 
 # ============================================================================
@@ -225,7 +268,7 @@ path_prepend() {
 }
 
 for d in ~/bin ~/.local/bin ~/.rd/bin \
-    ~/app/bin ~/app/groovy-lsp ~/app/jenkins-cli ~/app/{go,VSCode-linux-x64}/bin \
+    ~/app/bin ~/app/groovy-lsp ~/app/jenkins-cli \
     ~/.npm-global ~/app/lkltools /opt/homebrew/opt/coreutils/bin
 do
     [ -d "$d" ] && path_prepend "$d"
@@ -244,10 +287,10 @@ done
 # ============================================================================
 # go
 # ============================================================================
-alias gr='go run .'
-alias gb='go vet && staticcheck && go fmt && go build .'
-alias gbs='go vet && staticcheck && go fmt && go build -ldflags "-w -s" .'
-alias gf='go fmt'
+alias glr='go run .'
+alias glb='go vet && staticcheck && go fmt && go build .'
+alias glc='go vet && staticcheck && go fmt && go build -ldflags "-w -s" .'
+alias glf='go fmt'
 
 # ============================================================================
 # rust
@@ -257,7 +300,9 @@ alias gf='go fmt'
 # ============================================================================
 # python
 # ============================================================================
-alias ur='uv run'
+alias uvr='uv run'
+alias uvt='uv test'
+
 alias vea='[ -f .venv/bin/activate ] && . .venv/bin/activate || echo "No venv here!" >&2'
 alias ved='[ -n "$VIRTUAL_ENV" ] && deactivate || echo "Not in a venv!" >&2'
 
@@ -393,7 +438,7 @@ alias gcl='git status --porcelain=v1 | grep -q . || true'
 alias glr='git log --reverse'
 alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
 alias gpl='git pull'
-alias gst='gcl && echo clean || echo dirty'
+alias gst='git status'
 
 # git push (set upstream origin if required)
 gpu() {
@@ -429,24 +474,11 @@ npm_modules
 EOF
 }
 
-ginit() {
-    local dir=${1:-}
-    [ -n "$dir" ] && { [ -d "$dir" ] && { msg "dir exists"; return 1; } || mkdir -p "$dir" && cd "$dir"; }
-    [ ! -f README.md ] && echo -e "# Description\n\nBla..." >README.md
-    mk_gitignore
-    git init && git add -A . && git commit -m "initial version"
-}
-
-mkbranch() {
-    [ $# -ge 1 ] || { msg "usage: mkbranch branch [origin]"; return 1; }
-    git checkout -b "$1" && git push "${2:-origin}" "$1"
-}
 chbranch() {
     local br; br=$(git branch -a | grep -v '^\*' | sed -e 's/^  *//' -e 's%remotes/origin/%%' | fzf) || return 1
     git checkout "$br" && echo "Switched to $br"
 }
-alias mbr=mkbranch
-alias cbr=chbranch
+
 export GIT_PAGER=cat
 
 # ============================================================================
