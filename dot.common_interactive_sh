@@ -117,6 +117,55 @@ CC() { clear; for _ in $(seq "$LINES"); do echo; done; }
 
 msg() { echo "$*" >&2; }
 
+#!/usr/bin/env bash
+# Consistent message badges for Nerd Font terminals (no bold, dark theme friendly)
+
+# --- Color helpers ------------------------------------------------------
+RESET="\033[0m"
+WHITE="\033[97m"
+
+# --- Badge corners ------------------------------------------------------
+LEFT_CORNER=""
+RIGHT_CORNER=""
+
+# --- Error message (red) -----------------------------------------------
+errmsg() {
+  local RED="\033[31m"
+  local RED_BG="\033[41m"
+  echo
+  printf "%b\n" \
+    "${RED}${LEFT_CORNER}${RED_BG}${WHITE} error ${RESET}${RED}${RIGHT_CORNER}${RESET} $*"
+  echo
+}
+
+# --- Warning message (orange) ------------------------------------------
+warnmsg() {
+  # Truecolor orange (foreground + background)
+  local ORANGE_FG="\033[38;2;255;140;0m"
+  local ORANGE_BG="\033[48;2;255;140;0m"
+  echo
+  printf "%b\n" \
+    "${ORANGE_FG}${LEFT_CORNER}${ORANGE_BG}${WHITE} warning ${RESET}${ORANGE_FG}${RIGHT_CORNER}${RESET} $*"
+  echo
+}
+
+# --- Info message (blue) -----------------------------------------------
+hintmsg() {
+  local BLUE="\033[34m"
+  local BLUE_BG="\033[44m"
+  echo
+  printf "%b\n" \
+    "${BLUE}${LEFT_CORNER}${BLUE_BG}${WHITE} hint ${RESET}${BLUE}${RIGHT_CORNER}${RESET} $*"
+  echo
+}
+
+# --- Examples -----------------------------------------------------------
+# errmsg "Failed to connect to database"
+# warnmsg "Low disk space on /dev/sda1"
+# infomsg "Backup completed successfully"
+
+
+
 # ============================================================================
 # helpers
 # ============================================================================
@@ -338,19 +387,45 @@ alias nbat='bat -n'
 # ============================================================================
 # git
 # ============================================================================
-alias gl='git log --reverse'
+alias gbl='git blame'
 alias gbr='git rev-parse --abbrev-ref HEAD'
-alias gpbr='git push --set-upstream origin $(gbr)'
+alias gcl='git status --porcelain=v1 | grep -q . || true'
+alias glr='git log --reverse'
 alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
+alias gpl='git pull'
+alias gst='gcl && echo clean || echo dirty'
 
-mk_gitignore() {
-    cat >.gitignore <<EOF
+# git push (set upstream origin if required)
+gpu() {
+    if [ -n "$(gor)" ]
+    then
+        git push
+    else
+        git push --set-upstream origin "$(gbr)"
+    fi
+}
+
+gmi() {
+    if [ ! -d $PWD/.git ]
+    then
+       msg "No git dir"
+       return 1
+    fi
+
+    if [ -f $PWD/.gitignore ]
+    then
+       msg ".gitignore aleady exist"
+       return 1
+    fi
+
+    /bin/cat >.gitignore <<EOF
 .DS_Store
 __pycache__
 *.pyc
 npm_modules
 *.o
 .env
+?  # throw-away executors like x or even y...
 EOF
 }
 
