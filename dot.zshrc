@@ -141,7 +141,7 @@ export BAT_THEME="gruvbox-dark"
 : "${FZF_MAX_FILES:=100000}"
 
 # ----------------------- Directory stack -----------------------------
-setopt auto_pushd pushd_ignore_dups pushd_silent
+setopt auto_cd auto_pushd pushd_ignore_dups pushd_silent
 DIRSTACKSIZE=20
 
 # -------------------------- fzf widgets ------------------------------
