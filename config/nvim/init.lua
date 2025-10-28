@@ -66,6 +66,9 @@ require("nvim-tree").setup {
   view = { width = 30, side = "left", preserve_window_proportions = true },
   renderer = { indent_markers = { enable = true } },
   actions = { open_file = { quit_on_open = false } },
+  filters = {
+    dotfiles = true,  -- <== Blendet .hidden Dateien aus
+  },
   on_attach = function(bufnr)
     local api = require "nvim-tree.api"
     local view = require "nvim-tree.view"
@@ -305,7 +308,21 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "TextChanged", "TextChangedI", "BufW
   end,
 })
 
+
+------------------------------------------------------------
+-- 11. More or less sophisticated keympaps
+------------------------------------------------------------
 vim.keymap.set("n", "<leader>rf", function()
   -- Insert file under cursor below the current line
   vim.cmd("read " .. vim.fn.expand "<cfile>")
 end, { desc = "Insert contents of file under cursor" })
+
+vim.keymap.set('n', '<leader>hh', function()
+  require('nvim-tree.api').tree.toggle_hidden_filter()
+end, { desc = 'nvim-tree: Toggle dotfiles' })
+
+vim.keymap.set('n', '<leader>qq', '<cmd>qa<CR>', {
+  noremap = true,
+  silent = true,
+  desc = 'Quit all'
+})
