@@ -36,6 +36,16 @@ require("lazy").setup {
   { "lewis6991/gitsigns.nvim", config = true },
   { "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" }, config = true },
   { "christoomey/vim-tmux-navigator" },
+  {
+  "NStefan002/screenkey.nvim",
+  cmd = "Screenkey",
+  opts = {
+    -- Nur gültige Optionen verwenden
+    timeout = 3,
+    show_leader = true,
+    max_length = 20,
+  },
+}
 }
 
 ------------------------------------------------------------
