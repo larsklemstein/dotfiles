@@ -336,3 +336,9 @@ vim.keymap.set('n', '<leader>qq', '<cmd>qa<CR>', {
   silent = true,
   desc = 'Quit all'
 })
+
+-- Remove non-breaking spaces before write
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*",
+  command = [[silent! %s/\%xa0/ /ge]],
+})
