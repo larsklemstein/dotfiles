@@ -33,19 +33,44 @@ require("lazy").setup {
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
   { "hrsh7th/nvim-cmp", dependencies = { "hrsh7th/cmp-buffer", "hrsh7th/cmp-path" } },
   { "williamboman/mason.nvim", config = true },
-  { "lewis6991/gitsigns.nvim", config = true },
   { "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" }, config = true },
   { "christoomey/vim-tmux-navigator" },
-  {
-  "NStefan002/screenkey.nvim",
-  cmd = "Screenkey",
+
+  ------------------------------------------------------------
+-- Modern Git integration: gitsigns + git-blame
+------------------------------------------------------------
+{
+  -- Git diff signs in sign column
+  "lewis6991/gitsigns.nvim",
+  event = { "BufReadPre", "BufNewFile" },
   opts = {
-    -- Nur gültige Optionen verwenden
-    timeout = 3,
-    show_leader = true,
-    max_length = 20,
+    signs = { add = { text = "│" }, change = { text = "│" }, delete = { text = "_" } },
+    on_attach = function(buf)
+      local gs = package.loaded.gitsigns
+      local map = function(l, r, d) vim.keymap.set("n", l, r, { buffer = buf, desc = d }) end
+      map("]h", gs.next_hunk, "Next hunk")
+      map("[h", gs.prev_hunk, "Prev hunk")
+      map("<leader>hp", gs.preview_hunk, "Preview hunk")
+      map("<leader>hb", function() gs.blame_line { full = true } end, "Blame line")
+    end,
   },
+},
+
+{
+  -- Inline git blame text
+  "f-person/git-blame.nvim",
+  event = { "BufReadPre", "BufNewFile" },
+  opts = {
+    delay = 500,
+    message_template = "<author>, <date> • <summary>",
+    date_format = "%Y-%m-%d",
+  },
+  config = function(_, opts)
+    require("gitblame").setup(opts)
+    vim.keymap.set("n", "<leader>gb", ":GitBlameToggle<CR>", { desc = "Toggle blame" })
+  end,
 }
+
 }
 
 ------------------------------------------------------------
@@ -256,16 +281,20 @@ map("n", "<leader>ty", function()
   print "Terminal output yanked to system clipboard (+)"
 end, opts)
 
+
+
+
 ------------------------------------------------------------
--- 9. Safe format-on-save (config-aware)
+-- 9. Async, UV-safe format-on-save (ruff for Python, fixed)
 ------------------------------------------------------------
+
 local formatters = {
-  lua = { cmd = "stylua --respect-ignores %", config_files = { ".stylua.toml", "stylua.toml" } },
-  python = { cmd = "black --quiet %", config_files = { "pyproject.toml", "black.toml", "black.cfg" } },
-  javascript = { cmd = "prettier --write %", config_files = { ".prettierrc", "prettier.config.js" } },
-  typescript = { cmd = "prettier --write %", config_files = { ".prettierrc", "prettier.config.js" } },
-  go = { cmd = "gofmt -w %", config_files = { "go.mod" } },
-  rust = { cmd = "rustfmt %", config_files = { "rustfmt.toml", ".rustfmt.toml" } },
+  lua = { cmd = { "stylua", "--respect-ignores" }, config_files = { ".stylua.toml", "stylua.toml" } },
+  python = { cmd = { "ruff", "format" }, config_files = { "pyproject.toml", "ruff.toml" } },
+  javascript = { cmd = { "prettier", "--write" }, config_files = { ".prettierrc", "prettier.config.js" } },
+  typescript = { cmd = { "prettier", "--write" }, config_files = { ".prettierrc", "prettier.config.js" } },
+  go = { cmd = { "gofmt", "-w" }, config_files = { "go.mod" } },
+  rust = { cmd = { "rustfmt" }, config_files = { "rustfmt.toml", ".rustfmt.toml" } },
 }
 
 local function get_project_root()
@@ -283,21 +312,55 @@ local function project_has_config(files)
   return false
 end
 
-vim.api.nvim_create_autocmd("BufWritePre", {
+local function run_formatter_async(filepath, fmt)
+  local args = vim.deepcopy(fmt.cmd)
+  table.insert(args, filepath)
+
+  local handle
+  handle = vim.loop.spawn(args[1], { args = vim.list_slice(args, 2) }, function(code, _)
+    if handle and not handle:is_closing() then
+      handle:close()
+    end
+
+    vim.schedule(function()
+      if code ~= 0 then
+        vim.notify(
+          "[format] " .. args[1] .. " exited with code " .. code,
+          vim.log.levels.WARN
+        )
+        return
+      end
+
+      -- Safely reload buffer if still loaded
+      local bufnr = vim.fn.bufnr(filepath)
+      if bufnr >= 0 and vim.api.nvim_buf_is_loaded(bufnr) then
+        local win = vim.fn.bufwinid(bufnr)
+        if win ~= -1 and vim.api.nvim_win_is_valid(win) then
+          local ok, curpos = pcall(vim.api.nvim_win_get_cursor, win)
+          vim.cmd("checktime " .. bufnr)
+          if ok then
+            pcall(vim.api.nvim_win_set_cursor, win, curpos)
+          end
+        else
+          -- No window open for that buffer; just checktime silently
+          vim.cmd("checktime " .. bufnr)
+        end
+      end
+    end)
+  end)
+end
+
+vim.api.nvim_create_autocmd("BufWritePost", {
   callback = function(args)
     local ft = vim.bo[args.buf].filetype
     local fmt = formatters[ft]
-    if not fmt then
-      return
-    end
-    local binary = fmt.cmd:match "^%S+"
-    if vim.fn.executable(binary) == 0 then
-      return
-    end
-    if not project_has_config(fmt.config_files) then
-      return
-    end
-    vim.cmd("silent! !" .. fmt.cmd)
+    if not fmt then return end
+    if vim.fn.executable(fmt.cmd[1]) == 0 then return end
+    if not project_has_config(fmt.config_files) then return end
+
+    local filepath = vim.api.nvim_buf_get_name(args.buf)
+    if filepath == "" then return end
+    run_formatter_async(filepath, fmt)
   end,
 })
 
@@ -342,3 +405,10 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = "*",
   command = [[silent! %s/\%xa0/ /ge]],
 })
+
+vim.opt.backup = false
+vim.opt.swapfile = false
+
+vim.opt.backupcopy = "yes"
+
+vim.opt.autoread = true
