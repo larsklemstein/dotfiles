@@ -275,6 +275,22 @@ end
 map("n", "<leader>tb", toggle_bottom_terminal, opts)
 map("t", "<leader>tb", toggle_bottom_terminal, opts)
 
+
+-- Open a new terminal in the directory of the current file
+vim.keymap.set('n', '<leader>tf', function()
+  local file_dir = vim.fn.expand('%:p:h')
+  if file_dir == '' then
+    file_dir = vim.fn.getcwd()
+  end
+
+  vim.cmd('botright split')
+  vim.cmd('resize 15')              -- adjust height if desired
+  vim.cmd('terminal')
+
+  vim.fn.chansend(vim.b.terminal_job_id, 'cd ' .. file_dir .. '\n')
+  vim.cmd('startinsert')
+end, { desc = 'Open terminal in current file directory' })
+
 ------------------------------------------------------------
 -- 8. Yank helpers for terminal
 ------------------------------------------------------------
@@ -452,3 +468,6 @@ end, { desc = 'Smart down: into terminal if below', silent = true })
 
 -- Ctrl+k: zurück in Editor, falls im Terminal
 vim.keymap.set('t', '<C-k>', [[<C-\><C-n><C-w>k]], { desc = 'Leave terminal upward', silent = true })
+
+vim.o.showcmd = false      -- Disable live key display
+vim.o.showcmdloc = 'last'  -- (optional default) but harmless
