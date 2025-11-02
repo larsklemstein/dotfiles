@@ -416,3 +416,39 @@ vim.opt.swapfile = false
 vim.opt.backupcopy = "yes"
 
 vim.opt.autoread = true
+
+-- Clear search highlight on Ctrl+L
+vim.keymap.set('n', '<C-c>', ':nohl<CR>', { noremap = true, silent = true, desc = 'Clear search highlight' })
+
+-- Command-line editing comfort (Blink/iTerm2 safe)
+vim.keymap.set('c', '<C-A>', '<Home>', { noremap = true })
+vim.keymap.set('c', '<C-E>', '<End>',  { noremap = true })
+vim.keymap.set('c', '<C-Left>', '<S-Left>', { noremap = true })
+vim.keymap.set('c', '<C-Right>', '<S-Right>', { noremap = true })
+
+
+-- Context-aware Ctrl+j: jump into terminal only if it's directly below
+vim.keymap.set('n', '<C-j>', function()
+  local current_win = vim.api.nvim_get_current_win()
+  local target_win  = vim.fn.winnr('j')          -- window below
+
+  -- same window → kein Fenster darunter
+  if target_win == vim.fn.winnr() then
+    return vim.cmd('silent! TmuxNavigateDown')
+  end
+
+  local target_id = vim.fn.win_getid(target_win)
+  local buf = vim.api.nvim_win_get_buf(target_id)
+
+  if vim.bo[buf].buftype == 'terminal' then
+    -- Fokus ins Terminal + Insert-Mode
+    vim.api.nvim_set_current_win(target_id)
+    vim.cmd('startinsert')
+  else
+    -- normales Verhalten (tmux-navigator)
+    vim.cmd('silent! TmuxNavigateDown')
+  end
+end, { desc = 'Smart down: into terminal if below', silent = true })
+
+-- Ctrl+k: zurück in Editor, falls im Terminal
+vim.keymap.set('t', '<C-k>', [[<C-\><C-n><C-w>k]], { desc = 'Leave terminal upward', silent = true })

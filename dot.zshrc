@@ -94,6 +94,8 @@ zstyle ':vcs_info:git*:*' check-for-changes false
 zstyle ':vcs_info:git:*' formats '[%b]'
 zstyle ':vcs_info:*'     actionformats '[%b|%a]'
 
+export PRE_COMMIT_COLOR=never
+
 if [[ -f $HOME/.env_desc ]]; then
   ENV_DESC=$(<"$HOME/.env_desc")
 else
@@ -212,6 +214,13 @@ fzf_cd_stack() {
   zle reset-prompt
 }
 zle -N fzf_cd_stack
+
+# el == edit last
+el() {
+    local h_id=$(history |grep "$EDITOR" | tail -1)
+    [ -zz "$hd_id" ] && { echo '???' >&2; return 1; }
+    fc -e - $h_id
+}
 
 # ----------------------- Dir stack commands --------------------------
 d() { dirs -v; }
