@@ -389,11 +389,15 @@ e() {
 # ============================================================================
 # mise
 # ============================================================================
-case $SHELL in
-    */bash) eval "$(mise activate bash)" ;;
-    */zsh)  eval "$(mise activate zsh)" ;;
-    *) echo "Don't know how to init mise for shell $SHELL" >&2 ;;
-esac
+if [ -n "$ZSH_VERSION" ]
+then
+    eval "$(mise activate zsh)"
+elif [ -n "$BASH_VERSION" ]
+then
+    eval "$(mise activate bash)"
+else
+    echo "No mise init..." >&2
+fi
 
 mst() {
     if ! is_worker_path; then
