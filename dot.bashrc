@@ -40,5 +40,3 @@ alias mst=my_session_type
 [[ -s "$HOME/.common_interactive_sh" ]] && . "$HOME/.common_interactive_sh"
 
 set -o vi
-
-source /Users/larsklemstein/.config/broot/launcher/bash/br
