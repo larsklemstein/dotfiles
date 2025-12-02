@@ -3,6 +3,11 @@
 -- LSP-free, deterministic, ergonomic
 ------------------------------------------------------------
 
+vim.opt.expandtab = true      -- convert Tab -> spaces
+vim.opt.shiftwidth = 4        -- indent size
+vim.opt.tabstop = 4           -- display width of Tab
+vim.opt.softtabstop = 4       -- editing width of Tab
+
 ------------------------------------------------------------
 -- 0. Leader key
 ------------------------------------------------------------
