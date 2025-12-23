@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+ZINIT_COMP="$HOME/.local/share/zinit/completions"
+
+# zsh completion cache entfernen
+rm -f ~/.zcompdump*
+
+# zinit-completions neu anlegen und absichern
+if [[ -d "$ZINIT_COMP" ]]; then
+  chmod g-w,o-w "$ZINIT_COMP"
+fi
+
