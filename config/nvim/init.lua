@@ -57,6 +57,10 @@ require("lazy").setup({
   },
 
   {
+    "ojroques/nvim-osc52",
+  },
+
+  {
     "sainnhe/everforest",
     lazy = false,
     priority = 1000,
@@ -471,3 +475,19 @@ vim.cmd([[
 
 vim.opt.number = true         -- absolute line numbers
 vim.opt.relativenumber = true -- relative line numbers
+
+-- OSC52 Clipboard (ony with SSH)
+if vim.env.SSH_CONNECTION then
+  require("osc52").setup({
+    max_length = 0,
+    silent = true,
+  })
+
+  vim.keymap.set("v", "<leader>y", function()
+    require("osc52").copy_visual()
+  end, { desc = "Copy via OSC52" })
+
+  vim.keymap.set("n", "<leader>yy", function()
+    require("osc52").copy_operator()
+  end, { desc = "Copy line via OSC52" })
+end
