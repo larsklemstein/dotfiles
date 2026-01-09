@@ -47,59 +47,62 @@ require("lazy").setup({
   },
 
   {
-      "lukas-reineke/indent-blankline.nvim",
-      main = "ibl",
-      dependencies = {
-        "TheGLander/indent-rainbowline.nvim",
+  "lukas-reineke/indent-blankline.nvim",
+  main = "ibl",
+  dependencies = {
+    "TheGLander/indent-rainbowline.nvim",
+  },
+  config = function()
+    local hooks = require("ibl.hooks")
+
+    hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
+      vim.api.nvim_set_hl(0, "RainbowBlue", {
+        fg = "#3f5f7f",
+        blend = 45,
+      })
+      vim.api.nvim_set_hl(0, "RainbowGreen", {
+        fg = "#4f6f4f",
+        blend = 45,
+      })
+      vim.api.nvim_set_hl(0, "RainbowYellow", {
+        fg = "#7f6f3f",
+        blend = 45,
+      })
+      vim.api.nvim_set_hl(0, "RainbowViolet", {
+        fg = "#6f5f7f",
+        blend = 45,
+      })
+    end)
+
+    require("ibl").setup {
+      indent = {
+        char = "▏",
+        highlight = {
+          "RainbowBlue",
+          "RainbowGreen",
+          "RainbowYellow",
+          "RainbowViolet",
+        },
       },
-      config = function()
-        -- Rainbow highlight groups
-        local hooks = require("ibl.hooks")
-
-        local hooks = require("ibl.hooks")
-
-        hooks.register(hooks.type.HIGHLIGHT_SETUP, function()
-          vim.api.nvim_set_hl(0, "RainbowRed",    { fg = "#7f3f3f" })
-          vim.api.nvim_set_hl(0, "RainbowYellow", { fg = "#7f6f3f" })
-          vim.api.nvim_set_hl(0, "RainbowBlue",   { fg = "#3f5f7f" })
-          vim.api.nvim_set_hl(0, "RainbowOrange", { fg = "#7f5f3f" })
-          vim.api.nvim_set_hl(0, "RainbowGreen",  { fg = "#4f6f4f" })
-          vim.api.nvim_set_hl(0, "RainbowViolet", { fg = "#6f5f7f" })
-          vim.api.nvim_set_hl(0, "RainbowCyan",   { fg = "#4f6f6f" })
-        end)
-
-        require("ibl").setup {
-          indent = {
-            char = "│",
-            highlight = {
-              "RainbowRed",
-              "RainbowYellow",
-              "RainbowBlue",
-              "RainbowOrange",
-              "RainbowGreen",
-              "RainbowViolet",
-              "RainbowCyan",
-            },
-          },
-          scope = {
-            enabled = false,
-          },
-          whitespace = {
-            remove_blankline_trail = true,
-          },
-          exclude = {
-            filetypes = {
-              "help",
-              "dashboard",
-              "lazy",
-              "mason",
-              "notify",
-              "terminal",
-            },
-          },
-        }
-      end,
-    },
+      scope = {
+        enabled = false,
+      },
+      whitespace = {
+        remove_blankline_trail = true,
+      },
+      exclude = {
+        filetypes = {
+          "help",
+          "dashboard",
+          "lazy",
+          "mason",
+          "notify",
+          "terminal",
+        },
+      },
+    }
+  end,
+},
 
   {
     "folke/tokyonight.nvim",
