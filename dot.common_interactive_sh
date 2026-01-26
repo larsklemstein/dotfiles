@@ -417,10 +417,12 @@ export AWS_PAGER=''
 alias aws_credentials_export='perl -00ne "/\{.+\"Credentials\":\s.+\"AccessKeyId\":\s+\"([^\"]+)\".+\"SecretAccessKey\":\s+\"([^\"]+)\".+\"SessionToken\":\s+\"([^\"]+)\"/s; print qq{export AWS_ACCESS_KEY_ID=\"\$1\";export AWS_SECRET_ACCESS_KEY=\"\$2\";export AWS_SESSION_TOKEN=\"\$3\"\n}"'
 
 aws_gt() {
+set -x
     [ $# -eq 4 ] || [ $# -eq 2 ] || { echo "usage: aws_gt profile region [mfa token_code]"; return 1; }
     local profile=$1 region=$2 mfa=$3 token=$4
     local out rc export_cmd
     local cmd="$AWS_CMD sts get-session-token --profile $profile"
+    local cmd=($AWS_CMD sts get-session-token --profile $profile)
     [ -n "$mfa" ] && out=$($cmd --serial-number "$mfa" --token-code "$token") || out=$($cmd)
     rc=$?
     [ $rc -eq 0 ] || { echo "ups: rc=$rc"; echo "$out"; return 1; }
