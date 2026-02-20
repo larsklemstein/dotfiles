@@ -408,6 +408,35 @@ mst() {
     [ -n "$choice" ] && mise use "$choice"
 }
 
+alias mlr='mise ls-remote'
+
+mlrr() {
+    echo
+    for lang in go python nodejs java
+    do
+        version=$(mise ls-remote $lang | grep -v a|tail -1)
+
+        if [ $lang = go ]
+        then
+            installed=$(go version | cut -d" " -f3 | sed 's/go//')
+        elif [ $lang = java ]
+        then
+            installed=$(java -version 2>&1 | head -1 | cut -d" " -f3|tr -d '["v]')
+        elif [ $lang = nodejs ]
+        then
+            installed=$(node --version | tr -d 'v')
+        elif [ $lang = python ]
+        then
+            installed=$(python3 -V | cut -d" " -f2)
+        else
+            installed='???'
+        fi
+
+        printf "%10s - %s - %s\n" $lang $version $installed
+    done | sort
+    echo
+}
+
 # ============================================================================
 # aws
 # ============================================================================
