@@ -208,6 +208,56 @@ arrowmsg() {
   printf "%b\n" "${COLOR}${POINTER} $*${RESET}"
 }
 
+# ============================================================================
+# docker stuff
+# ============================================================================
+
+alias docker_ports="docker ps --format 'table {{.Ports}}' |grep 127 | sed -e 's/.*://' -e 's/->.*//' |sort -n | paste - - - -"
+
+# dcs == docker compose (list) services
+dcs() {
+    local compose_yaml="$PWD/docker-compose.yml"
+
+    if [ ! -f "$compose_yaml" ]
+    then
+        errmsg "No file $compose_yaml"
+        return 1
+    fi
+
+    yq '.services|keys' $compose_yaml | sed 's/- *//'
+}
+
+# dce == docker compose ennter (service shell)
+dce() {
+    local command="${1:-/bin/bash}"
+
+	case $command in
+		sh) command=/bin/sh ;;
+		bash) command=/bin/bash ;;
+	esac
+
+    local compose_yaml="$PWD/docker-compose.yml"
+
+    if [ ! -f "$compose_yaml" ]
+    then
+        errmsg "No file $compose_yaml"
+        return 1
+    fi
+
+    services="$(yq '.services|keys' $compose_yaml | sed 's/- *//')"
+    local amount=$(wc -l <<<"$services")
+
+    local choosen_service
+    if [ $amount -eq 1 ]
+    then 
+        choosen_service=$services
+	else
+        choosen_service="$(sort -r <<< "$services" | fzf)"
+		[ -z "$choosen_service" ] && return 0
+    fi
+
+	docker compose exec -it $choosen_service $command
+}
 
 # ============================================================================
 # helpers
