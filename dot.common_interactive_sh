@@ -96,8 +96,8 @@ alias dua="$BREW_BIN/dua -t4 interactive"
 alias nrg='rg --color=never'
 alias webp2jpg='for w in *.webp; do convert "$w" "${w%.webp}.jpg" && rm "$w"; done'
 
-# set tabby tab name title
-alias tn="printf '\033]2;%s\007'"
+alias dv='dirs -v'
+
 
 # pager/editor
 export PAGER=less
@@ -244,7 +244,7 @@ dce() {
         return 1
     fi
 
-    services="$(yq '.services|keys' $compose_yaml | sed 's/- *//')"
+    services="$(yq '.services|keys' $compose_yaml | sed 's/- *//' | grep -v '^ *#')"
     local amount=$(wc -l <<<"$services")
 
     local choosen_service
@@ -258,6 +258,16 @@ dce() {
 
 	docker compose exec -it $choosen_service $command
 }
+
+
+alias dcu='docker compose up'
+alias dcud='docker compose up -d'
+alias dcudr='docker compose up -d --force-recreate'
+alias dcudb='docker compose up -d --build'
+alias dcp='docker compose ps'
+alias dcl='docker compose logs --since 5m'
+alias dclf='docker compose logs --since 5m -f'
+
 
 # ============================================================================
 # helpers
