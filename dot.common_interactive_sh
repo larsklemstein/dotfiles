@@ -38,7 +38,8 @@ export NCONF_LUA="$NCONF/lua/config"
 
 alias s='source'
 
-alias eci='nvim $DF/dot.common_interactive_sh'
+alias nro='nvim -R'
+
 
 # short cuts for dirs and files
 cdd() {
@@ -98,6 +99,10 @@ alias webp2jpg='for w in *.webp; do convert "$w" "${w%.webp}.jpg" && rm "$w"; do
 
 alias dv='dirs -v'
 
+# gd == go (to) directory
+gd() {
+    cd ~$1
+}
 
 # pager/editor
 export PAGER=less
