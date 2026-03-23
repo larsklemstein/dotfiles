@@ -115,7 +115,7 @@ precmd() {
 
 zstyle ':vcs_info:git:*' formats '%F{magenta}(%b)%f'
 
-PROMPT='%F{yellow}${VI_MODE}%f %F{green}$(get_user_label)%f %F{blue}$(short_pwd)%f ${vcs_info_msg_0_}%# '
+PROMPT='%F{yellow}${VI_MODE}%f %F{green}$(get_user_label)%f %F{white}$(short_pwd)%f ${vcs_info_msg_0_}%# '
 
 # ----------------------------------
 # Ctrl-F → FILE (non-blocking + initial load)
@@ -255,3 +255,10 @@ lk_fzf_stack_widget() {
 }
 zle -N lk_fzf_stack_widget
 bindkey '^E' lk_fzf_stack_widget
+
+source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#444444'
+
+bindkey -M viins '^[[C' forward-char
+bindkey -M vicmd '^[[C' forward-char
