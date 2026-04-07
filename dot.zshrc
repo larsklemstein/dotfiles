@@ -118,7 +118,7 @@ zstyle ':vcs_info:git:*' formats '%F{magenta}(%b)%f'
 PROMPT='%F{yellow}${VI_MODE}%f %F{green}$(get_user_label)%f %F{white}$(short_pwd)%f ${vcs_info_msg_0_}%# '
 
 # ----------------------------------
-# Ctrl-F → FILE (non-blocking + initial load)
+# Ctrl-F → FILE (balanced layout)
 # ----------------------------------
 lk_fzf_file_widget() {
   emulate -L zsh
@@ -128,13 +128,8 @@ lk_fzf_file_widget() {
 
   zle -I
 
-  selected=$(fzf \
-    --height 40% \
-    --layout=reverse \
-    --border \
-    --disabled \
-    --prompt 'Files> ' \
-    --bind "start:reload:fd --type f --max-depth 8 \
+  selected=$(
+    fd --type f \
       --hidden \
       --exclude .git \
       --exclude node_modules \
@@ -147,27 +142,21 @@ lk_fzf_file_widget() {
       --exclude Library \
       --exclude .Trash \
       --exclude Nextcloud \
-      2>/dev/null" \
-    --bind "change:reload:fd --type f --max-depth 8 \
-      --hidden \
-      --exclude .git \
-      --exclude node_modules \
-      --exclude .cache \
-      --exclude .venv \
-      --exclude venv \
-      --exclude dist \
-      --exclude build \
-      --exclude target \
-      --exclude Library \
-      --exclude .Trash \
-      --exclude Nextcloud \
-      {q} 2>/dev/null" \
-    --preview 'bat --style=numbers --color=always --theme=1337 --line-range :100 {}' \
-    --preview-window=right:60%
+      2>/dev/null \
+    | sed 's|^\./||' \
+    | fzf \
+      --height=24 \
+      --layout=reverse \
+      --border \
+      --prompt 'Files> ' \
+      --preview 'bat --style=numbers --color=always --theme=1337 --line-range :100 {} 2>/dev/null || sed -n "1,100p" {}' \
+      --preview-window=up:8:wrap
   ) || {
     zle redisplay
     return 0
   }
+
+  selected="./${selected}"
 
   if [[ -z "${BUFFER//[[:space:]]/}" ]]; then
     editor_cmd="${VISUAL:-$EDITOR}"
@@ -179,6 +168,7 @@ lk_fzf_file_widget() {
     zle redisplay
   fi
 }
+
 zle -N lk_fzf_file_widget
 bindkey '^F' lk_fzf_file_widget
 
@@ -192,7 +182,7 @@ lk_fzf_dir_widget() {
   local selected
 
   zle -I
-  selected=$(fd --type d --max-depth 8 \
+  selected=$(fd --type d \
     --hidden \
     --exclude .git \
     --exclude node_modules \
