@@ -12,7 +12,8 @@
 # Core
 # ----------------------------------
 autoload -Uz compinit
-compinit
+# compinit
+compinit -C -d ~/.zcompdump
 
 bindkey -v
 
@@ -99,6 +100,7 @@ zle-keymap-select() {
 
 zle-line-init() {
   VI_MODE="I"
+  zle reset-prompt
 }
 
 zle -N zle-keymap-select
@@ -246,9 +248,11 @@ lk_fzf_stack_widget() {
 zle -N lk_fzf_stack_widget
 bindkey '^E' lk_fzf_stack_widget
 
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Ctrl+J → accept autosuggestion
+bindkey -M viins '^J' autosuggest-accept
 
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#444444'
 
 bindkey -M viins '^[[C' forward-char
-bindkey -M vicmd '^[[C' forward-char
