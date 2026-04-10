@@ -229,6 +229,7 @@ lk_fzf_stack_widget() {
   local -a stack
   local selected
 
+  typeset -U stack
   stack=("$PWD" "${dirstack[@]}")
 
   zle -I
@@ -248,7 +249,7 @@ lk_fzf_stack_widget() {
 zle -N lk_fzf_stack_widget
 bindkey '^E' lk_fzf_stack_widget
 
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # Ctrl+J → accept autosuggestion
 bindkey -M viins '^J' autosuggest-accept
