@@ -36,17 +36,6 @@ require("lazy").setup({
   -- Minimal Colorschemes (choose ONE)
   ------------------------------------------------------------
   {
-    "ellisonleao/gruvbox.nvim",
-    lazy = false,
-    priority = 1000,
-    enabled = false,
-    config = function()
-      vim.o.background = "dark"
-      vim.cmd.colorscheme("gruvbox")
-    end,
-  },
-
-  {
   "lukas-reineke/indent-blankline.nvim",
   main = "ibl",
   dependencies = {
@@ -105,16 +94,6 @@ require("lazy").setup({
 },
 
   {
-    "folke/tokyonight.nvim",
-    lazy = false,
-    priority = 1000,
-    enabled = false,
-    config = function()
-      vim.cmd.colorscheme("tokyonight")
-    end,
-  },
-
-  {
     "ojroques/nvim-osc52",
   },
 
@@ -123,34 +102,12 @@ require("lazy").setup({
     lazy = false,
     priority = 1000,
     enabled = true,
-    config = function()
-      vim.g.everforest_background = "hard"
-      vim.cmd.colorscheme("everforest")
-    end,
-  },
-
-  {
-    "navarasu/onedark.nvim",
-    lazy = false,
-    priority = 1000,
-    enabled = false,
-    config = function()
-      require("onedark").setup({ style = "dark" })
-      require("onedark").load()
-    end,
-  },
-
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    lazy = false,
-    priority = 1000,
-    enabled = false,
-    opts = { integrations = {} },
-    config = function(_, opts)
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin")
-    end,
+    init = function()
+  vim.g.everforest_background = "hard"
+end,
+config = function()
+  vim.cmd.colorscheme("everforest")
+end,
   },
 
   {
@@ -189,7 +146,7 @@ require("lazy").setup({
       filesystem = {
         filtered_items = { hide_dotfiles = true },
         follow_current_file = { enabled = true },
-        use_libuv_file_watcher = true,
+        use_libuv_file_watcher = false,
       },
 
       window = { width = 30 },
@@ -214,7 +171,7 @@ require("lazy").setup({
     },
   },
 
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  { "nvim-treesitter/nvim-treesitter",  event = "BufReadPost", build = ":TSUpdate" },
 
 {
   "hrsh7th/nvim-cmp",
@@ -293,23 +250,8 @@ require("lazy").setup({
         map("]h", gs.next_hunk, "Next hunk")
         map("[h", gs.prev_hunk, "Prev hunk")
         map("<leader>hp", gs.preview_hunk, "Preview hunk")
-        map("<leader>hb", function() gs.blame_line({ full = true }) end, "Blame line")
       end,
     },
-  },
-
-  {
-    "f-person/git-blame.nvim",
-    event = { "BufReadPre", "BufNewFile" },
-    opts = {
-      delay = 500,
-      message_template = "<author>, <date> • <summary>",
-      date_format = "%Y-%m-%d",
-    },
-    config = function(_, opts)
-      require("gitblame").setup(opts)
-      vim.keymap.set("n", "<leader>gb", ":GitBlameToggle<CR>", { desc = "Toggle blame" })
-    end,
   },
 
 })

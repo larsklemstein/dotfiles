@@ -533,13 +533,10 @@ alias nbat='bat -n'
 # ============================================================================
 alias gbl='git blame'
 alias gbr='git rev-parse --abbrev-ref HEAD'
-alias gcl='git status --porcelain=v1 | grep -q . || true'
 alias glr='git log --reverse'
 alias gor="git remote -v | awk '/^origin/ && NR==1 {print \$2}'"
-alias gpl='git pull'
-alias gst='git status'
 alias gcm='git commit -m'
-alias gta='git add -A . && git commit -m'
+alias gaa='git add -A .'
 
 gpa() {
     local message
