@@ -2,6 +2,7 @@
 -- Minimal, deterministic, lazy-optimized Neovim setup
 ------------------------------------------------------------
 
+vim.opt.cursorline = true
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
