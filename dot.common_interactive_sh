@@ -473,7 +473,15 @@ mst() {
     [ -n "$choice" ] && mise use "$choice"
 }
 
-alias mlr='mise ls-remote'
+ml() {
+    local tool="$1"
+    mise ls "$tool" | tail -30
+}
+
+mlr() {
+    local tool="$1"
+    mise ls-remote "$tool" | tail -30
+}
 
 mlrr() {
     echo
