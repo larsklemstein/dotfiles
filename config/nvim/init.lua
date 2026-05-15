@@ -2,6 +2,8 @@
 -- Minimal, deterministic, lazy-optimized Neovim setup
 ------------------------------------------------------------
 
+vim.loader.enable()
+
 vim.opt.cursorline = true
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
@@ -9,6 +11,8 @@ vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 
 vim.g.mapleader = " "
+
+vim.keymap.set("n", "<leader>l", "<cmd>nohl<CR>")
 
 ------------------------------------------------------------
 -- lazy.nvim bootstrap
@@ -27,6 +31,7 @@ vim.opt.rtp:prepend(lazypath)
 -- Plugins
 ------------------------------------------------------------
 require("lazy").setup({
+-- plugins --
 
 ------------------------------------------------------------
 -- Colorscheme (einziger Early-Load)
@@ -79,12 +84,9 @@ require("lazy").setup({
 ------------------------------------------------------------
 {
   "ojroques/nvim-osc52",
+  cond = function() return vim.env.SSH_CONNECTION ~= nil end,
   event = "VeryLazy",
-  config = function()
-    if vim.env.SSH_CONNECTION then
-      require("osc52").setup({ max_length = 0, silent = true })
-    end
-  end,
+  opts = { max_length = 0, silent = true },
 },
 
 ------------------------------------------------------------
@@ -121,6 +123,13 @@ require("lazy").setup({
 {
   "nvim-telescope/telescope.nvim",
   cmd = "Telescope",
+  keys = {
+    { "<leader>ff", "<cmd>Telescope find_files<CR>" },
+    { "<leader>fg", "<cmd>Telescope live_grep<CR>" },
+    { "<leader>fb", "<cmd>Telescope buffers<CR>" },
+    { "<leader>fh", "<cmd>Telescope help_tags<CR>" },
+    { "<leader>fj", "<cmd>Telescope jumplist<CR>" },
+  },
   dependencies = { "nvim-lua/plenary.nvim" },
 },
 
@@ -154,6 +163,20 @@ require("lazy").setup({
   config = function()
     require("mason").setup()
   end,
+},
+
+------------------------------------------------------------
+-- Toggleterm
+------------------------------------------------------------
+{
+  "akinsho/toggleterm.nvim",
+  version = "*",
+  keys = { { "<leader>t", "<cmd>ToggleTerm<CR>", mode = { "n", "t" } } },
+  opts = {
+    open_mapping = [[<leader>t]],
+    direction = "float",
+    float_opts = { border = "curved" },
+  },
 },
 
 ------------------------------------------------------------
@@ -196,6 +219,15 @@ require("lazy").setup({
   },
 },
 
+}, {
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip", "matchit", "matchparen", "netrwPlugin",
+        "tarPlugin", "tohtml", "tutor", "zipPlugin",
+      },
+    },
+  },
 })
 
 ------------------------------------------------------------
