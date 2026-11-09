@@ -220,7 +220,7 @@ arrowmsg() {
 alias docker_ports="docker ps --format 'table {{.Ports}}' |grep 127 | sed -e 's/.*://' -e 's/->.*//' |sort -n | paste - - - -"
 
 # dcs == docker compose (list) services
-dcs() {
+dcls() {
     local compose_yaml="$PWD/docker-compose.yml"
 
     if [ ! -f "$compose_yaml" ]
@@ -233,7 +233,7 @@ dcs() {
 }
 
 # dce == docker compose ennter (service shell)
-dce() {
+dces() {
     local command="${1:-/bin/bash}"
 
 	case $command in
@@ -264,12 +264,19 @@ dce() {
 	docker compose exec -it $choosen_service $command
 }
 
+# --- (plain) dokcer
+alias dovl='docker volume ls'
+alias dovr='docker volume rm'
+alias docl='docker container ls'
+alias docla='docker container ls --all'
 
+# --- dokcer compose
+alias dcpull='docker compose pull'
 alias dcu='docker compose up'
 alias dcud='docker compose up -d'
 alias dcudr='docker compose up -d --force-recreate'
 alias dcudb='docker compose up -d --build'
-alias dcp='docker compose ps'
+alias dcps='docker compose ps'
 alias dcl='docker compose logs --since 5m'
 alias dclf='docker compose logs --since 5m -f'
 
@@ -604,8 +611,8 @@ alias clean_tmux_sessions='tmux ls -F "#S #{session_attached}" | awk "$2==0{prin
 # ============================================================================
 # eye candy + extras
 # ============================================================================
-if [ -n "$SSH_CONNECTION" ] && [ -z "$MADE_NEOFETCH_CALL" ] && command -v neofetch >/dev/null; then
-    neofetch
+if [ -n "$SSH_CONNECTION" ] && [ -z "$MADE_NEOFETCH_CALL" ] && command -v neowofetch >/dev/null; then
+    neowofetch
     export MADE_NEOFETCH_CALL=y
 fi
 
