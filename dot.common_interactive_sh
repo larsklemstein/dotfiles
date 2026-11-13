@@ -219,6 +219,24 @@ arrowmsg() {
 
 alias docker_ports="docker ps --format 'table {{.Ports}}' |grep 127 | sed -e 's/.*://' -e 's/->.*//' |sort -n | paste - - - -"
 
+free_docker_port() {
+    local -i port
+    local -A used_ports
+
+    for port in $(docker_ports); do
+        used_ports[$port]=1
+    done
+
+    for (( port = 13000; port <= 13999; port++ )); do
+        if [[ -z ${used_ports[$port]} ]]; then
+            print -r -- "$port"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # dcs == docker compose (list) services
 dcls() {
     local compose_yaml="$PWD/docker-compose.yml"
