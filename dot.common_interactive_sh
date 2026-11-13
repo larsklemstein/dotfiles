@@ -646,9 +646,13 @@ then
         then
             if [ "$_tool" = "fastfetch" ]
             then
-                fastfetch --config paleofetch
+                echo
+                fastfetch
+                echo
             else
+                echo
                 $_tool
+                echo
             fi
 
             export MADE_FETCH_CALL=y
