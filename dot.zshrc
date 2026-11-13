@@ -61,27 +61,49 @@ setopt PUSHD_IGNORE_DUPS
 setopt PUSHD_SILENT
 
 # ----------------------------------
-# Prompt Helpers
+# Prompt Helpers (fork-frei, macOS + Linux)
 # ----------------------------------
-get_user_label() {
-  if [[ -f "$HOME/.env_id" ]]; then
-    head -n1 "$HOME/.env_id"
+# Label einmalig beim Start ermitteln
+if [[ -r "$HOME/.env_id" ]]; then
+  read -r _lk_label < "$HOME/.env_id"
+else
+  _lk_label="${USER:-$LOGNAME}@${HOST%%.*}"
+fi
+
+_lk_update_pwd() {
+  local p="${PWD/#$HOME/~}"
+  local -a parts=("${(@s:/:)p}")
+
+  if (( ${#parts} >= 2 )); then
+    _lk_pwd="${parts[-2]}/${parts[-1]}"
   else
-    echo "${USER}@${HOST%%.*}"
+    _lk_pwd="$p"
   fi
 }
 
-short_pwd() {
-  local p="$PWD"
-  p="${p/#$HOME/~}"
-
-  local parts
-  parts=("${(@s:/:)p}")
-
-  if (( ${#parts} >= 2 )); then
-    echo "${parts[-2]}/${parts[-1]}"
+# Git-Branch ohne git-Prozess: .git/HEAD direkt lesen
+_lk_update_git() {
+  _lk_git=""
+  local dir="$PWD" head gitdir line
+  while [[ -n "$dir" ]]; do
+    if [[ -d "$dir/.git" ]]; then
+      gitdir="$dir/.git"
+      break
+    elif [[ -f "$dir/.git" ]]; then
+      # Worktree/Submodule: "gitdir: <pfad>"
+      read -r line < "$dir/.git"
+      gitdir="${line#gitdir: }"
+      [[ "$gitdir" = /* ]] || gitdir="$dir/$gitdir"
+      break
+    fi
+    dir="${dir%/*}"
+  done
+  [[ -r "$gitdir/HEAD" ]] || return
+  read -r head < "$gitdir/HEAD"
+  if [[ "$head" = ref:\ refs/heads/* ]]; then
+    _lk_git="%F{magenta}(${head#ref: refs/heads/})%f "
   else
-    echo "$p"
+    _lk_git="%F{magenta}(${head[1,7]})%f "
   fi
 }
 
@@ -91,16 +113,16 @@ short_pwd() {
 VI_MODE="I"
 
 zle-keymap-select() {
-  case $KEYMAP in
-    vicmd) VI_MODE="N" ;;
-    *)     VI_MODE="I" ;;
-  esac
-  zle reset-prompt
+  local new="I"
+  [[ $KEYMAP == vicmd ]] && new="N"
+  if [[ $new != $VI_MODE ]]; then
+    VI_MODE=$new
+    zle reset-prompt
+  fi
 }
 
 zle-line-init() {
   VI_MODE="I"
-  zle reset-prompt
 }
 
 zle -N zle-keymap-select
@@ -109,15 +131,12 @@ zle -N zle-line-init
 # ----------------------------------
 # Prompt + Git
 # ----------------------------------
-autoload -Uz vcs_info
-
 precmd() {
-  vcs_info
+  _lk_update_pwd
+  _lk_update_git
 }
 
-zstyle ':vcs_info:git:*' formats '%F{magenta}(%b)%f'
-
-PROMPT='%F{yellow}${VI_MODE}%f %F{green}$(get_user_label)%f %F{white}$(short_pwd)%f ${vcs_info_msg_0_}%# '
+PROMPT='%F{yellow}${VI_MODE}%f %F{green}${_lk_label}%f %F{white}${_lk_pwd}%f ${_lk_git}%# '
 
 # ----------------------------------
 # Ctrl-F → FILE (balanced layout)
@@ -249,7 +268,18 @@ lk_fzf_stack_widget() {
 zle -N lk_fzf_stack_widget
 bindkey '^E' lk_fzf_stack_widget
 
-source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+# zsh-autosuggestions: Homebrew (macOS/Linuxbrew) oder Distro-Pakete
+for _f in \
+  /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  "$HOME/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh" \
+  /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+do
+  [[ -r "$_f" ]] && { source "$_f"; break; }
+done
+unset _f
 
 # Ctrl+J → accept autosuggestion
 bindkey -M viins '^J' autosuggest-accept
