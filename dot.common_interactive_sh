@@ -637,7 +637,6 @@ alias clean_tmux_sessions='tmux ls -F "#S #{session_attached}" | awk "$2==0{prin
 # ============================================================================
 # eye candy + extras
 # ============================================================================
-SSH_CONNECTION=hhkjhkjh
 if [ -n "$SSH_CONNECTION" ] && [ -z "$MADE_ETCH_CALL" ]
 then
     for _tool in fastfetch neowofetch neofetch
